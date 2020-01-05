@@ -1,7 +1,7 @@
 #pragma once
 
 #include <complex>
-#include "../Computeation/kernel.h"
+#include "../Computation/kernel.h"
 #include "../utils/Viewport.h"
 
 class Renderer {
