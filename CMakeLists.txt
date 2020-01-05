@@ -6,7 +6,7 @@ set(CMAKE_CUDA_HOST_COMPILER /usr/bin/g++-8)
 #set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -lineinfo -Xcompiler -rdynamic")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -rdynamic -g")
 
-add_executable(fixed_point_fractals main.cpp Rendering/glad/glad.c Computeation/kernel.cu Computeation/kernel.h Rendering/Window.cpp Rendering/Window.h Rendering/Renderer.cpp Rendering/Renderer.h Rendering/shaders.h Computeation/cudaSafeCall.h utils/Viewport.cpp utils/Viewport.h utils/Timer.cpp utils/Timer.h)
+add_executable(fixed_point_fractals main.cpp Rendering/glad/glad.c Computation/kernel.cu Computation/kernel.h Rendering/Window.cpp Rendering/Window.h Rendering/Renderer.cpp Rendering/Renderer.h Rendering/shaders.h Computation/cudaSafeCall.h utils/Viewport.cpp utils/Viewport.h utils/Timer.cpp utils/Timer.h)
 
 target_include_directories(fixed_point_fractals PRIVATE /usr/local/cuda/include)
 
