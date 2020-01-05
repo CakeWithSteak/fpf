@@ -6,7 +6,7 @@
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include <driver_types.h>
-#include "../Computeation/cudaSafeCall.h"
+#include "../Computation/cudaSafeCall.h"
 
 
 std::pair<fpdist_t, fpdist_t> interleavedMinmax(fpdist_t* buffer, size_t size);
