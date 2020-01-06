@@ -124,7 +124,7 @@ Renderer::~Renderer() {
     CUDA_SAFE(cudaFree(cudaBuffer));
 }
 
-void Renderer::render(fpdist_t maxIters) {
+void Renderer::render(fpdist_t maxIters, float tolerance) {
     auto [start, end] = viewport.getCorners();
 
     CUDA_SAFE(cudaGraphicsMapResources(1, &cudaSurfaceRes));

@@ -8,7 +8,6 @@ class Renderer {
     int width;
     int height;
     const Viewport& viewport;
-    float tolerance;
 
     int numBlocks;
     unsigned int texture;
@@ -26,11 +25,11 @@ class Renderer {
     void initCuda();
     cudaSurfaceObject_t createSurface();
 public:
-    Renderer(int width, int height, const Viewport& viewport, float tolerance)
-            : width(width), height(height), viewport(viewport), tolerance(tolerance) {init();}
+    Renderer(int width, int height, const Viewport& viewport)
+            : width(width), height(height), viewport(viewport) {init();}
     ~Renderer();
 
-    void render(fpdist_t maxIters);
+    void render(fpdist_t maxIters, float tolerance);
 };
 
 
