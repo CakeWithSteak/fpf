@@ -9,6 +9,8 @@ uniform int maxDist;
 
 out vec4 fragColor;
 
+const float maxHue = 0.8f; //Pink
+
 //http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
 vec3 hsv2rgb(vec3 c)
 {
@@ -18,18 +20,22 @@ vec3 hsv2rgb(vec3 c)
 }
 
 float mapHue(float distance) {
+    if(minDist == maxDist) return 0;
+
     //Linear
-    return (distance - minDist) / float(maxDist - minDist);
+    //return (distance - minDist) / float(maxDist - minDist);
+
+    //Better linear
+    return (distance - minDist) * (maxHue/(maxDist - minDist));
 
     //Everything is red
-    //return distance;
+    //return 0.8;
+
+    //1 is red
+    //return distance == 1 ? 0 : 0.5;
 }
 
 void main() {
-    if(maxDist < minDist) {
-        fragColor = vec4(0, 0, 0, 1);
-        return;
-    }
     int distance = texture(distances, vTexCoords).r;
     if(distance == -1) {
         fragColor = vec4(0, 0, 0, 1);

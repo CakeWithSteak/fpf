@@ -50,7 +50,6 @@ void Renderer::initTexture() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    std::vector<fpdist_t> initialData(width*height, -1);
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32I, width, height);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -140,6 +139,8 @@ void Renderer::render(fpdist_t maxIters) {
     glUniform1i(minimumUniform, min);
     glUniform1i(maximumUniform, max);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    std::cout << "Min: " << min << " max: " << max << "\n";
 }
 
 cudaSurfaceObject_t Renderer::createSurface() {
