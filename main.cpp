@@ -56,7 +56,7 @@ void APIENTRY glDebugCallback(GLenum source,
     std::cout << std::endl;
 }
 
-bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float deltaTime, float moveStep, float zoomStep) {
+bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& tolerance, float deltaTime, float moveStep, float zoomStep, float tolStep) {
     deltaTime = std::clamp(deltaTime, 0.0f, 1.0f);
     bool inputReceived = false;
 
@@ -101,6 +101,18 @@ bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float delta
         std::cout << "Max iterations: " << maxIters << std::endl;
         inputReceived = true;
     }
+    if(window.isKeyPressed(GLFW_KEY_0)) {
+        tolerance += tolStep;
+        tolerance = std::clamp(tolerance, 0.0f, 2.0f);
+        std::cout << "Tolerance: " << tolerance << std::endl;
+        inputReceived = true;
+    }
+    if(window.isKeyPressed(GLFW_KEY_9)) {
+        tolerance -= tolStep;
+        tolerance = std::clamp(tolerance, 0.0f, 2.0f);
+        std::cout << "Tolerance: " << tolerance << std::endl;
+        inputReceived = true;
+    }
     return inputReceived;
 }
 
@@ -110,9 +122,10 @@ int main() {
     constexpr int WIN_HEIGHT = 1024;
     constexpr int WIN_WIDTH = 1024;
     int maxIters = 128;
-    constexpr float TOLERANCE = 0.01;
+    float tolerance = 0.01;
     constexpr float MOVE_STEP = 2.0f;
     constexpr float ZOOM_STEP = 0.4f;
+    constexpr float TOL_STEP = 0.0001f;
     std::ios::sync_with_stdio(false);
 
     Viewport viewport(0, 2);
@@ -121,23 +134,23 @@ int main() {
     window.setSwapInterval(1);
     window.enableGLDebugMessages(glDebugCallback);
 
-    Renderer renderer(WIN_WIDTH, WIN_HEIGHT, viewport, TOLERANCE);
+    Renderer renderer(WIN_WIDTH, WIN_HEIGHT, viewport);
 
     //First render
     glClear(GL_COLOR_BUFFER_BIT);
-    renderer.render(maxIters);
+    renderer.render(maxIters, tolerance);
     window.swapBuffers();
     window.poll();
 
     Timer timer;
     while(!window.shouldClose()) {
-        bool repaintNeeded = handleInputs(window, viewport, maxIters, timer.getSeconds(), MOVE_STEP, ZOOM_STEP);
+        bool repaintNeeded = handleInputs(window, viewport, maxIters, tolerance, timer.getSeconds(), MOVE_STEP, ZOOM_STEP, TOL_STEP);
         //std::cout << "Approx FPS: " << 1.0/timer.getSeconds() << std::endl;
         timer.reset();
 
         if(repaintNeeded) {
             glClear(GL_COLOR_BUFFER_BIT);
-            renderer.render(maxIters);
+            renderer.render(maxIters, tolerance);
             window.poll(); // The Renderer call may take a long time, so we poll here to ensure responsiveness
             window.swapBuffers();
         }
