@@ -1,5 +1,6 @@
 #include <iostream>
 #include <algorithm>
+#include <thread>
 #include "Rendering/Window.h"
 #include "Rendering/Renderer.h"
 #include "utils/Viewport.h"
@@ -145,7 +146,6 @@ int main() {
     Timer timer;
     while(!window.shouldClose()) {
         bool repaintNeeded = handleInputs(window, viewport, maxIters, tolerance, timer.getSeconds(), MOVE_STEP, ZOOM_STEP, TOL_STEP);
-        //std::cout << "Approx FPS: " << 1.0/timer.getSeconds() << std::endl;
         timer.reset();
 
         if(repaintNeeded) {
@@ -155,5 +155,7 @@ int main() {
             window.swapBuffers();
         }
         window.poll();
+        if(!repaintNeeded)
+            std::this_thread::sleep_for(40ms);
     }
 }

@@ -25,10 +25,10 @@ __device__ __inline__ float2 square(float2 z) {
     );
 }
 
-__device__ __inline__ float2 f(float2 z) {
+__device__ __inline__ float2 cmul(float2 a, float2 b) {
     return make_float2(
-            z.x * z.x + z.y,
-            z.y * z.y + z.x
+            a.x * b.x - a.y * b.y,
+            a.x * b.y + a.y * b.x
     );
 }
 
@@ -50,7 +50,7 @@ __device__ __inline__ float2 getZ(float re0, float re1, float im0, float im1, in
 __device__ fpdist_t findFixedPointDist(float2 z, float tsquare, fpdist_t maxIters) {
     float2 last = z;
     for(fpdist_t i = 0; i < maxIters; ++i) {
-        z = csin(z);
+        z = ccos(z);
         if(withinTolerance(z, last, tsquare))
             return i + 1;
         last = z;
@@ -85,7 +85,7 @@ __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare
     warp.sync();
     debugPrint("FP find done.");
 
-    if (!threadIsExcessive) surf2Dwrite(fpDist, surface, x * sizeof(int), y); //try before sync?
+    if (!threadIsExcessive) surf2Dwrite(fpDist, surface, x * sizeof(int), y);
     debugPrint("Surf write done.");
 
     fpdist_t min_ = (fpDist == -1) ? maxIters + 2 : fpDist;
