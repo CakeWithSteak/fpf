@@ -1,36 +1,9 @@
 #include "kernel.h"
 #include <cooperative_groups.h>
 #include <cstdio>
+#include "math.cuh"
 
 namespace cg = cooperative_groups;
-
-__device__ __inline__ float2 ccos(float2 z) {
-    return make_float2(
-        cosf(z.x) * coshf(z.y),
-        -1 * sinf(z.x) * sinhf(z.y)
-    );
-}
-
-__device__ __inline__ float2 csin(float2 z) {
-    return make_float2(
-            sinf(z.x) * coshf(z.y),
-            cosf(z.x) * sinhf(z.y)
-    );
-}
-
-__device__ __inline__ float2 square(float2 z) {
-    return make_float2(
-            z.x * z.x,
-            2 * z.x * z.y + z.y * z.y
-    );
-}
-
-__device__ __inline__ float2 cmul(float2 a, float2 b) {
-    return make_float2(
-            a.x * b.x - a.y * b.y,
-            a.x * b.y + a.y * b.x
-    );
-}
 
 __device__ __inline__ bool withinTolerance(float2 a, float2 b, float tsquare) {
     float xdist = a.x - b.x;
@@ -41,7 +14,7 @@ __device__ __inline__ bool withinTolerance(float2 a, float2 b, float tsquare) {
 __device__ __inline__ float2 getZ(float re0, float re1, float im0, float im1, int width, int height, int x, int y) {
     float reStep = (re1 - re0) / width;
     float imStep = (im1 - im0) / height;
-    return make_float2(
+    return make_complex(
         re0 + reStep * x,
         im0 + imStep * y
     );
@@ -50,7 +23,7 @@ __device__ __inline__ float2 getZ(float re0, float re1, float im0, float im1, in
 __device__ fpdist_t findFixedPointDist(float2 z, float tsquare, fpdist_t maxIters) {
     float2 last = z;
     for(fpdist_t i = 0; i < maxIters; ++i) {
-        z = ccos(z);
+        z = csin(z);
         if(withinTolerance(z, last, tsquare))
             return i + 1;
         last = z;
