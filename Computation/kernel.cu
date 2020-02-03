@@ -1,9 +1,23 @@
 #include "kernel.h"
+
+// Hack for proper code insights
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wignored-attributes"
+#ifndef __CUDACC__
+#define __CUDACC__
+#endif
+
+#include <cuda_runtime.h>
 #include <cooperative_groups.h>
+#include <surface_types.h>
+#include <surface_functions.h>
 #include <cstdio>
 #include "math.cuh"
 
 namespace cg = cooperative_groups;
+
+using fpdist2 = int2;
+#define make_fpdist2 make_int2
 
 __device__ __inline__ bool withinTolerance(float2 a, float2 b, float tsquare) {
     float xdist = a.x - b.x;
@@ -88,3 +102,5 @@ __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare
 void launch_kernel(float re0, float re1, float im0, float im1, float tolerance, fpdist_t maxIters, fpdist_t* minmaxOut, cudaSurfaceObject_t surface, int surfW, int surfH) {
     kernel<<<surfW * surfH, 1024>>>(re0, re1, im0, im1, tolerance * tolerance, maxIters, minmaxOut, surface, surfW, surfH);
 }
+
+#pragma clang diagnostic pop
