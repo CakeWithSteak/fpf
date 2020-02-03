@@ -1,5 +1,3 @@
-#include "kernel.h"
-
 // Hack for proper code insights
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wignored-attributes"
@@ -12,12 +10,13 @@
 #include <surface_types.h>
 #include <surface_functions.h>
 #include <cstdio>
+#include "kernel_types.h"
 #include "math.cuh"
 
 namespace cg = cooperative_groups;
+using f_ptr = complex (*)(complex);
 
-using fpdist2 = int2;
-#define make_fpdist2 make_int2
+__device__ __inline__ complex fun(complex z);
 
 __device__ __inline__ bool withinTolerance(float2 a, float2 b, float tsquare) {
     float xdist = a.x - b.x;
@@ -34,10 +33,10 @@ __device__ __inline__ float2 getZ(float re0, float re1, float im0, float im1, in
     );
 }
 
-__device__ fpdist_t findFixedPointDist(float2 z, float tsquare, fpdist_t maxIters) {
+__device__ fpdist_t findFixedPointDist(f_ptr f, float2 z, float tsquare, fpdist_t maxIters) {
     float2 last = z;
     for(fpdist_t i = 0; i < maxIters; ++i) {
-        z = csin(z);
+        z = f(z);
         if(withinTolerance(z, last, tsquare))
             return i + 1;
         last = z;
@@ -67,7 +66,7 @@ __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare
     if (!threadIsExcessive) {
         //Find a z for this thread
         float2 z = getZ(re0, re1, im0, im1, surfW, surfH, x, y);
-        fpDist = findFixedPointDist(z, tsquare, maxIters);
+        fpDist = findFixedPointDist(fun, z, tsquare, maxIters);
     }
     warp.sync();
     debugPrint("FP find done.");
@@ -104,3 +103,7 @@ void launch_kernel(float re0, float re1, float im0, float im1, float tolerance, 
 }
 
 #pragma clang diagnostic pop
+
+__device__ __inline__ complex fun(complex z) {
+    return csin(z);
+}
