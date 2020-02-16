@@ -1,22 +1,22 @@
 // Hack for proper code insights
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wignored-attributes"
+
+#ifndef BUILD_FOR_NVRTC
 #ifndef __CUDACC__
 #define __CUDACC__
 #endif
-
 #include <cuda_runtime.h>
 #include <cooperative_groups.h>
 #include <surface_types.h>
-#include <surface_functions.h>
-#include <cstdio>
+#endif
+
 #include "kernel_types.h"
 #include "math.cuh"
+DEFER_TO_NVRTC_PREPROCESSOR #include <cooperative_groups.h>
 
 namespace cg = cooperative_groups;
-using f_ptr = complex (*)(complex);
-
-__device__ __inline__ complex fun(complex z);
+__device__ __inline__ complex F(complex z);
 
 __device__ __inline__ bool withinTolerance(float2 a, float2 b, float tsquare) {
     float xdist = a.x - b.x;
@@ -33,10 +33,10 @@ __device__ __inline__ float2 getZ(float re0, float re1, float im0, float im1, in
     );
 }
 
-__device__ fpdist_t findFixedPointDist(f_ptr f, float2 z, float tsquare, fpdist_t maxIters) {
+__device__ fpdist_t findFixedPointDist(float2 z, float tsquare, fpdist_t maxIters) {
     float2 last = z;
     for(fpdist_t i = 0; i < maxIters; ++i) {
-        z = f(z);
+        z = F(z);
         if(withinTolerance(z, last, tsquare))
             return i + 1;
         last = z;
@@ -50,9 +50,9 @@ __device__ __inline__ void debugPrint(const char* str) {
 
 __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare, fpdist_t maxIters, fpdist_t* minmaxOut, cudaSurfaceObject_t surface, int surfW, int surfH) {
     __shared__ fpdist2 minmaxBlock[32];
-    auto block = cg::this_thread_block();
-    auto warp = cg::tiled_partition<32>(block);
-    auto tid = threadIdx.x;
+    cg::thread_block block = cg::this_thread_block();
+    cg::thread_block_tile<32> warp = cg::tiled_partition<32>(block);
+    unsigned int tid = threadIdx.x;
     int i = blockIdx.x * blockDim.x + tid;
     int x = i % surfW;
     int y = i / surfW;
@@ -66,7 +66,7 @@ __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare
     if (!threadIsExcessive) {
         //Find a z for this thread
         float2 z = getZ(re0, re1, im0, im1, surfW, surfH, x, y);
-        fpDist = findFixedPointDist(fun, z, tsquare, maxIters);
+        fpDist = findFixedPointDist(z, tsquare, maxIters);
     }
     warp.sync();
     debugPrint("FP find done.");
@@ -98,12 +98,8 @@ __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare
     debugPrint("Done.");
 }
 
-void launch_kernel(float re0, float re1, float im0, float im1, float tolerance, fpdist_t maxIters, fpdist_t* minmaxOut, cudaSurfaceObject_t surface, int surfW, int surfH) {
-    kernel<<<surfW * surfH, 1024>>>(re0, re1, im0, im1, tolerance * tolerance, maxIters, minmaxOut, surface, surfW, surfH);
+__device__ __inline__ complex F(complex z) {
+    return csin(z);
 }
 
 #pragma clang diagnostic pop
-
-__device__ __inline__ complex fun(complex z) {
-    return csin(z);
-}

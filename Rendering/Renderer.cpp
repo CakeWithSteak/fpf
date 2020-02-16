@@ -6,8 +6,8 @@
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include <driver_types.h>
-#include "../Computation/cudaSafeCall.h"
-
+#include "../Computation/safeCall.h"
+#include "../Computation/runtime_template.h"
 
 std::pair<fpdist_t, fpdist_t> interleavedMinmax(fpdist_t* buffer, size_t size);
 
@@ -43,6 +43,7 @@ void Renderer::init() {
     initTexture();
     initShaders();
     initCuda();
+    initKernel();
 }
 
 void Renderer::initTexture() {
@@ -129,7 +130,7 @@ void Renderer::render(fpdist_t maxIters, float tolerance) {
 
     CUDA_SAFE(cudaGraphicsMapResources(1, &cudaSurfaceRes));
     auto surface = createSurface();
-    launch_kernel(start.real(), end.real(), start.imag(), end.imag(), tolerance, maxIters, cudaBuffer, surface, width, height);
+    launch_kernel(kernel, start.real(), end.real(), start.imag(), end.imag(), tolerance, maxIters, cudaBuffer, surface, width, height);
     CUDA_SAFE(cudaDeviceSynchronize());
 
     CUDA_SAFE(cudaDestroySurfaceObject(surface));
@@ -148,6 +149,11 @@ cudaSurfaceObject_t Renderer::createSurface() {
     cudaSurfaceObject_t surface;
     CUDA_SAFE(cudaCreateSurfaceObject(&surface, &cudaSurfaceDesc));
     return surface;
+}
+
+void Renderer::initKernel() {
+    std::string finalCode = runtimeTemplateCode;
+    kernel = compiler.Compile(finalCode, "runtime.cu", "kernel");
 }
 
 std::pair<fpdist_t, fpdist_t> interleavedMinmax(fpdist_t* buffer, size_t size) {
