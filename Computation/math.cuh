@@ -1,18 +1,52 @@
 #pragma once
+
+//Hack for code insights
+#ifndef BUILD_FOR_NVRTC
 #include <vector_functions.h>
-#include <cuComplex.h>
+#include <cmath>
 #include <cstdint>
+#undef __inline__
+#define __inline__
+#else
+#define DEFER_TO_NVRTC_PREPROCESSOR
+//#define __STRICT_ANSI__ 1
+//DEFER_TO_NVRTC_PREPROCESSOR #include <math.h>
+DEFER_TO_NVRTC_PREPROCESSOR #define __ASSEMBLER__
+DEFER_TO_NVRTC_PREPROCESSOR #define __extension__
+DEFER_TO_NVRTC_PREPROCESSOR #include <stdint.h>
+#endif
 
-using complex = cuFloatComplex;
+#define complex float2
 
-//Some macros for functions defined in cuComplex.h
 #define make_complex make_float2
-#define cconj cuConjf
-#define cadd cuCaddf
-#define csub cuCsubf
-#define cmul cuCmulf
-#define cdiv cuCdivf
-#define cabs cuCabsf
+
+__device__ __inline__ complex cconj(complex z) {
+    return make_complex(
+            z.x,
+            -z.y
+    );
+}
+
+__device__ __inline__ complex cadd(complex a, complex b) {
+    return make_complex(
+            a.x + b.x,
+            a.y + b.y
+            );
+}
+
+__device__ __inline__ complex csub(complex a, complex b) {
+    return make_complex(
+            a.x - b.x,
+            a.y - b.y
+    );
+}
+
+__device__ __inline__ complex cmul(complex a, complex b) {
+    return make_complex(
+            (a.x * b.x) - (a.y * b.y),
+            (a.x * b.y) + (b.x * a.y)
+    );
+}
 
 __device__ __inline__ complex ccos(complex z) {
     return make_complex(
