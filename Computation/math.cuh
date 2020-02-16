@@ -1,21 +1,11 @@
 #pragma once
 
-//Hack for code insights
-#ifndef BUILD_FOR_NVRTC
+#ifndef BUILD_FOR_NVRTC //Hack for code insights
 #include <vector_functions.h>
 #include <cmath>
-#include <cstdint>
-#undef __inline__
-#define __inline__
-#else
-#define DEFER_TO_NVRTC_PREPROCESSOR
-//#define __STRICT_ANSI__ 1
-//DEFER_TO_NVRTC_PREPROCESSOR #include <math.h>
-DEFER_TO_NVRTC_PREPROCESSOR #define __ASSEMBLER__
-DEFER_TO_NVRTC_PREPROCESSOR #define __extension__
-DEFER_TO_NVRTC_PREPROCESSOR #include <stdint.h>
 #endif
 
+#include "kernel_stdint.cuh"
 #define complex float2
 
 #define make_complex make_float2
