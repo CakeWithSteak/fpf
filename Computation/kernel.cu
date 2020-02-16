@@ -1,8 +1,7 @@
 // Hack for proper code insights
+#ifndef BUILD_FOR_NVRTC
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wignored-attributes"
-
-#ifndef BUILD_FOR_NVRTC
 #ifndef __CUDACC__
 #define __CUDACC__
 #endif
@@ -11,6 +10,7 @@
 #include <surface_types.h>
 #endif
 
+#include "kernel_macros.cuh"
 #include "kernel_types.h"
 #include "math.cuh"
 DEFER_TO_NVRTC_PREPROCESSOR #include <cooperative_groups.h>
@@ -44,10 +44,6 @@ __device__ fpdist_t findFixedPointDist(float2 z, float tsquare, fpdist_t maxIter
     return -1;
 }
 
-__device__ __inline__ void debugPrint(const char* str) {
-    /*/printf("[kernel %i/%i] %s\n", blockIdx.x, threadIdx.x, str);/**/
-}
-
 __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare, fpdist_t maxIters, fpdist_t* minmaxOut, cudaSurfaceObject_t surface, int surfW, int surfH) {
     __shared__ fpdist2 minmaxBlock[32];
     cg::thread_block block = cg::this_thread_block();
@@ -59,8 +55,6 @@ __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare
     int area = surfW * surfH;
     if (i - area > 31) return; //The entire warp is excessive
 
-    debugPrint("Start");
-
     fpdist_t fpDist = -1;
     bool threadIsExcessive = i >= area;
     if (!threadIsExcessive) {
@@ -69,10 +63,8 @@ __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare
         fpDist = findFixedPointDist(z, tsquare, maxIters);
     }
     warp.sync();
-    debugPrint("FP find done.");
 
     if (!threadIsExcessive) surf2Dwrite(fpDist, surface, x * sizeof(int), y);
-    debugPrint("Surf write done.");
 
     fpdist_t min_ = (fpDist == -1) ? maxIters + 2 : fpDist;
     fpdist_t max_ = fpDist;
@@ -82,10 +74,8 @@ __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare
     }
     if (warp.thread_rank() == 0) minmaxBlock[tid / 32] = make_fpdist2(min_, max_);
     block.sync();
-    debugPrint("Reduce round 1 done.");
 
     if (tid < 32) {
-        debugPrint("Start reduce round 2.");
         fpdist2 value = minmaxBlock[tid];
         min_ = value.x;
         max_ = value.y;
@@ -95,11 +85,11 @@ __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare
         }
         if (tid == 0) reinterpret_cast<fpdist2 *>(minmaxOut)[blockIdx.x] = make_fpdist2(min_, max_);
     }
-    debugPrint("Done.");
 }
 
 __device__ __inline__ complex F(complex z) {
     return csin(z);
 }
-
+#ifndef BUILD_FOR_NVRTC
 #pragma clang diagnostic pop
+#endif
