@@ -1,7 +1,7 @@
 #pragma once
 #include <map>
 #include <cassert>
-#include "token_transformations/operators.h"
+#include "operators.h"
 
 template <typename K, typename V>
 inline bool mapContains(const std::map<K,V>& m, const K& key) {

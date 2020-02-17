@@ -1,5 +1,5 @@
 #include "tokenize.h"
-#include "operators.h"
+#include "../operators.h"
 #include "../utils.h"
 #include <cctype>
 
