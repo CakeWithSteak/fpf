@@ -6,8 +6,8 @@ CUfunction NvrtcCompiler::Compile(std::string_view code, std::string_view filena
     nvrtcProgram program;
     NVRTC_SAFE(nvrtcCreateProgram(&program, code.data(), filename.data(), 0, nullptr, nullptr));
     NVRTC_SAFE(nvrtcAddNameExpression(program, functionName.data()));
-    const char* compileArgs[] = {"--gpu-architecture=compute_61", "--include-path=/usr/local/cuda/include/", "-std=c++14"};
-    nvrtcResult compileResult = nvrtcCompileProgram(program, 3, compileArgs); //todo more options for optimization
+    const char* compileArgs[] = {"--gpu-architecture=compute_61", "--include-path=/usr/local/cuda/include/", "-std=c++14", "-ewp"};
+    nvrtcResult compileResult = nvrtcCompileProgram(program, 4, compileArgs); //todo more options for optimization
     if(compileResult != NVRTC_SUCCESS) {
         size_t logSize;
         NVRTC_SAFE(nvrtcGetProgramLogSize(program, &logSize));

@@ -5,39 +5,20 @@
 #include <cmath>
 #endif
 
+
 #include "kernel_macros.cuh"
 #include "kernel_stdint.cuh"
 using complex = float2;
 
+DEFER_TO_NVRTC_PREPROCESSOR #include <cuComplex.h>
 DEFER_TO_NVRTC_PREPROCESSOR #define make_complex make_float2
 
-__device__ __inline__ complex cconj(complex z) {
-    return make_complex(
-            z.x,
-            -z.y
-    );
-}
-
-__device__ __inline__ complex cadd(complex a, complex b) {
-    return make_complex(
-            a.x + b.x,
-            a.y + b.y
-            );
-}
-
-__device__ __inline__ complex csub(complex a, complex b) {
-    return make_complex(
-            a.x - b.x,
-            a.y - b.y
-    );
-}
-
-__device__ __inline__ complex cmul(complex a, complex b) {
-    return make_complex(
-            (a.x * b.x) - (a.y * b.y),
-            (a.x * b.y) + (b.x * a.y)
-    );
-}
+//Aliases for functions defined in cuComplex
+DEFER_TO_NVRTC_PREPROCESSOR #define cadd cuCaddf
+DEFER_TO_NVRTC_PREPROCESSOR #define csub cuCsubf
+DEFER_TO_NVRTC_PREPROCESSOR #define cmul cuCmulf
+DEFER_TO_NVRTC_PREPROCESSOR #define cdiv cuCdivf
+DEFER_TO_NVRTC_PREPROCESSOR #define cconj cuConjf
 
 __device__ __inline__ complex ccos(complex z) {
     return make_complex(
@@ -114,4 +95,20 @@ __device__ __inline__ complex cxor(complex a, complex b) {
             *reinterpret_cast<float*>(&re),
             *reinterpret_cast<float*>(&im)
     );
+}
+
+__device__ __inline__ complex cabs(complex z) {
+    return make_complex(cuCabsf(z), 0);
+}
+
+__device__ __inline__ complex creal(complex z) {
+    return make_complex(cuCrealf(z), 0);
+}
+
+__device__ __inline__ complex cimag(complex z) {
+    return make_complex(cuCimagf(z), 0);
+}
+
+__device__ __inline__ complex carg(complex z) {
+    return make_complex(atan2(z.y, z.x), 0);
 }
