@@ -5,10 +5,11 @@
 #include <cmath>
 #endif
 
+#include "kernel_macros.cuh"
 #include "kernel_stdint.cuh"
-#define complex float2
+using complex = float2;
 
-#define make_complex make_float2
+DEFER_TO_NVRTC_PREPROCESSOR #define make_complex make_float2
 
 __device__ __inline__ complex cconj(complex z) {
     return make_complex(

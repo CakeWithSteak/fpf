@@ -5,18 +5,18 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_HOST_COMPILER /usr/bin/g++-8)
 
 add_custom_command(OUTPUT kernel.ii
-                   COMMAND cpp -DBUILD_FOR_NVRTC -x c++ -P -std=c++17 -I ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} ${CMAKE_SOURCE_DIR}/Computation/kernel.cu |
-                    sed "1 iR\"(" |
-                    sed -e "\$a\)\"" > kernel.ii
-                   DEPENDS Computation/kernel.cu Computation/math.cuh Computation/kernel_types.h
-                   IMPLICIT_DEPENDS CXX VERBATIM)
+        COMMAND cpp -DBUILD_FOR_NVRTC -x c++ -P -std=c++17 -I ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} ${CMAKE_SOURCE_DIR}/Computation/kernel.cu |
+        sed "1 iR\"(" |
+        sed -e "\$a\)\"" > kernel.ii
+        DEPENDS Computation/kernel.cu Computation/*.cuh Computation/kernel_types.h
+        IMPLICIT_DEPENDS CXX VERBATIM)
 
-add_executable(fixed_point_fractals main.cpp Rendering/glad/glad.c Computation/kernel.h Rendering/Window.cpp Rendering/Window.h Rendering/Renderer.cpp Rendering/Renderer.h Rendering/shaders.h Computation/safeCall.h utils/Viewport.cpp utils/Viewport.h utils/Timer.cpp utils/Timer.h Computation/kernel_types.h Compilation/NvrtcCompiler.cpp Compilation/NvrtcCompiler.h kernel.ii Computation/dummy.cu)
+add_executable(fixed_point_fractals main.cpp Rendering/glad/glad.c Rendering/Window.cpp Rendering/Renderer.cpp utils/Viewport.cpp utils/Timer.cpp Computation/kernel_types.h Compilation/NvrtcCompiler.cpp kernel.ii Computation/dummy.cu Compilation/compileExpression.cpp Compilation/expr2cuda/expression_tree/ConstantNode.cpp Compilation/expr2cuda/expression_tree/ExpressionNode.cpp Compilation/expr2cuda/expression_tree/OperatorNode.cpp Compilation/expr2cuda/expression_tree/RootNode.cpp Compilation/expr2cuda/expression_tree/VariableNode.cpp Compilation/expr2cuda/token_transformations/infixtoprefix.cpp Compilation/expr2cuda/token_transformations/token_prep.cpp Compilation/expr2cuda/token_transformations/tokenize.cpp Compilation/expr2cuda/tree_transformations/buildTree.cpp)
 
 target_include_directories(fixed_point_fractals PRIVATE ${CMAKE_BINARY_DIR})
 target_include_directories(fixed_point_fractals PRIVATE /usr/local/cuda/include)
 
-target_compile_options(fixed_point_fractals PRIVATE -O0 -g)
+target_compile_options(fixed_point_fractals PRIVATE -O3 -g)
 
 target_link_libraries(fixed_point_fractals glfw)
 target_link_libraries(fixed_point_fractals GL)
