@@ -7,7 +7,6 @@
 #include <cuda_gl_interop.h>
 #include <driver_types.h>
 #include "../Computation/safeCall.h"
-#include "../Computation/runtime_template.h"
 
 std::pair<fpdist_t, fpdist_t> interleavedMinmax(fpdist_t* buffer, size_t size);
 
@@ -23,7 +22,7 @@ float data[] = {
      1, -1,  1, 1, //bottom right
 };
 
-void Renderer::init() {
+void Renderer::init(std::string_view cudaCode) {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
@@ -43,7 +42,7 @@ void Renderer::init() {
     initTexture();
     initShaders();
     initCuda();
-    initKernel();
+    initKernel(cudaCode);
 }
 
 void Renderer::initTexture() {
@@ -151,9 +150,8 @@ cudaSurfaceObject_t Renderer::createSurface() {
     return surface;
 }
 
-void Renderer::initKernel() {
-    std::string finalCode = runtimeTemplateCode;
-    kernel = compiler.Compile(finalCode, "runtime.cu", "kernel");
+void Renderer::initKernel(std::string_view cudaCode) {
+    kernel = compiler.Compile(cudaCode, "runtime.cu", "kernel");
 }
 
 std::pair<fpdist_t, fpdist_t> interleavedMinmax(fpdist_t* buffer, size_t size) {

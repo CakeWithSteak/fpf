@@ -22,15 +22,15 @@ class Renderer {
     NvrtcCompiler compiler;
     CUfunction kernel;
 
-    void init();
+    void init(std::string_view cudaCode);
     void initTexture();
     void initShaders();
     void initCuda();
-    void initKernel();
+    void initKernel(std::string_view cudaCode);
     cudaSurfaceObject_t createSurface();
 public:
-    Renderer(int width, int height, const Viewport& viewport)
-            : width(width), height(height), viewport(viewport) {init();}
+    Renderer(int width, int height, const Viewport& viewport, std::string_view cudaCode)
+            : width(width), height(height), viewport(viewport) {init(cudaCode);}
     ~Renderer();
 
     void render(fpdist_t maxIters, float tolerance);

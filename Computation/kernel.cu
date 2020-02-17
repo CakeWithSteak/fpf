@@ -88,8 +88,8 @@ __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare
 }
 
 __device__ __inline__ complex F(complex z) {
-    return csin(z);
-}
+    /*Generated code goes here*/
+//}
 #ifndef BUILD_FOR_NVRTC
 #pragma clang diagnostic pop
 #endif

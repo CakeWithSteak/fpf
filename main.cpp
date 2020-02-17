@@ -5,6 +5,8 @@
 #include "Rendering/Renderer.h"
 #include "utils/Viewport.h"
 #include "utils/Timer.h"
+#include "Compilation/compileExpression.h"
+#include "Computation/runtime_template.h"
 
 
 using namespace std::chrono_literals;
@@ -117,6 +119,15 @@ bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& tole
     return inputReceived;
 }
 
+std::string getCudaCode() {
+    std::cout << "Expression> ";
+    std::string expr;
+    std::getline(std::cin, expr);
+    auto cudaCode = compileExpression(expr);
+    auto finalCode = runtimeTemplateCode + cudaCode + "}";
+    return finalCode;
+}
+
 //Precision very low at (1.0067,-1.219) -> (1.00677,-1.21893)
 
 int main() {
@@ -129,13 +140,16 @@ int main() {
     constexpr float TOL_STEP = 0.0001f;
     std::ios::sync_with_stdio(false);
 
+    auto cudaCode = getCudaCode();
+    std::cout << cudaCode << "\n\n//////////\n\n";
+
     Viewport viewport(0, 2);
 
     Window window(WIN_WIDTH, WIN_HEIGHT, "Fixed point fractals", false);
     window.setSwapInterval(1);
     window.enableGLDebugMessages(glDebugCallback);
 
-    Renderer renderer(WIN_WIDTH, WIN_HEIGHT, viewport);
+    Renderer renderer(WIN_WIDTH, WIN_HEIGHT, viewport, cudaCode);
 
     //First render
     glClear(GL_COLOR_BUFFER_BIT);
