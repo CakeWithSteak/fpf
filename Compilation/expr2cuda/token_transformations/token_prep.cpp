@@ -18,7 +18,7 @@ void unaryOpToFunction(TokenList& tl) {
                 prev(it)->type == TokenType::COMMA ||
                 prev(it)->type == TokenType::OPERATOR)
             {
-                auto replacementFunction = unaryOperatorLookup.at(t.value);
+                const auto& replacementFunction = unaryOperatorLookup.at(t.value);
                 if(replacementFunction.empty()) {
                     auto newIt = --it; // The iterator will be invalidated by erase
                     tl.erase(next(it));
@@ -28,6 +28,23 @@ void unaryOpToFunction(TokenList& tl) {
                     auto termEnd = findTermEnd(next(insertedParen), tl.end());
                     tl.insert(next(termEnd), Token(TokenType::RIGHT_PAREN, ")"));
                 }
+            }
+        }
+    }
+}
+
+void juxtaposeToExplicit(TokenList& tl) {
+    const Token multiply = Token(TokenType::OPERATOR, '*');
+    for(auto it = next(tl.begin()); it != tl.end(); ++it) {
+        Token t = *it;
+        if(t.type == TokenType::LEFT_PAREN && prev(it)->type == TokenType::RIGHT_PAREN)
+            tl.insert(it, multiply);
+        else if (prev(it)->type == TokenType::NUMBER_LITERAL || prev(it)->type == TokenType::VARIABLE) {
+            if(t.type == TokenType::LEFT_PAREN ||
+               t.type == TokenType::VARIABLE ||
+               (t.type == TokenType::OPERATOR && getTraits(t).isFunction))
+            {
+                tl.insert(it, multiply);
             }
         }
     }
