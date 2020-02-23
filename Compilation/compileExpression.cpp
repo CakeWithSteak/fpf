@@ -7,6 +7,7 @@
 std::string compileExpression(std::string_view sv) {
     auto tokens = tokenize(sv);
     unaryOpToFunction(tokens);
+    juxtaposeToExplicit(tokens);
     auto prefix = infixToPrefix(tokens);
     return buildTree(prefix).getCudaCode();
 }
