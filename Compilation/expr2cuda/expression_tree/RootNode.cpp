@@ -31,3 +31,7 @@ RootNode& RootNode::operator=(RootNode&& other) noexcept {
     other.children.pop_back();
     return *this;
 }
+
+NodeType RootNode::type() const{
+    return NodeType::ROOT;
+}

@@ -10,6 +10,8 @@ public:
     virtual std::string getCudaCode() const override;
 
     explicit VariableNode(char varName) : varName{varName} {}
+
+    virtual NodeType type() const override;
 };
 
 
