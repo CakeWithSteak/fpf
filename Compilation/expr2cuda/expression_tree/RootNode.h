@@ -12,6 +12,8 @@ public:
     RootNode(RootNode&& other) noexcept;
     RootNode& operator= (RootNode&& other) noexcept;
     RootNode& operator= (RootNode& other) = delete;
+
+    virtual NodeType type() const override;
 };
 
 

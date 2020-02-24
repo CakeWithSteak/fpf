@@ -9,8 +9,11 @@ class ConstantNode : public ExpressionNode {
 public:
     virtual std::optional<OperatorTraits> getOperator() const override;
     virtual std::string getCudaCode() const override;
+    std::complex<float> value();
 
     explicit ConstantNode(const std::complex<float>& num) : num(num) {}
+
+    virtual NodeType type() const override;
 };
 
 

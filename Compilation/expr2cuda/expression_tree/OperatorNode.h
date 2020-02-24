@@ -11,6 +11,8 @@ public:
     virtual std::string getCudaCode() const override;
 
     explicit OperatorNode(OperatorTraits traits) : opTraits{traits} {}
+
+    virtual NodeType type() const override;
 };
 
 

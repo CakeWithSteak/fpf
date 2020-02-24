@@ -124,6 +124,7 @@ std::string getCudaCode() {
     std::string expr;
     std::getline(std::cin, expr);
     auto cudaCode = compileExpression(expr);
+    std::cout << "CUDA expression: " << cudaCode << "\n\n" << std::flush;
     auto finalCode = runtimeTemplateCode + cudaCode + "}";
     return finalCode;
 }
@@ -141,7 +142,6 @@ int main() {
     std::ios::sync_with_stdio(false);
 
     auto cudaCode = getCudaCode();
-    std::cout << cudaCode << "\n\n//////////\n\n";
 
     Viewport viewport(0, 2);
 

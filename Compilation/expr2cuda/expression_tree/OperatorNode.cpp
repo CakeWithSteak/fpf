@@ -12,3 +12,7 @@ std::string OperatorNode::getCudaCode() const {
     result[result.size() - 1] = ')'; // Cut the trailing comma
     return result;
 }
+
+NodeType OperatorNode::type() const{
+    return NodeType::OPERATOR;
+}
