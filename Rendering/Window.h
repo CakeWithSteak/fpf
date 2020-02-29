@@ -2,7 +2,6 @@
 #include <string>
 #include <map>
 #include <list>
-#include <any>
 #include "GLFW/glfw3.h"
 
 class Window {

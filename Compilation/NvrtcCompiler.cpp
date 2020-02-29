@@ -6,8 +6,8 @@ CUfunction NvrtcCompiler::Compile(std::string_view code, std::string_view filena
     nvrtcProgram program;
     NVRTC_SAFE(nvrtcCreateProgram(&program, code.data(), filename.data(), 0, nullptr, nullptr));
     NVRTC_SAFE(nvrtcAddNameExpression(program, functionName.data()));
-    const char* compileArgs[] = {"--gpu-architecture=compute_61", "--include-path=/usr/local/cuda/include/", "-std=c++14", "-ewp"};
-    nvrtcResult compileResult = nvrtcCompileProgram(program, 4, compileArgs); //todo more options for optimization
+    const char* compileArgs[] = {"--gpu-architecture=compute_61", "--include-path=/usr/local/cuda/include/", "-std=c++14", "-ewp"}; //todo autodetect sm
+    nvrtcResult compileResult = nvrtcCompileProgram(program, 4, compileArgs);
     if(compileResult != NVRTC_SUCCESS) {
         size_t logSize;
         NVRTC_SAFE(nvrtcGetProgramLogSize(program, &logSize));
@@ -19,7 +19,7 @@ CUfunction NvrtcCompiler::Compile(std::string_view code, std::string_view filena
     NVRTC_SAFE(nvrtcGetPTXSize(program, &ptxSize));
     char* ptx = new char[ptxSize];
     NVRTC_SAFE(nvrtcGetPTX(program, ptx));
-    const char* loweredName;
+    const char* loweredName; //The mangled name of the function
     NVRTC_SAFE(nvrtcGetLoweredName(program, functionName.data(), &loweredName));
 
     CUDA_SAFE(cuModuleLoadDataEx(&module, ptx, 0, nullptr, nullptr));

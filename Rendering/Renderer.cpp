@@ -8,7 +8,7 @@
 #include <driver_types.h>
 #include "../Computation/safeCall.h"
 
-std::pair<fpdist_t, fpdist_t> interleavedMinmax(fpdist_t* buffer, size_t size);
+std::pair<fpdist_t, fpdist_t> interleavedMinmax(const fpdist_t* buffer, size_t size);
 
 float data[] = {
     //XY position and UV coordinates
@@ -50,6 +50,7 @@ void Renderer::initTexture() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
 
+    //Allocates one-channel int32 texture
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32I, width, height);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -114,7 +115,7 @@ void Renderer::initCuda() {
     numBlocks = (width * height) / 1024;
     if((width * height) % 1024 != 0)
         ++numBlocks;
-    CUDA_SAFE(cudaMallocManaged(&cudaBuffer, 2 * numBlocks * sizeof(int)));
+    CUDA_SAFE(cudaMallocManaged(&cudaBuffer, 2 * numBlocks * sizeof(int))); //Buffer for min/max fpdist values
     CUDA_SAFE(cudaGraphicsGLRegisterImage(&cudaSurfaceRes, texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
     cudaSurfaceDesc.resType = cudaResourceTypeArray;
 }
@@ -163,7 +164,7 @@ std::string Renderer::getPerformanceReport() {
     return pm.generateReports();
 }
 
-std::pair<fpdist_t, fpdist_t> interleavedMinmax(fpdist_t* buffer, size_t size) {
+std::pair<fpdist_t, fpdist_t> interleavedMinmax(const fpdist_t* buffer, size_t size) {
     int min = std::numeric_limits<int>::max();
     int max = std::numeric_limits<int>::min();
     for(int i = 0; i < size; i += 2) {
