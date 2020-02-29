@@ -172,4 +172,5 @@ int main() {
         if(!repaintNeeded)
             std::this_thread::sleep_for(40ms);
     }
+    std::cout << "\n" << renderer.getPerformanceReport();
 }
