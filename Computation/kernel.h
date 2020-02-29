@@ -1,5 +1,4 @@
 #pragma once
-
 #include "kernel_types.h"
 #include "safeCall.h"
 #include <cuda.h>

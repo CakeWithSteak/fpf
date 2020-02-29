@@ -1,5 +1,4 @@
 #include <iostream>
-#include <functional>
 #include "glad/glad.h"
 #include "Window.h"
 

@@ -13,6 +13,6 @@ std::string OperatorNode::getCudaCode() const {
     return result;
 }
 
-NodeType OperatorNode::type() const{
+NodeType OperatorNode::type() const {
     return NodeType::OPERATOR;
 }

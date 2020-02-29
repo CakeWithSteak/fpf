@@ -1,5 +1,4 @@
 #pragma once
-
 #include <map>
 #include "OperatorTraits.h"
 
@@ -27,6 +26,7 @@ const std::map<std::string, OperatorTraits> operatorLookup {
         {"arg", {"arg", true, 1, "carg"}},
 };
 
+//Maps the unary operator to its function form
 const std::map<std::string, std::string> unaryOperatorLookup {
         {"+", ""},
         {"-", "neg"},

@@ -1,3 +1,9 @@
+/*
+ * This file is preprocessed to create kernel.ii, which is included in runtime_template.h
+ * Normal preprocessor directives are processed build-time, while the ones marked with DEFER_TO_NVRTC_PREPROCESSOR
+ *  are processed runtime by NVRTC.
+ */
+
 // Hack for proper code insights
 #ifndef BUILD_FOR_NVRTC
 #pragma clang diagnostic push
@@ -66,6 +72,7 @@ __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare
 
     if (!threadIsExcessive) surf2Dwrite(fpDist, surface, x * sizeof(int), y);
 
+    //Find the min/max of this warp and write it to minmaxBlock
     fpdist_t min_ = (fpDist == -1) ? maxIters + 2 : fpDist;
     fpdist_t max_ = fpDist;
     for (int delta = 16; delta > 0; delta >>= 1) {
@@ -75,6 +82,7 @@ __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare
     if (warp.thread_rank() == 0) minmaxBlock[tid / 32] = make_fpdist2(min_, max_);
     block.sync();
 
+    //The first warp calculates the min/max of the whole block and writes it to the output buffer
     if (tid < 32) {
         fpdist2 value = minmaxBlock[tid];
         min_ = value.x;
