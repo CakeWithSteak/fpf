@@ -125,12 +125,16 @@ Renderer::~Renderer() {
 }
 
 void Renderer::render(fpdist_t maxIters, float tolerance) {
+    pm.enter(PERF_RENDER);
     auto [start, end] = viewport.getCorners();
 
     CUDA_SAFE(cudaGraphicsMapResources(1, &cudaSurfaceRes));
     auto surface = createSurface();
+
+    pm.enter(PERF_KERNEL);
     launch_kernel(kernel, start.real(), end.real(), start.imag(), end.imag(), tolerance, maxIters, cudaBuffer, surface, width, height);
     CUDA_SAFE(cudaDeviceSynchronize());
+    pm.exit(PERF_KERNEL);
 
     CUDA_SAFE(cudaDestroySurfaceObject(surface));
     CUDA_SAFE(cudaGraphicsUnmapResources(1, &cudaSurfaceRes));
@@ -141,6 +145,7 @@ void Renderer::render(fpdist_t maxIters, float tolerance) {
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     std::cout << "Min: " << min << " max: " << max << "\n";
+    pm.exit(PERF_RENDER);
 }
 
 cudaSurfaceObject_t Renderer::createSurface() {
@@ -152,6 +157,10 @@ cudaSurfaceObject_t Renderer::createSurface() {
 
 void Renderer::initKernel(std::string_view cudaCode) {
     kernel = compiler.Compile(cudaCode, "runtime.cu", "kernel");
+}
+
+std::string Renderer::getPerformanceReport() {
+    return pm.generateReports();
 }
 
 std::pair<fpdist_t, fpdist_t> interleavedMinmax(fpdist_t* buffer, size_t size) {

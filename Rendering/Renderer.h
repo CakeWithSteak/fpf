@@ -4,6 +4,7 @@
 #include "../Computation/kernel.h"
 #include "../utils/Viewport.h"
 #include "../Compilation/NvrtcCompiler.h"
+#include "../utils/PerformanceMonitor.h"
 
 class Renderer {
     int width;
@@ -22,6 +23,10 @@ class Renderer {
     NvrtcCompiler compiler;
     CUfunction kernel;
 
+    PerformanceMonitor pm{"CUDA kernel time", "Total render time"};
+    static constexpr size_t PERF_KERNEL = 0;
+    static constexpr size_t PERF_RENDER = 1;
+
     void init(std::string_view cudaCode);
     void initTexture();
     void initShaders();
@@ -34,6 +39,7 @@ public:
     ~Renderer();
 
     void render(fpdist_t maxIters, float tolerance);
+    std::string getPerformanceReport();
 };
 
 
