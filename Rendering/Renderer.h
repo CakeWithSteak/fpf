@@ -37,7 +37,7 @@ public:
             : width(width), height(height), viewport(viewport) {init(cudaCode);}
     ~Renderer();
 
-    void render(fpdist_t maxIters, float tolerance);
+    void render(fpdist_t maxIters, float tolerance, const std::complex<float>& p);
     std::string getPerformanceReport();
 };
 

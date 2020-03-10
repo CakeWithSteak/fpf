@@ -125,7 +125,7 @@ Renderer::~Renderer() {
     CUDA_SAFE(cudaFree(cudaBuffer));
 }
 
-void Renderer::render(fpdist_t maxIters, float tolerance) {
+void Renderer::render(fpdist_t maxIters, float tolerance, const std::complex<float>& p) {
     pm.enter(PERF_RENDER);
     auto [start, end] = viewport.getCorners();
 
@@ -133,7 +133,7 @@ void Renderer::render(fpdist_t maxIters, float tolerance) {
     auto surface = createSurface();
 
     pm.enter(PERF_KERNEL);
-    launch_kernel(kernel, start.real(), end.real(), start.imag(), end.imag(), tolerance, maxIters, cudaBuffer, surface, width, height);
+    launch_kernel(kernel, start.real(), end.real(), start.imag(), end.imag(), tolerance, maxIters, cudaBuffer, surface, width, height, p.real(), p.imag());
     CUDA_SAFE(cudaDeviceSynchronize());
     pm.exit(PERF_KERNEL);
 
