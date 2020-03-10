@@ -22,7 +22,7 @@
 DEFER_TO_NVRTC_PREPROCESSOR #include <cooperative_groups.h>
 
 namespace cg = cooperative_groups;
-__device__ __inline__ complex F(complex z);
+__device__ __inline__ complex F(complex z, complex p);
 
 __device__ __inline__ bool withinTolerance(float2 a, float2 b, float tsquare) {
     float xdist = a.x - b.x;
@@ -39,10 +39,10 @@ __device__ __inline__ float2 getZ(float re0, float re1, float im0, float im1, in
     );
 }
 
-__device__ fpdist_t findFixedPointDist(float2 z, float tsquare, fpdist_t maxIters) {
+__device__ fpdist_t findFixedPointDist(complex z, float tsquare, fpdist_t maxIters, complex p) {
     float2 last = z;
     for(fpdist_t i = 0; i < maxIters; ++i) {
-        z = F(z);
+        z = F(z, p);
         if(withinTolerance(z, last, tsquare))
             return i + 1;
         last = z;
@@ -50,7 +50,7 @@ __device__ fpdist_t findFixedPointDist(float2 z, float tsquare, fpdist_t maxIter
     return -1;
 }
 
-__global__ void kernel(float re0, float re1, float im0, float im1, float tsquare, fpdist_t maxIters, fpdist_t* minmaxOut, cudaSurfaceObject_t surface, int surfW, int surfH) {
+__global__ void kernel(float re0, float re1, float im0, float im1, float tsquare, fpdist_t maxIters, fpdist_t* minmaxOut, cudaSurfaceObject_t surface, int surfW, int surfH, float pre, float pim) {
     __shared__ fpdist2 minmaxBlock[32];
     cg::thread_block block = cg::this_thread_block();
     cg::thread_block_tile<32> warp = cg::tiled_partition<32>(block);
@@ -66,7 +66,7 @@ __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare
     if (!threadIsExcessive) {
         //Find a z for this thread
         float2 z = getZ(re0, re1, im0, im1, surfW, surfH, x, y);
-        fpDist = findFixedPointDist(z, tsquare, maxIters);
+        fpDist = findFixedPointDist(z, tsquare, maxIters, make_complex(pre, pim));
     }
     warp.sync();
 
@@ -95,7 +95,7 @@ __global__ void kernel(float re0, float re1, float im0, float im1, float tsquare
     }
 }
 
-__device__ __inline__ complex F(complex z) {
+__device__ __inline__ complex F(complex z, complex p) {
     /*Generated code goes here*/
 //}
 #ifndef BUILD_FOR_NVRTC

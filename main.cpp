@@ -59,7 +59,7 @@ void APIENTRY glDebugCallback(GLenum source,
     std::cout << std::endl;
 }
 
-bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& tolerance, float deltaTime, float moveStep, float zoomStep, float tolStep) {
+bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& tolerance, std::complex<float>& p, float deltaTime, float moveStep, float zoomStep, float tolStep, float pStep) {
     deltaTime = std::clamp(deltaTime, 0.0f, 1.0f);
     bool inputReceived = false;
 
@@ -116,6 +116,27 @@ bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& tole
         std::cout << "Tolerance: " << tolerance << std::endl;
         inputReceived = true;
     }
+    if(window.isKeyPressed(GLFW_KEY_W)) {
+        p.imag(p.imag() + pStep * deltaTime);
+        std::cout << "p = " << p << std::endl;
+        inputReceived = true;
+    }
+    if(window.isKeyPressed(GLFW_KEY_S)) {
+        p.imag(p.imag() - pStep * deltaTime);
+        std::cout << "p = " << p << std::endl;
+        inputReceived = true;
+    }
+    if(window.isKeyPressed(GLFW_KEY_D)) {
+        p.real(p.real() + pStep * deltaTime);
+        std::cout << "p = " << p << std::endl;
+        inputReceived = true;
+    }
+    if(window.isKeyPressed(GLFW_KEY_A)) {
+        p.real(p.real() - pStep * deltaTime);
+        std::cout << "p = " << p << std::endl;
+        inputReceived = true;
+    }
+
     return inputReceived;
 }
 
@@ -136,9 +157,11 @@ int main() {
     constexpr int WIN_WIDTH = 1024;
     int maxIters = 128;
     float tolerance = 0.01;
+    std::complex<float> p{0};
     constexpr float MOVE_STEP = 2.0f;
     constexpr float ZOOM_STEP = 0.4f;
     constexpr float TOL_STEP = 0.0001f;
+    constexpr float PARAM_STEP = 0.05f;
     std::ios::sync_with_stdio(false);
 
     auto cudaCode = getCudaCode();
@@ -153,18 +176,18 @@ int main() {
 
     //First render
     glClear(GL_COLOR_BUFFER_BIT);
-    renderer.render(maxIters, tolerance);
+    renderer.render(maxIters, tolerance, p);
     window.swapBuffers();
     window.poll();
 
     Timer timer;
     while(!window.shouldClose()) {
-        bool repaintNeeded = handleInputs(window, viewport, maxIters, tolerance, timer.getSeconds(), MOVE_STEP, ZOOM_STEP, TOL_STEP);
+        bool repaintNeeded = handleInputs(window, viewport, maxIters, tolerance, p, timer.getSeconds(), MOVE_STEP, ZOOM_STEP, TOL_STEP, PARAM_STEP);
         timer.reset();
 
         if(repaintNeeded) {
             glClear(GL_COLOR_BUFFER_BIT);
-            renderer.render(maxIters, tolerance);
+            renderer.render(maxIters, tolerance, p);
             window.poll(); // The Renderer call may take a long time, so we poll here to ensure responsiveness
             window.swapBuffers();
         }
