@@ -22,7 +22,7 @@ float data[] = {
      1, -1,  1, 1, //bottom right
 };
 
-void Renderer::init(std::string_view cudaCode, DistanceMetric metric) {
+void Renderer::init(std::string_view cudaCode) {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
@@ -42,7 +42,7 @@ void Renderer::init(std::string_view cudaCode, DistanceMetric metric) {
     initTexture();
     initShaders();
     initCuda();
-    initKernel(cudaCode, metric);
+    initKernel(cudaCode);
 }
 
 void Renderer::initTexture() {
@@ -125,7 +125,7 @@ Renderer::~Renderer() {
     CUDA_SAFE(cudaFree(cudaBuffer));
 }
 
-void Renderer::render(dist_t maxIters, float tolerance, const std::complex<float>& p) {
+void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float>& p) {
     pm.enter(PERF_RENDER);
     auto [start, end] = viewport.getCorners();
 
@@ -133,7 +133,7 @@ void Renderer::render(dist_t maxIters, float tolerance, const std::complex<float
     auto surface = createSurface();
 
     pm.enter(PERF_KERNEL);
-    launch_kernel(kernel, start.real(), end.real(), start.imag(), end.imag(), tolerance, maxIters, cudaBuffer, surface, width, height, p.real(), p.imag());
+    launch_kernel(kernel, start.real(), end.real(), start.imag(), end.imag(), maxIters, cudaBuffer, surface, width, height, p.real(), p.imag(), prepMetricArg(metric, metricArg));
     CUDA_SAFE(cudaDeviceSynchronize());
     pm.exit(PERF_KERNEL);
 
@@ -156,7 +156,7 @@ cudaSurfaceObject_t Renderer::createSurface() {
     return surface;
 }
 
-void Renderer::initKernel(std::string_view cudaCode, DistanceMetric metric) {
+void Renderer::initKernel(std::string_view cudaCode) {
     kernel = compiler.Compile(cudaCode, "runtime.cu", "kernel", metric);
 }
 
