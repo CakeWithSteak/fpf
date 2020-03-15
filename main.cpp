@@ -153,7 +153,7 @@ std::string getCudaCode() {
 }
 
 ModeInfo getMode() {
-    DistanceMetric metric = JULIA; //todo cli
+    DistanceMetric metric = FIXEDPOINT_EUCLIDEAN; //todo cli
     auto mode = modes.at(metric);
     return mode;
 }
