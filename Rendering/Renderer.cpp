@@ -50,8 +50,8 @@ void Renderer::initTexture() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    //Allocates one-channel int32 texture
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32I, width, height);
+    //Allocates one-channel float32 texture
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F, width, height);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -141,8 +141,8 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
     CUDA_SAFE(cudaGraphicsUnmapResources(1, &cudaSurfaceRes));
 
     auto [min, max] = interleavedMinmax(cudaBuffer, 2 * numBlocks);
-    glUniform1i(minimumUniform, min);
-    glUniform1i(maximumUniform, max);
+    glUniform1f(minimumUniform, min);
+    glUniform1f(maximumUniform, max);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     std::cout << "Min: " << min << " max: " << max << "\n";
@@ -165,8 +165,8 @@ std::string Renderer::getPerformanceReport() {
 }
 
 std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size) {
-    int min = std::numeric_limits<int>::max();
-    int max = std::numeric_limits<int>::min();
+    dist_t min = std::numeric_limits<dist_t>::max();
+    dist_t max = std::numeric_limits<dist_t>::min();
     for(int i = 0; i < size; i += 2) {
         if(buffer[i] < min)
             min = buffer[i];

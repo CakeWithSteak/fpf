@@ -3,9 +3,9 @@ R"(
 
 in vec2 vTexCoords;
 
-uniform isampler2D distances;
-uniform int minDist;
-uniform int maxDist;
+uniform sampler2D distances;
+uniform float minDist;
+uniform float maxDist;
 
 out vec4 fragColor;
 
@@ -36,7 +36,7 @@ float mapHue(float distance) {
 }
 
 void main() {
-    int distance = texture(distances, vTexCoords).r;
+    float distance = texture(distances, vTexCoords).r;
     if(distance == -1) {
         fragColor = vec4(0, 0, 0, 1);
     } else {
