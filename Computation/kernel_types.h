@@ -3,9 +3,9 @@
 #include <builtin_types.h>
 #endif
 
-using dist_t = int;
-using dist2 = int2;
-#define make_dist2 make_int2
+using dist_t = float;
+using dist2 = float2;
+#define make_dist2 make_float2
 using complex = float2;
 
 #ifdef BUILD_FOR_NVRTC
