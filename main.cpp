@@ -162,6 +162,7 @@ int main() {
     constexpr float ZOOM_STEP = 0.4f;
     constexpr float TOL_STEP = 0.0001f;
     constexpr float PARAM_STEP = 0.05f;
+    constexpr DistanceMetric metric = FIXEDPOINT_ITERATIONS;
     std::ios::sync_with_stdio(false);
 
     auto cudaCode = getCudaCode();
@@ -172,7 +173,7 @@ int main() {
     window.setSwapInterval(1);
     window.enableGLDebugMessages(glDebugCallback);
 
-    Renderer renderer(WIN_WIDTH, WIN_HEIGHT, viewport, cudaCode);
+    Renderer renderer(WIN_WIDTH, WIN_HEIGHT, viewport, metric, cudaCode);
 
     //First render
     glClear(GL_COLOR_BUFFER_BIT);

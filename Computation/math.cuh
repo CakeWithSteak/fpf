@@ -8,7 +8,6 @@
 
 #include "kernel_macros.cuh"
 #include "kernel_stdint.cuh"
-using complex = float2;
 
 DEFER_TO_NVRTC_PREPROCESSOR #include <cuComplex.h>
 DEFER_TO_NVRTC_PREPROCESSOR #define make_complex make_float2

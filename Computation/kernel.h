@@ -8,7 +8,7 @@ inline unsigned int ceilDivide(unsigned int x, unsigned int y) {
     return (x + y - 1) / y;
 }
 
-inline void launch_kernel(CUfunction kernel, float re0, float re1, float im0, float im1, float tolerance, fpdist_t maxIters, fpdist_t* minmaxOut, cudaSurfaceObject_t surface, int surfW, int surfH, float pre, float pim) {
+inline void launch_kernel(CUfunction kernel, float re0, float re1, float im0, float im1, float tolerance, dist_t maxIters, dist_t* minmaxOut, cudaSurfaceObject_t surface, int surfW, int surfH, float pre, float pim) {
     constexpr unsigned int BLOCK_SIZE = 1024;
 
     auto tsquare = tolerance * tolerance;

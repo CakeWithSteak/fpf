@@ -18,7 +18,7 @@ class Renderer {
     int maximumUniform;
     cudaGraphicsResource_t cudaSurfaceRes = nullptr;
     cudaResourceDesc cudaSurfaceDesc;
-    fpdist_t* cudaBuffer = nullptr;
+    dist_t* cudaBuffer = nullptr;
     NvrtcCompiler compiler;
     CUfunction kernel;
 
@@ -26,18 +26,18 @@ class Renderer {
     static constexpr size_t PERF_KERNEL = 0;
     static constexpr size_t PERF_RENDER = 1;
 
-    void init(std::string_view cudaCode);
+    void init(std::string_view cudaCode, DistanceMetric metric);
     void initTexture();
     void initShaders();
     void initCuda();
-    void initKernel(std::string_view cudaCode);
+    void initKernel(std::string_view cudaCode, DistanceMetric metric);
     cudaSurfaceObject_t createSurface();
 public:
-    Renderer(int width, int height, const Viewport& viewport, std::string_view cudaCode)
-            : width(width), height(height), viewport(viewport) {init(cudaCode);}
+    Renderer(int width, int height, const Viewport& viewport, DistanceMetric metric, std::string_view cudaCode)
+            : width(width), height(height), viewport(viewport) {init(cudaCode, metric);}
     ~Renderer();
 
-    void render(fpdist_t maxIters, float tolerance, const std::complex<float>& p);
+    void render(dist_t maxIters, float tolerance, const std::complex<float>& p);
     std::string getPerformanceReport();
 };
 
