@@ -1,11 +1,6 @@
 #pragma once
 #include "../kernel_types.h"
-
-__device__ __inline__ bool withinTolerance(float2 a, float2 b, float tsquare) {
-    float xdist = a.x - b.x;
-    float ydist = a.y - b.y;
-    return (xdist * xdist + ydist * ydist) <= tsquare;
-}
+#include "utils.cuh"
 
 __device__ __inline__ dist_t fixedPointDist(complex z, dist_t maxIters, complex p, float tsquare) {
     float2 last = z;

@@ -7,11 +7,14 @@
 #include "kernel_macros.cuh"
 #include "distance_metrics/fixedpoint.cuh"
 #include "distance_metrics/julia.cuh"
+#include "distance_metrics/fixedpoint_euclid.cuh"
 
 DEFER_TO_NVRTC_PREPROCESSOR #ifdef FIXEDPOINT_ITERATIONS
 DEFER_TO_NVRTC_PREPROCESSOR #define DIST_F fixedPointDist
 DEFER_TO_NVRTC_PREPROCESSOR #elif defined(JULIA)
 DEFER_TO_NVRTC_PREPROCESSOR #define DIST_F juliaDist
+DEFER_TO_NVRTC_PREPROCESSOR #elif defined(FIXEDPOINT_EUCLIDEAN)
+DEFER_TO_NVRTC_PREPROCESSOR #define DIST_F fixedPointDistEuclid
 DEFER_TO_NVRTC_PREPROCESSOR #else
 DEFER_TO_NVRTC_PREPROCESSOR #error "Invalid distance metric."
 DEFER_TO_NVRTC_PREPROCESSOR #endif
@@ -20,11 +23,12 @@ DEFER_TO_NVRTC_PREPROCESSOR #endif
 
 enum DistanceMetric {
     FIXEDPOINT_ITERATIONS,
+    FIXEDPOINT_EUCLIDEAN,
     JULIA
 };
 
 inline float prepMetricArg(DistanceMetric metric, float arg) {
-    if(metric == FIXEDPOINT_ITERATIONS || metric == JULIA)
+    if(metric == FIXEDPOINT_ITERATIONS || metric == JULIA || metric == FIXEDPOINT_EUCLIDEAN)
         return arg* arg;
     return arg;
 }
