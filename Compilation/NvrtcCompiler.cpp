@@ -10,13 +10,13 @@ std::string defineMacro(const std::string& name) {
     return prefix + name;
 }
 
-std::vector<char*> getCompileArgs(DistanceMetric metric) {
+std::vector<char*> getCompileArgs(const ModeInfo& mode) {
     std::vector<std::string> args;
     args.push_back("--gpu-architecture=compute_61"); //todo autodetect sm
     args.push_back("--include-path=/usr/local/cuda/include/");
     args.push_back("-std=c++14");
     args.push_back("-ewp");
-    args.push_back(defineMacro(metricMacroMap.at(metric)));
+    args.push_back(defineMacro(mode.internalName));
     std::vector<char*> res;
     for(int i = 0; i < args.size(); ++i) {
         res.push_back(new char[args[i].size() + 1]);
@@ -25,11 +25,11 @@ std::vector<char*> getCompileArgs(DistanceMetric metric) {
     return res;
 }
 
-CUfunction NvrtcCompiler::Compile(std::string_view code, std::string_view filename, std::string_view functionName, DistanceMetric metric) {
+CUfunction NvrtcCompiler::Compile(std::string_view code, std::string_view filename, std::string_view functionName, const ModeInfo& mode) {
     nvrtcProgram program;
     NVRTC_SAFE(nvrtcCreateProgram(&program, code.data(), filename.data(), 0, nullptr, nullptr));
     NVRTC_SAFE(nvrtcAddNameExpression(program, functionName.data()));
-    const auto compileArgs = getCompileArgs(metric);
+    const auto compileArgs = getCompileArgs(mode);
     nvrtcResult compileResult = nvrtcCompileProgram(program, compileArgs.size(), compileArgs.data());
     if(compileResult != NVRTC_SUCCESS) {
         size_t logSize;

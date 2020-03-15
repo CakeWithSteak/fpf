@@ -18,18 +18,9 @@ DEFER_TO_NVRTC_PREPROCESSOR #endif
 #else
 #include <map>
 
-#ifdef __cplusplus
-#elif JULIA
-#endif
-
 enum DistanceMetric {
     FIXEDPOINT_ITERATIONS,
     JULIA
-};
-
-const std::map<DistanceMetric, std::string> metricMacroMap {
-        {FIXEDPOINT_ITERATIONS, "FIXEDPOINT_ITERATIONS"},
-        {JULIA, "JULIA"},
 };
 
 inline float prepMetricArg(DistanceMetric metric, float arg) {

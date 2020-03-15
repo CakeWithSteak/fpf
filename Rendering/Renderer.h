@@ -1,16 +1,16 @@
 #pragma once
 #include <complex>
 #include "../Computation/kernel.h"
-#include "../Computation/metrics.h"
 #include "../utils/Viewport.h"
 #include "../Compilation/NvrtcCompiler.h"
 #include "../utils/PerformanceMonitor.h"
+#include "../utils/ModeInfo.h"
 
 class Renderer {
     int width;
     int height;
     const Viewport& viewport;
-    DistanceMetric metric;
+    ModeInfo mode;
 
     int numBlocks;
     unsigned int texture;
@@ -35,8 +35,8 @@ class Renderer {
     void initKernel(std::string_view cudaCode);
     cudaSurfaceObject_t createSurface();
 public:
-    Renderer(int width, int height, const Viewport& viewport, DistanceMetric metric, std::string_view cudaCode)
-            : width(width), height(height), viewport(viewport), metric(metric) {init(cudaCode);}
+    Renderer(int width, int height, const Viewport& viewport, const ModeInfo& mode, std::string_view cudaCode)
+            : width(width), height(height), viewport(viewport), mode(mode) {init(cudaCode);}
     ~Renderer();
 
     void render(dist_t maxIters, float metricArg, const std::complex<float>& p);
