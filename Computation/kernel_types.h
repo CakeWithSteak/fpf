@@ -8,17 +8,6 @@ using dist2 = int2;
 #define make_dist2 make_int2
 using complex = float2;
 
-#ifndef BUILD_FOR_NVRTC
-#include <map>
-
-enum DistanceMetric {
-    FIXEDPOINT_ITERATIONS
-};
-
-const std::map<DistanceMetric, std::string> metricMacroMap {
-        {FIXEDPOINT_ITERATIONS, "FIXEDPOINT_ITERATIONS"}
-};
-
-#else
+#ifdef BUILD_FOR_NVRTC
 __device__ __inline__ complex F(complex z, complex p); //Forward declaration for generated code
 #endif

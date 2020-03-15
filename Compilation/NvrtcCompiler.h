@@ -3,6 +3,7 @@
 #include <cuda_runtime.h>
 #include <cuda.h>
 #include "../Computation/kernel_types.h"
+#include "../Computation/metrics.h"
 
 class NvrtcCompiler {
     CUmodule module = nullptr;

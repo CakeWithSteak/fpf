@@ -11,6 +11,9 @@
 
 using namespace std::chrono_literals;
 
+//todo stop calling metric arg tolerance
+//todo auto deafult metric args
+
 //https://learnopengl.com/In-Practice/Debugging
 void APIENTRY glDebugCallback(GLenum source,
                             GLenum type,
@@ -106,13 +109,13 @@ bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& tole
     }
     if(window.isKeyPressed(GLFW_KEY_0)) {
         tolerance += tolStep;
-        tolerance = std::clamp(tolerance, 0.0f, 2.0f);
+        tolerance = std::clamp(tolerance, 0.0f, 10000.0f);
         std::cout << "Tolerance: " << tolerance << std::endl;
         inputReceived = true;
     }
     if(window.isKeyPressed(GLFW_KEY_9)) {
         tolerance -= tolStep;
-        tolerance = std::clamp(tolerance, 0.0f, 2.0f);
+        tolerance = std::clamp(tolerance, 0.0f, 10000.0f);
         std::cout << "Tolerance: " << tolerance << std::endl;
         inputReceived = true;
     }
@@ -156,13 +159,13 @@ int main() {
     constexpr int WIN_HEIGHT = 1024;
     constexpr int WIN_WIDTH = 1024;
     int maxIters = 128;
-    float tolerance = 0.01;
+    float tolerance = 10; //0.01
     std::complex<float> p{0};
     constexpr float MOVE_STEP = 2.0f;
     constexpr float ZOOM_STEP = 0.4f;
-    constexpr float TOL_STEP = 0.0001f;
+    constexpr float TOL_STEP = 0.05f; //0.0001
     constexpr float PARAM_STEP = 0.05f;
-    constexpr DistanceMetric metric = FIXEDPOINT_ITERATIONS;
+    constexpr DistanceMetric metric = JULIA;
     std::ios::sync_with_stdio(false);
 
     auto cudaCode = getCudaCode();
