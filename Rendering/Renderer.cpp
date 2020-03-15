@@ -8,7 +8,7 @@
 #include <driver_types.h>
 #include "../Computation/safeCall.h"
 
-std::pair<fpdist_t, fpdist_t> interleavedMinmax(const fpdist_t* buffer, size_t size);
+std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size);
 
 float data[] = {
     //XY position and UV coordinates
@@ -22,7 +22,7 @@ float data[] = {
      1, -1,  1, 1, //bottom right
 };
 
-void Renderer::init(std::string_view cudaCode) {
+void Renderer::init(std::string_view cudaCode, DistanceMetric metric) {
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
@@ -42,7 +42,7 @@ void Renderer::init(std::string_view cudaCode) {
     initTexture();
     initShaders();
     initCuda();
-    initKernel(cudaCode);
+    initKernel(cudaCode, metric);
 }
 
 void Renderer::initTexture() {
@@ -125,7 +125,7 @@ Renderer::~Renderer() {
     CUDA_SAFE(cudaFree(cudaBuffer));
 }
 
-void Renderer::render(fpdist_t maxIters, float tolerance, const std::complex<float>& p) {
+void Renderer::render(dist_t maxIters, float tolerance, const std::complex<float>& p) {
     pm.enter(PERF_RENDER);
     auto [start, end] = viewport.getCorners();
 
@@ -156,15 +156,15 @@ cudaSurfaceObject_t Renderer::createSurface() {
     return surface;
 }
 
-void Renderer::initKernel(std::string_view cudaCode) {
-    kernel = compiler.Compile(cudaCode, "runtime.cu", "kernel");
+void Renderer::initKernel(std::string_view cudaCode, DistanceMetric metric) {
+    kernel = compiler.Compile(cudaCode, "runtime.cu", "kernel", metric);
 }
 
 std::string Renderer::getPerformanceReport() {
     return pm.generateReports();
 }
 
-std::pair<fpdist_t, fpdist_t> interleavedMinmax(const fpdist_t* buffer, size_t size) {
+std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size) {
     int min = std::numeric_limits<int>::max();
     int max = std::numeric_limits<int>::min();
     for(int i = 0; i < size; i += 2) {
