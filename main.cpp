@@ -7,12 +7,11 @@
 #include "utils/Timer.h"
 #include "Compilation/compileExpression.h"
 #include "Computation/runtime_template.h"
+#include "utils/ModeInfo.h"
+#include "modes.h"
 
 
 using namespace std::chrono_literals;
-
-//todo stop calling metric arg tolerance
-//todo auto deafult metric args
 
 //https://learnopengl.com/In-Practice/Debugging
 void APIENTRY glDebugCallback(GLenum source,
@@ -62,7 +61,7 @@ void APIENTRY glDebugCallback(GLenum source,
     std::cout << std::endl;
 }
 
-bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& tolerance, std::complex<float>& p, float deltaTime, float moveStep, float zoomStep, float tolStep, float pStep) {
+bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& metricArg, std::complex<float>& p, float deltaTime, float moveStep, float zoomStep, float pStep, const ModeInfo& mode) {
     deltaTime = std::clamp(deltaTime, 0.0f, 1.0f);
     bool inputReceived = false;
 
@@ -108,15 +107,15 @@ bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& tole
         inputReceived = true;
     }
     if(window.isKeyPressed(GLFW_KEY_0)) {
-        tolerance += tolStep;
-        tolerance = std::clamp(tolerance, 0.0f, 10000.0f);
-        std::cout << "Tolerance: " << tolerance << std::endl;
+        metricArg += mode.argStep;
+        metricArg = std::clamp(metricArg, mode.argMin, mode.argMax);
+        std::cout << mode.argDisplayName << ": " << metricArg << std::endl;
         inputReceived = true;
     }
     if(window.isKeyPressed(GLFW_KEY_9)) {
-        tolerance -= tolStep;
-        tolerance = std::clamp(tolerance, 0.0f, 10000.0f);
-        std::cout << "Tolerance: " << tolerance << std::endl;
+        metricArg -= mode.argStep;
+        metricArg = std::clamp(metricArg, mode.argMin, mode.argMax);
+        std::cout << mode.argDisplayName << ": " << metricArg << std::endl;
         inputReceived = true;
     }
     if(window.isKeyPressed(GLFW_KEY_W)) {
@@ -153,45 +152,52 @@ std::string getCudaCode() {
     return finalCode;
 }
 
+ModeInfo getMode() {
+    DistanceMetric metric = JULIA; //todo cli
+    auto mode = modes.at(metric);
+    return mode;
+}
+
 //Precision very low at (1.0067,-1.219) -> (1.00677,-1.21893)
 
 int main() {
+    std::ios::sync_with_stdio(false);
     constexpr int WIN_HEIGHT = 1024;
     constexpr int WIN_WIDTH = 1024;
-    int maxIters = 128;
-    float tolerance = 10; //0.01
-    std::complex<float> p{0};
     constexpr float MOVE_STEP = 2.0f;
     constexpr float ZOOM_STEP = 0.4f;
-    constexpr float TOL_STEP = 0.05f; //0.0001
     constexpr float PARAM_STEP = 0.05f;
-    constexpr DistanceMetric metric = JULIA;
-    std::ios::sync_with_stdio(false);
+
+    ModeInfo mode = getMode();
+
+    int maxIters = 128;
+    float metricArg = mode.argInitValue;
+    std::complex<float> p{0};
 
     auto cudaCode = getCudaCode();
 
     Viewport viewport(0, 2);
 
-    Window window(WIN_WIDTH, WIN_HEIGHT, "Fixed point fractals", false);
+    Window window(WIN_WIDTH, WIN_HEIGHT, "Fixed point fractals - " + mode.displayName, false);
     window.setSwapInterval(1);
     window.enableGLDebugMessages(glDebugCallback);
 
-    Renderer renderer(WIN_WIDTH, WIN_HEIGHT, viewport, metric, cudaCode);
+    Renderer renderer(WIN_WIDTH, WIN_HEIGHT, viewport, mode, cudaCode);
 
     //First render
     glClear(GL_COLOR_BUFFER_BIT);
-    renderer.render(maxIters, tolerance, p);
+    renderer.render(maxIters, metricArg, p);
     window.swapBuffers();
     window.poll();
 
     Timer timer;
     while(!window.shouldClose()) {
-        bool repaintNeeded = handleInputs(window, viewport, maxIters, tolerance, p, timer.getSeconds(), MOVE_STEP, ZOOM_STEP, TOL_STEP, PARAM_STEP);
+        bool repaintNeeded = handleInputs(window, viewport, maxIters, metricArg, p, timer.getSeconds(), MOVE_STEP, ZOOM_STEP, PARAM_STEP, mode);
         timer.reset();
 
         if(repaintNeeded) {
             glClear(GL_COLOR_BUFFER_BIT);
-            renderer.render(maxIters, tolerance, p);
+            renderer.render(maxIters, metricArg, p);
             window.poll(); // The Renderer call may take a long time, so we poll here to ensure responsiveness
             window.swapBuffers();
         }

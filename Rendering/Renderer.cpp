@@ -133,7 +133,7 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
     auto surface = createSurface();
 
     pm.enter(PERF_KERNEL);
-    launch_kernel(kernel, start.real(), end.real(), start.imag(), end.imag(), maxIters, cudaBuffer, surface, width, height, p.real(), p.imag(), prepMetricArg(metric, metricArg));
+    launch_kernel(kernel, start.real(), end.real(), start.imag(), end.imag(), maxIters, cudaBuffer, surface, width, height, p.real(), p.imag(), prepMetricArg(mode.metric, metricArg));
     CUDA_SAFE(cudaDeviceSynchronize());
     pm.exit(PERF_KERNEL);
 
@@ -157,7 +157,7 @@ cudaSurfaceObject_t Renderer::createSurface() {
 }
 
 void Renderer::initKernel(std::string_view cudaCode) {
-    kernel = compiler.Compile(cudaCode, "runtime.cu", "kernel", metric);
+    kernel = compiler.Compile(cudaCode, "runtime.cu", "kernel", mode);
 }
 
 std::string Renderer::getPerformanceReport() {
