@@ -13,6 +13,8 @@ struct ModeInfo {
     float argStep;
     float argMin;
     float argMax;
+    bool disableArg = false;
+    bool disableIterations = false;
 };
 
 

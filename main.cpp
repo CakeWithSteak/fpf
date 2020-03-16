@@ -95,25 +95,25 @@ bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& metr
         viewport.moveTo({0,0});
         inputReceived = true;
     }
-    if(window.isKeyPressed(GLFW_KEY_KP_MULTIPLY) || window.isKeyPressed(GLFW_KEY_RIGHT_BRACKET)) {
+    if((window.isKeyPressed(GLFW_KEY_KP_MULTIPLY) || window.isKeyPressed(GLFW_KEY_RIGHT_BRACKET)) && !mode.disableIterations) {
         maxIters += 2;
         maxIters = std::clamp(maxIters, 1, 1024);
         std::cout << "Max iterations: " << maxIters << std::endl;
         inputReceived = true;
     }
-    if(window.isKeyPressed(GLFW_KEY_KP_DIVIDE) || window.isKeyPressed(GLFW_KEY_LEFT_BRACKET)) {
+    if((window.isKeyPressed(GLFW_KEY_KP_DIVIDE) || window.isKeyPressed(GLFW_KEY_LEFT_BRACKET)) && !mode.disableIterations) {
         maxIters -= 2;
         maxIters = std::clamp(maxIters, 1, 1024);
         std::cout << "Max iterations: " << maxIters << std::endl;
         inputReceived = true;
     }
-    if(window.isKeyPressed(GLFW_KEY_0)) {
+    if(window.isKeyPressed(GLFW_KEY_0) && !mode.disableArg) {
         metricArg += mode.argStep;
         metricArg = std::clamp(metricArg, mode.argMin, mode.argMax);
         std::cout << mode.argDisplayName << ": " << metricArg << std::endl;
         inputReceived = true;
     }
-    if(window.isKeyPressed(GLFW_KEY_9)) {
+    if(window.isKeyPressed(GLFW_KEY_9) && !mode.disableArg) {
         metricArg -= mode.argStep;
         metricArg = std::clamp(metricArg, mode.argMin, mode.argMax);
         std::cout << mode.argDisplayName << ": " << metricArg << std::endl;
