@@ -29,7 +29,7 @@ __device__ __inline__ float2 getZ(float re0, float re1, float im0, float im1, in
     float imStep = (im1 - im0) / height;
     return make_complex(
         re0 + reStep * x,
-        im0 + imStep * y
+        im0 + imStep * (width - y)
     );
 }
 
