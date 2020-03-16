@@ -166,7 +166,7 @@ std::string Renderer::getPerformanceReport() {
 
 std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size) {
     dist_t min = std::numeric_limits<dist_t>::max();
-    dist_t max = std::numeric_limits<dist_t>::min();
+    dist_t max = std::numeric_limits<dist_t>::lowest();
     for(int i = 0; i < size; i += 2) {
         if(buffer[i] < min)
             min = buffer[i];
