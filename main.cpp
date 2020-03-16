@@ -9,6 +9,7 @@
 #include "Computation/runtime_template.h"
 #include "utils/ModeInfo.h"
 #include "modes.h"
+#include "cli.h"
 
 
 using namespace std::chrono_literals;
@@ -142,47 +143,37 @@ bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& metr
     return inputReceived;
 }
 
-std::string getCudaCode() {
-    std::cout << "Expression> ";
-    std::string expr;
-    std::getline(std::cin, expr);
+std::string getCudaCode(const std::string& expr) {
     auto cudaCode = compileExpression(expr);
     std::cout << "CUDA expression: " << cudaCode << "\n\n" << std::flush;
     auto finalCode = runtimeTemplateCode + cudaCode + "}";
     return finalCode;
 }
 
-ModeInfo getMode() {
-    DistanceMetric metric = FIXEDPOINT_EUCLIDEAN; //todo cli
-    auto mode = modes.at(metric);
-    return mode;
-}
-
 //Precision very low at (1.0067,-1.219) -> (1.00677,-1.21893)
 
-int main() {
+int main(int argc, char** argv) {
     std::ios::sync_with_stdio(false);
-    constexpr int WIN_HEIGHT = 1024;
-    constexpr int WIN_WIDTH = 1024;
     constexpr float MOVE_STEP = 2.0f;
     constexpr float ZOOM_STEP = 0.4f;
     constexpr float PARAM_STEP = 0.05f;
 
-    ModeInfo mode = getMode();
+    Options opt = getOptions(argc, argv);
+    const ModeInfo mode = opt.mode;
 
     int maxIters = 128;
     float metricArg = mode.argInitValue;
     std::complex<float> p{0};
 
-    auto cudaCode = getCudaCode();
+    auto cudaCode = getCudaCode(opt.expression);
 
     Viewport viewport(0, 2);
 
-    Window window(WIN_WIDTH, WIN_HEIGHT, "Fixed point fractals - " + mode.displayName, false);
+    Window window(opt.width, opt.height, "Fixed point fractals - " + mode.displayName, false);
     window.setSwapInterval(1);
     window.enableGLDebugMessages(glDebugCallback);
 
-    Renderer renderer(WIN_WIDTH, WIN_HEIGHT, viewport, mode, cudaCode);
+    Renderer renderer(opt.width, opt.height, viewport, mode, cudaCode);
 
     //First render
     glClear(GL_COLOR_BUFFER_BIT);
