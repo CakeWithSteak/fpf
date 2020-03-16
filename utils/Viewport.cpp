@@ -17,10 +17,10 @@ void Viewport::move(Viewport::Direction dir, float step) {
         step *= breadth;
     switch(dir) {
         case Direction::UP:
-            center.imag(center.imag() - step);
+            center.imag(center.imag() + step);
             break;
         case Direction::DOWN:
-            center.imag(center.imag() + step);
+            center.imag(center.imag() - step);
             break;
         case Direction::RIGHT:
             center += step;
