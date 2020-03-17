@@ -22,17 +22,10 @@ vec3 hsv2rgb(vec3 c)
 float mapHue(float distance) {
     if(minDist == maxDist) return 0;
 
-    //Linear
-    //return (distance - minDist) / float(maxDist - minDist);
+    //Color cutoff may set a lower maxDist than the actual maximum we get from CUDA, so clamp it here.
+    distance = min(distance, maxDist);
 
-    //Better linear
     return (distance - minDist) * (maxHue/(maxDist - minDist));
-
-    //Everything is red
-    //return 0.8;
-
-    //1 is red
-    //return distance == 1 ? 0 : 0.5;
 }
 
 void main() {

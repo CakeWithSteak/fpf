@@ -62,7 +62,9 @@ void APIENTRY glDebugCallback(GLenum source,
     std::cout << std::endl;
 }
 
-bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& metricArg, std::complex<float>& p, float deltaTime, float moveStep, float zoomStep, float pStep, const ModeInfo& mode) {
+//todo refactor
+bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& metricArg, std::complex<float>& p, bool& colorCutoffEnabled, float& colorCutoff, float deltaTime, float moveStep, float zoomStep, float pStep, float colorCutoffStep, const ModeInfo& mode) {
+    static auto lastToggleTime = std::chrono::high_resolution_clock::now();
     deltaTime = std::clamp(deltaTime, 0.0f, 1.0f);
     bool inputReceived = false;
 
@@ -139,6 +141,23 @@ bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& metr
         std::cout << "p = " << p << std::endl;
         inputReceived = true;
     }
+    if(window.isKeyPressed(GLFW_KEY_C) && colorCutoffEnabled) {
+        colorCutoff += colorCutoffStep;
+        std::cout << "Color cutoff: " << colorCutoff << std::endl;
+        inputReceived = true;
+    }
+    if(window.isKeyPressed(GLFW_KEY_X) && colorCutoffEnabled) {
+        colorCutoff -= colorCutoffStep;
+        colorCutoff = std::max(colorCutoff, 0.0f);
+        std::cout << "Color cutoff: " << colorCutoff << std::endl;
+        inputReceived = true;
+    }
+    if(window.isKeyPressed(GLFW_KEY_Z) && std::chrono::high_resolution_clock::now() - lastToggleTime > 400ms) {
+        colorCutoffEnabled = !colorCutoffEnabled;
+        std::cout << "Color cutoff " << (colorCutoffEnabled ? "enabled" : "disabled") << std::endl;
+        lastToggleTime = std::chrono::high_resolution_clock::now();
+        inputReceived = true;
+    }
 
     return inputReceived;
 }
@@ -157,6 +176,7 @@ int main(int argc, char** argv) {
     constexpr float MOVE_STEP = 2.0f;
     constexpr float ZOOM_STEP = 0.4f;
     constexpr float PARAM_STEP = 0.05f;
+    constexpr float COLOR_CUTOFF_STEP = 0.1f;
 
     Options opt = getOptions(argc, argv);
     const ModeInfo mode = opt.mode;
@@ -164,6 +184,8 @@ int main(int argc, char** argv) {
     int maxIters = 128;
     float metricArg = mode.argInitValue;
     std::complex<float> p{0};
+    bool colorCutoffEnabled = (mode.defaultColorCutoff != -1);
+    float colorCutoff = colorCutoffEnabled ? mode.defaultColorCutoff : 10.0f;
 
     auto cudaCode = getCudaCode(opt.expression);
 
@@ -177,18 +199,19 @@ int main(int argc, char** argv) {
 
     //First render
     glClear(GL_COLOR_BUFFER_BIT);
-    renderer.render(maxIters, metricArg, p);
+    renderer.render(maxIters, metricArg, p, colorCutoffEnabled ? colorCutoff : std::numeric_limits<float>::max());
     window.swapBuffers();
     window.poll();
 
     Timer timer;
     while(!window.shouldClose()) {
-        bool repaintNeeded = handleInputs(window, viewport, maxIters, metricArg, p, timer.getSeconds(), MOVE_STEP, ZOOM_STEP, PARAM_STEP, mode);
+        bool repaintNeeded = handleInputs(window, viewport, maxIters, metricArg, p, colorCutoffEnabled, colorCutoff, timer.getSeconds(), MOVE_STEP, ZOOM_STEP, PARAM_STEP, COLOR_CUTOFF_STEP, mode);
         timer.reset();
 
         if(repaintNeeded) {
             glClear(GL_COLOR_BUFFER_BIT);
-            renderer.render(maxIters, metricArg, p);
+            float actualColorCutoff = colorCutoffEnabled ? colorCutoff : std::numeric_limits<float>::max();
+            renderer.render(maxIters, metricArg, p, actualColorCutoff);
             window.poll(); // The Renderer call may take a long time, so we poll here to ensure responsiveness
             window.swapBuffers();
         }

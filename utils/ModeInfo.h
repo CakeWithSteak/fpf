@@ -1,8 +1,6 @@
 #pragma once
 #include "../Computation/metrics.h"
 
-//todo different coloroing for different modes
-// Configuration data of a given mode
 struct ModeInfo {
     DistanceMetric metric;
     std::string displayName;
@@ -13,6 +11,7 @@ struct ModeInfo {
     float argStep;
     float argMin;
     float argMax;
+    float defaultColorCutoff = -1;
     bool disableArg = false;
     bool disableIterations = false;
 };
