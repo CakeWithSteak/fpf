@@ -125,7 +125,7 @@ Renderer::~Renderer() {
     CUDA_SAFE(cudaFree(cudaBuffer));
 }
 
-void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float>& p) {
+void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float>& p, float colorCutoff) {
     pm.enter(PERF_RENDER);
     auto [start, end] = viewport.getCorners();
 
@@ -142,7 +142,7 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
 
     auto [min, max] = interleavedMinmax(cudaBuffer, 2 * numBlocks);
     glUniform1f(minimumUniform, min);
-    glUniform1f(maximumUniform, max);
+    glUniform1f(maximumUniform, std::min(max, colorCutoff));
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     std::cout << "Min: " << min << " max: " << max << "\n";

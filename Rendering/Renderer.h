@@ -39,7 +39,7 @@ public:
             : width(width), height(height), viewport(viewport), mode(mode) {init(cudaCode);}
     ~Renderer();
 
-    void render(dist_t maxIters, float metricArg, const std::complex<float>& p);
+    void render(dist_t maxIters, float metricArg, const std::complex<float>& p, float colorCutoff);
     std::string getPerformanceReport();
 };
 

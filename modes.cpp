@@ -46,6 +46,7 @@ const std::map<DistanceMetric, ModeInfo> modes{
            .argStep = 0.0f,
            .argMin = 0.0f,
            .argMax = 0.0f,
+           .defaultColorCutoff = 20.0f,
            .disableArg = true,
            .disableIterations = true
         }}
