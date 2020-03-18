@@ -8,7 +8,7 @@ const std::map<DistanceMetric, ModeInfo> modes{
             .internalName = "FIXEDPOINT_ITERATIONS",
             .argDisplayName = "Tolerance",
             .argInitValue = 0.01f,
-            .argStep = 0.0001f,
+            .argStep = 0.0025f,
             .argMin = 0.0f,
             .argMax = 2.0f,
 
@@ -20,7 +20,7 @@ const std::map<DistanceMetric, ModeInfo> modes{
             .internalName = "JULIA",
             .argDisplayName = "Escape radius",
             .argInitValue = 10.0f,
-            .argStep = 0.05f,
+            .argStep = 0.5f,
             .argMin = 0.0f,
             .argMax = 200.0f,
 
@@ -32,7 +32,7 @@ const std::map<DistanceMetric, ModeInfo> modes{
            .internalName = "FIXEDPOINT_EUCLIDEAN",
            .argDisplayName = "Tolerance",
            .argInitValue = 0.01f,
-           .argStep = 0.0001f,
+           .argStep = 0.0025f,
            .argMin = 0.0f,
            .argMax = 2.0f,
         }},
