@@ -11,7 +11,7 @@ InputHandler initControls(Window& window,
     constexpr float ZOOM_STEP = 0.4f;
     constexpr int ITER_STEP = 2;
     constexpr float PARAM_STEP = 0.05f;
-    constexpr float COLOR_CUTOFF_STEP = 0.1f;
+    constexpr float COLOR_CUTOFF_STEP = 1.0f;
 
     InputHandler in(window);
     in.addViewport(viewport, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_KP_ADD, GLFW_KEY_KP_SUBTRACT, GLFW_KEY_HOME, MOVE_STEP, ZOOM_STEP);
