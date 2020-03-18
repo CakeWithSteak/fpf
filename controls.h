@@ -7,7 +7,7 @@ InputHandler initControls(Window& window,
                           const ModeInfo& mode,
                           int& maxIters, float& metricArg, std::complex<float>& p, bool& colorCutoffEnabled, float& colorCutoff
                           ) {
-    constexpr float MOVE_STEP = 2.0f;
+    constexpr float MOVE_STEP = 0.8f;
     constexpr float ZOOM_STEP = 0.4f;
     constexpr int ITER_STEP = 2;
     constexpr float PARAM_STEP = 0.05f;

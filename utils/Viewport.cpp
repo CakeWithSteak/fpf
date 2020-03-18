@@ -13,20 +13,18 @@ float Viewport::getBreadth() const {
 }
 
 void Viewport::move(Viewport::Direction dir, float step) {
-    if(breadth < 1)
-        step *= breadth;
     switch(dir) {
         case Direction::UP:
-            center.imag(center.imag() + step);
+            center.imag(center.imag() + breadth * step);
             break;
         case Direction::DOWN:
-            center.imag(center.imag() - step);
+            center.imag(center.imag() - breadth * step);
             break;
         case Direction::RIGHT:
-            center += step;
+            center += breadth * step;
             break;
         case Direction::LEFT:
-            center -= step;
+            center -= breadth * step;
             break;
     }
     debugPrintState();
