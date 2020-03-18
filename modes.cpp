@@ -1,6 +1,9 @@
 #include "modes.h"
+#include <cmath>
 
-const std::map<DistanceMetric, ModeInfo> modes{
+constexpr float TAU = 3.14159265358979323846 * 2;
+
+const std::map<DistanceMetric, ModeInfo> modes {
         {FIXEDPOINT_ITERATIONS, {
             .metric = FIXEDPOINT_ITERATIONS,
             .displayName = "Fixed point distance (iterations)",
@@ -11,7 +14,6 @@ const std::map<DistanceMetric, ModeInfo> modes{
             .argStep = 0.0025f,
             .argMin = 0.0f,
             .argMax = 2.0f,
-
         }},
         {JULIA, {
             .metric = JULIA,
@@ -63,7 +65,8 @@ const std::map<DistanceMetric, ModeInfo> modes{
             .defaultColorCutoff = -1.0f,
             .disableArg = true,
             .disableIterations = true,
-            .maxHue = 1.0f // The point of setting a max hue is to prevent high values bleeding into small ones -
-                           // but this is exactly what we want with angles (eg 1° and 359° should look similar)
+            .maxHue = 1.0f, // The point of setting a max hue is to prevent high values bleeding into small ones -
+                            // but this is exactly what we want with angles (eg 1° and 359° should look similar)
+            .staticMinMax = {{0, TAU}}
         }},
 };
