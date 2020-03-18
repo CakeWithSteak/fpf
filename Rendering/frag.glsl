@@ -6,10 +6,9 @@ in vec2 vTexCoords;
 uniform sampler2D distances;
 uniform float minDist;
 uniform float maxDist;
+uniform float maxHue;
 
 out vec4 fragColor;
-
-const float maxHue = 0.8f; //Pink
 
 //http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
 vec3 hsv2rgb(vec3 c)

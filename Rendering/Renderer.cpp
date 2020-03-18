@@ -105,6 +105,7 @@ void Renderer::initShaders() {
 
     glUseProgram(shaderProgram);
     glUniform1i(glGetUniformLocation(shaderProgram, "distances"), 0);
+    glUniform1f(glGetUniformLocation(shaderProgram, "maxHue"), mode.maxHue);
 
     minimumUniform = glGetUniformLocation(shaderProgram, "minDist");
     maximumUniform = glGetUniformLocation(shaderProgram, "maxDist");
