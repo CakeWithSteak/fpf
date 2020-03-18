@@ -14,6 +14,7 @@ struct ModeInfo {
     float defaultColorCutoff = -1;
     bool disableArg = false;
     bool disableIterations = false;
+    float maxHue = 0.8f;
 };
 
 
