@@ -15,6 +15,7 @@ struct ModeInfo {
     bool disableArg = false;
     bool disableIterations = false;
     float maxHue = 0.8f;
+    std::optional<std::pair<dist_t, dist_t>> staticMinMax = {};
 };
 
 

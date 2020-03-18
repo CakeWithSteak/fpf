@@ -109,6 +109,11 @@ void Renderer::initShaders() {
 
     minimumUniform = glGetUniformLocation(shaderProgram, "minDist");
     maximumUniform = glGetUniformLocation(shaderProgram, "maxDist");
+
+    if(mode.staticMinMax.has_value()) {
+        glUniform1f(minimumUniform, mode.staticMinMax->first);
+        glUniform1f(maximumUniform, mode.staticMinMax->second);
+    }
 }
 
 void Renderer::initCuda() {
@@ -141,12 +146,14 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
     CUDA_SAFE(cudaDestroySurfaceObject(surface));
     CUDA_SAFE(cudaGraphicsUnmapResources(1, &cudaSurfaceRes));
 
-    auto [min, max] = interleavedMinmax(cudaBuffer, 2 * numBlocks);
-    glUniform1f(minimumUniform, min);
-    glUniform1f(maximumUniform, std::min(max, colorCutoff));
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    if(!mode.staticMinMax.has_value()) {
+        auto [min, max] = interleavedMinmax(cudaBuffer, 2 * numBlocks);
+        glUniform1f(minimumUniform, min);
+        glUniform1f(maximumUniform, std::min(max, colorCutoff));
+        std::cout << "Min: " << min << " max: " << max << "\n";
+    }
 
-    std::cout << "Min: " << min << " max: " << max << "\n";
+    glDrawArrays(GL_TRIANGLES, 0, 6);
     pm.exit(PERF_RENDER);
 }
 
