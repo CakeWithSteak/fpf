@@ -49,5 +49,19 @@ const std::map<DistanceMetric, ModeInfo> modes{
            .defaultColorCutoff = 20.0f,
            .disableArg = true,
            .disableIterations = true
-        }}
+        }},
+        {VECTORFIELD_ANGLE, {
+            .metric = VECTORFIELD_ANGLE,
+            .displayName = "Direction",
+            .cliName = "direction",
+            .internalName = "VECTORFIELD_ANGLE",
+            .argDisplayName = "",
+            .argInitValue = 0.0f,
+            .argStep = 0.0f,
+            .argMin = 0.0f,
+            .argMax = 0.0f,
+            .defaultColorCutoff = -1.0f,
+            .disableArg = true,
+            .disableIterations = true
+        }},
 };
