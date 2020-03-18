@@ -10,6 +10,7 @@
 #include "utils/ModeInfo.h"
 #include "modes.h"
 #include "cli.h"
+#include "controls.h"
 
 
 using namespace std::chrono_literals;
@@ -62,106 +63,6 @@ void APIENTRY glDebugCallback(GLenum source,
     std::cout << std::endl;
 }
 
-//todo refactor
-bool handleInputs(Window& window, Viewport& viewport, int& maxIters, float& metricArg, std::complex<float>& p, bool& colorCutoffEnabled, float& colorCutoff, float deltaTime, float moveStep, float zoomStep, float pStep, float colorCutoffStep, const ModeInfo& mode) {
-    static auto lastToggleTime = std::chrono::high_resolution_clock::now();
-    deltaTime = std::clamp(deltaTime, 0.0f, 1.0f);
-    bool inputReceived = false;
-
-    if(window.isKeyPressed(GLFW_KEY_UP)) {
-        viewport.move(Viewport::Direction::UP, moveStep * deltaTime);
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_DOWN)) {
-        viewport.move(Viewport::Direction::DOWN, moveStep * deltaTime);
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_LEFT)) {
-        viewport.move(Viewport::Direction::LEFT, moveStep * deltaTime);
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_RIGHT)) {
-        viewport.move(Viewport::Direction::RIGHT, moveStep * deltaTime);
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_KP_ADD) || window.isKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
-        viewport.zoom(zoomStep * deltaTime);
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_KP_SUBTRACT) || window.isKeyPressed(GLFW_KEY_LEFT_CONTROL)) {
-        viewport.zoom(-zoomStep * deltaTime);
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_HOME)) {
-        viewport.zoomTo(2);
-        viewport.moveTo({0,0});
-        inputReceived = true;
-    }
-    if((window.isKeyPressed(GLFW_KEY_KP_MULTIPLY) || window.isKeyPressed(GLFW_KEY_RIGHT_BRACKET)) && !mode.disableIterations) {
-        maxIters += 2;
-        maxIters = std::clamp(maxIters, 1, 1024);
-        std::cout << "Max iterations: " << maxIters << std::endl;
-        inputReceived = true;
-    }
-    if((window.isKeyPressed(GLFW_KEY_KP_DIVIDE) || window.isKeyPressed(GLFW_KEY_LEFT_BRACKET)) && !mode.disableIterations) {
-        maxIters -= 2;
-        maxIters = std::clamp(maxIters, 1, 1024);
-        std::cout << "Max iterations: " << maxIters << std::endl;
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_0) && !mode.disableArg) {
-        metricArg += mode.argStep;
-        metricArg = std::clamp(metricArg, mode.argMin, mode.argMax);
-        std::cout << mode.argDisplayName << ": " << metricArg << std::endl;
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_9) && !mode.disableArg) {
-        metricArg -= mode.argStep;
-        metricArg = std::clamp(metricArg, mode.argMin, mode.argMax);
-        std::cout << mode.argDisplayName << ": " << metricArg << std::endl;
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_W)) {
-        p.imag(p.imag() + pStep * deltaTime);
-        std::cout << "p = " << p << std::endl;
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_S)) {
-        p.imag(p.imag() - pStep * deltaTime);
-        std::cout << "p = " << p << std::endl;
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_D)) {
-        p.real(p.real() + pStep * deltaTime);
-        std::cout << "p = " << p << std::endl;
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_A)) {
-        p.real(p.real() - pStep * deltaTime);
-        std::cout << "p = " << p << std::endl;
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_C) && colorCutoffEnabled) {
-        colorCutoff += colorCutoffStep;
-        std::cout << "Color cutoff: " << colorCutoff << std::endl;
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_X) && colorCutoffEnabled) {
-        colorCutoff -= colorCutoffStep;
-        colorCutoff = std::max(colorCutoff, 0.0f);
-        std::cout << "Color cutoff: " << colorCutoff << std::endl;
-        inputReceived = true;
-    }
-    if(window.isKeyPressed(GLFW_KEY_Z) && std::chrono::high_resolution_clock::now() - lastToggleTime > 400ms) {
-        colorCutoffEnabled = !colorCutoffEnabled;
-        std::cout << "Color cutoff " << (colorCutoffEnabled ? "enabled" : "disabled") << std::endl;
-        lastToggleTime = std::chrono::high_resolution_clock::now();
-        inputReceived = true;
-    }
-
-    return inputReceived;
-}
-
 std::string getCudaCode(const std::string& expr) {
     auto cudaCode = compileExpression(expr);
     std::cout << "CUDA expression: " << cudaCode << "\n\n" << std::flush;
@@ -173,10 +74,6 @@ std::string getCudaCode(const std::string& expr) {
 
 int main(int argc, char** argv) {
     std::ios::sync_with_stdio(false);
-    constexpr float MOVE_STEP = 2.0f;
-    constexpr float ZOOM_STEP = 0.4f;
-    constexpr float PARAM_STEP = 0.05f;
-    constexpr float COLOR_CUTOFF_STEP = 0.1f;
 
     Options opt = getOptions(argc, argv);
     const ModeInfo mode = opt.mode;
@@ -195,6 +92,8 @@ int main(int argc, char** argv) {
     window.setSwapInterval(1);
     window.enableGLDebugMessages(glDebugCallback);
 
+    InputHandler input = initControls(window, viewport, mode, maxIters, metricArg, p, colorCutoffEnabled, colorCutoff);
+
     Renderer renderer(opt.width, opt.height, viewport, mode, cudaCode);
 
     //First render
@@ -205,7 +104,7 @@ int main(int argc, char** argv) {
 
     Timer timer;
     while(!window.shouldClose()) {
-        bool repaintNeeded = handleInputs(window, viewport, maxIters, metricArg, p, colorCutoffEnabled, colorCutoff, timer.getSeconds(), MOVE_STEP, ZOOM_STEP, PARAM_STEP, COLOR_CUTOFF_STEP, mode);
+        bool repaintNeeded = input.process(timer.getSeconds());
         timer.reset();
 
         if(repaintNeeded) {
