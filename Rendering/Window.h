@@ -17,6 +17,7 @@ public:
     void swapBuffers();
     void poll();
     bool shouldClose();
+    void setShouldClose(bool val);
     ~Window();
 
     [[nodiscard]] int getWidth() const;

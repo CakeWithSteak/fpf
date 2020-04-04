@@ -19,6 +19,10 @@ void InputHandler::addViewport(Viewport& v, int upKey, int downKey, int leftKey,
     bindings.push_back(new ViewportBinding(v, upKey, downKey, leftKey, rightKey, zoomInKey, zoomOutKey, resetKey, moveStep, zoomStep));
 }
 
+void InputHandler::addTrigger(const std::function<void()>& handler, int triggerKey) {
+    bindings.push_back(new TriggerBinding(handler, triggerKey));
+}
+
 InputHandler::~InputHandler() {
     for(auto binding : bindings)
         delete binding;
@@ -66,4 +70,12 @@ bool ViewportBinding::process(Window &window, float dt) {
         inputReceived = true;
     }
     return inputReceived;
+}
+
+bool TriggerBinding::process(Window& window, [[maybe_unused]] float dt) {
+    if(window.isKeyPressed(triggerKey)) {
+        handler();
+        return true;
+    }
+    return false;
 }

@@ -73,3 +73,7 @@ void Window::enableGLDebugMessages(GLDEBUGPROC messageFunc) {
 bool Window::isKeyPressed(int key) {
     return glfwGetKey(handle, key) == GLFW_PRESS;
 }
+
+void Window::setShouldClose(bool val) {
+    glfwSetWindowShouldClose(handle, val);
+}
