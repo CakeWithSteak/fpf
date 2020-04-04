@@ -16,6 +16,7 @@ public:
     };
 
     Viewport(const std::complex<float>& center, float breadth);
+    Viewport() = default;
 
     void move(Direction dir, float step);
     void moveTo(const fcomplex& target);

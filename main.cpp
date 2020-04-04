@@ -11,6 +11,7 @@
 #include "modes.h"
 #include "cli.h"
 #include "controls.h"
+#include "utils/State.h"
 
 
 using namespace std::chrono_literals;
@@ -76,29 +77,24 @@ int main(int argc, char** argv) {
     std::ios::sync_with_stdio(false);
 
     Options opt = getOptions(argc, argv);
-    const ModeInfo mode = opt.mode;
+    State state(opt);
+    state.viewport = Viewport(0, 2);
 
-    int maxIters = 128;
-    float metricArg = mode.argInitValue;
-    std::complex<float> p{0};
-    bool colorCutoffEnabled = (mode.defaultColorCutoff != -1);
-    float colorCutoff = colorCutoffEnabled ? mode.defaultColorCutoff : 10.0f;
+    auto cudaCode = getCudaCode(state.expr);
 
-    auto cudaCode = getCudaCode(opt.expression);
-
-    Viewport viewport(0, 2);
-
-    Window window(opt.width, opt.height, "Fixed point fractals - " + mode.displayName, false);
+    Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, false);
     window.setSwapInterval(1);
     window.enableGLDebugMessages(glDebugCallback);
 
-    InputHandler input = initControls(window, viewport, mode, maxIters, metricArg, p, colorCutoffEnabled, colorCutoff);
+    Renderer renderer(state.width, state.height, state.viewport, state.mode, cudaCode);
 
-    Renderer renderer(opt.width, opt.height, viewport, mode, cudaCode);
+    RuntimeState runtimeState{window, renderer};
+
+    InputHandler input = initControls(state, runtimeState);
 
     //First render
     glClear(GL_COLOR_BUFFER_BIT);
-    renderer.render(maxIters, metricArg, p, colorCutoffEnabled ? colorCutoff : std::numeric_limits<float>::max());
+    renderer.render(state.maxIters, state.metricArg, state.p, state.colorCutoffEnabled ? state.colorCutoff : std::numeric_limits<float>::max());
     window.swapBuffers();
     window.poll();
 
@@ -109,8 +105,8 @@ int main(int argc, char** argv) {
 
         if(repaintNeeded) {
             glClear(GL_COLOR_BUFFER_BIT);
-            float actualColorCutoff = colorCutoffEnabled ? colorCutoff : std::numeric_limits<float>::max();
-            renderer.render(maxIters, metricArg, p, actualColorCutoff);
+            float actualColorCutoff = state.colorCutoffEnabled ? state.colorCutoff : std::numeric_limits<float>::max();
+            renderer.render(state.maxIters, state.metricArg, state.p, actualColorCutoff);
             window.poll(); // The Renderer call may take a long time, so we poll here to ensure responsiveness
             window.swapBuffers();
         }
