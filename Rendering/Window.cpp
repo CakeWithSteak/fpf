@@ -77,3 +77,12 @@ bool Window::isKeyPressed(int key) {
 void Window::setShouldClose(bool val) {
     glfwSetWindowShouldClose(handle, val);
 }
+
+void Window::minimize() {
+    glfwIconifyWindow(handle);
+}
+
+void Window::restore() {
+    glfwRestoreWindow(handle);
+    glfwFocusWindow(handle);
+}

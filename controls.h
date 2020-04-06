@@ -25,7 +25,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
     in.addScalar(s.colorCutoff, GLFW_KEY_C, GLFW_KEY_X, COLOR_CUTOFF_STEP, "Color cutoff", 0.0f);
     in.addToggle(s.colorCutoffEnabled, GLFW_KEY_Z, "Color cutoff");
     in.addTrigger([&rs](){rs.window.setShouldClose(true);}, GLFW_KEY_ESCAPE);
-    in.addTrigger([&s](){save(s);}, GLFW_KEY_TAB);
+    in.addTrigger([&s, &rs](){rs.window.minimize(); save(s); rs.window.restore();}, GLFW_KEY_TAB);
 
     return in;
 }

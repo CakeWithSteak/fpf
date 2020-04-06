@@ -18,6 +18,10 @@ public:
     void poll();
     bool shouldClose();
     void setShouldClose(bool val);
+    void minimize();
+    void restore();
+
+
     ~Window();
 
     [[nodiscard]] int getWidth() const;
