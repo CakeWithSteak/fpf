@@ -5,15 +5,14 @@
 
 namespace po = boost::program_options;
 
-std::istream& operator>>(std::istream& in, ModeInfo& metric) {
-    std::string str;
-    in >> str;
+std::optional<ModeInfo> tryGetMode(std::string str) {
     std::transform(str.cbegin(), str.cend(), str.begin(), [](char c){return std::tolower(c);});
+    std::optional<ModeInfo> res = {};
     for(auto& [_, mode] : modes) {
         if(mode.cliName == str)
-            metric = mode;
+            res = mode;
     }
-    return in;
+    return res;
 }
 
 std::string getExpression() {
@@ -27,7 +26,7 @@ Options getOptions(int argc, char** argv) {
     po::options_description desc;
 
     desc.add_options()
-       ("mode", po::value<ModeInfo>(), "Fractal construction mode: fixed/fixed-dist/julia")
+       ("mode", po::value<std::string>(), "Fractal construction mode: fixed/fixed-dist/julia")
        ("expression", po::value<std::string>(), "The function to generate the fractal")
        ("width,w", po::value<int>()->default_value(1024), "Window width")
        ("height,h", po::value<int>()->default_value(1024), "Window height");
@@ -44,10 +43,20 @@ Options getOptions(int argc, char** argv) {
     opt.width = vm["width"].as<int>();
     opt.height = vm["height"].as<int>();
 
-    if(vm.count("mode"))
-        opt.mode = vm["mode"].as<ModeInfo>();
-    else
+    if(vm.count("mode")) {
+        auto modeStr = vm["mode"].as<std::string>();
+        auto mode = tryGetMode(modeStr);
+        if(mode.has_value()) {
+            opt.mode = *mode;
+        } else if(std::filesystem::exists(modeStr)) {
+            opt.deserializationPath = modeStr;
+            return opt;
+        } else {
+            throw std::runtime_error("Invalid mode: \"" + modeStr + "\"");
+        }
+    } else {
         opt.mode = modes.at(FIXEDPOINT_ITERATIONS);
+    }
 
     if(vm.count("expression"))
         opt.expression = vm["expression"].as<std::string>();

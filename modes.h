@@ -1,4 +1,39 @@
 #pragma once
-#include "utils/ModeInfo.h"
+#include <boost/serialization/split_member.hpp>
+#include "../Computation/metrics.h"
+
+struct ModeInfo;
 
 extern const std::map<DistanceMetric, ModeInfo> modes;
+
+struct ModeInfo {
+    DistanceMetric metric;
+    std::string displayName;
+    std::string cliName;
+    std::string internalName;
+    std::string argDisplayName;
+    float argInitValue;
+    float argStep;
+    float argMin;
+    float argMax;
+    float defaultColorCutoff = -1;
+    bool disableArg = false;
+    bool disableIterations = false;
+    float maxHue = 0.8f;
+    std::optional<std::pair<dist_t, dist_t>> staticMinMax = {};
+
+    template<class Archive>
+    void save(Archive& ar, const unsigned int version) const
+    {
+        ar << metric;
+    }
+
+    template<class Archive>
+    void load(Archive & ar, const unsigned int version)
+    {
+        DistanceMetric m;
+        ar >> m;
+        *this = modes.at(m);
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+};

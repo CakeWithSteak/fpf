@@ -4,6 +4,7 @@
 #include <string_view>
 #include <memory>
 #include "../Computation/safeCall.h"
+#include "../modes.h"
 
 std::string defineMacro(const std::string& name) {
     std::string prefix = "--define-macro=";

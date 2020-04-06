@@ -4,7 +4,7 @@
 #include <cuda.h>
 #include "../Computation/kernel_types.h"
 #include "../Computation/metrics.h"
-#include "../utils/ModeInfo.h"
+#include "../modes.h"
 
 class NvrtcCompiler {
     CUmodule module = nullptr;
