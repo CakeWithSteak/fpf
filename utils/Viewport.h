@@ -1,5 +1,6 @@
 #pragma once
 #include <complex>
+#include <boost/serialization/access.hpp>
 
 using fcomplex = std::complex<float>;
 
@@ -28,6 +29,14 @@ public:
 
     [[nodiscard]] const fcomplex& getCenter() const;
     [[nodiscard]] float getBreadth() const;
+
+private:
+    friend class boost::serialization::access;
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        ar & center;
+        ar & breadth;
+    }
 };
 
 

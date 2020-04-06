@@ -1,7 +1,7 @@
 #pragma once
 #include "utils/Input.h"
-#include "utils/ModeInfo.h"
 #include "utils/State.h"
+#include "utils/serialization.h"
 
 InputHandler initControls(State& s, RuntimeState& rs) {
     constexpr float MOVE_STEP = 0.8f;
@@ -25,6 +25,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
     in.addScalar(s.colorCutoff, GLFW_KEY_C, GLFW_KEY_X, COLOR_CUTOFF_STEP, "Color cutoff", 0.0f);
     in.addToggle(s.colorCutoffEnabled, GLFW_KEY_Z, "Color cutoff");
     in.addTrigger([&rs](){rs.window.setShouldClose(true);}, GLFW_KEY_ESCAPE);
+    in.addTrigger([&s](){save(s);}, GLFW_KEY_TAB);
 
     return in;
 }

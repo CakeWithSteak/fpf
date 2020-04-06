@@ -4,7 +4,7 @@
 #include "../utils/Viewport.h"
 #include "../Compilation/NvrtcCompiler.h"
 #include "../utils/PerformanceMonitor.h"
-#include "../utils/ModeInfo.h"
+#include "../modes.h"
 
 class Renderer {
     int width;

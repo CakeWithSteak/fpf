@@ -3,11 +3,11 @@
 #include <complex>
 #include "../Computation/kernel_types.h"
 #include "Viewport.h"
-#include "ModeInfo.h"
 #include "../Rendering/Window.h"
 #include "../Rendering/Renderer.h"
 #include "Input.h"
 #include "../cli.h"
+#include "../modes.h"
 
 //A struct encompassing program state useful for event handlers and serialization
 struct State {
@@ -30,6 +30,7 @@ struct State {
         colorCutoffEnabled = (mode.defaultColorCutoff != -1);
         colorCutoff = colorCutoffEnabled ? mode.defaultColorCutoff : 10.0f;
     }
+    State() = default;
 };
 
 struct RuntimeState {

@@ -1,5 +1,4 @@
 #include <iostream>
-#include <algorithm>
 #include <thread>
 #include "Rendering/Window.h"
 #include "Rendering/Renderer.h"
@@ -7,11 +6,9 @@
 #include "utils/Timer.h"
 #include "Compilation/compileExpression.h"
 #include "Computation/runtime_template.h"
-#include "utils/ModeInfo.h"
-#include "modes.h"
 #include "cli.h"
 #include "controls.h"
-#include "utils/State.h"
+#include "utils/serialization.h"
 
 
 using namespace std::chrono_literals;
@@ -77,8 +74,14 @@ int main(int argc, char** argv) {
     std::ios::sync_with_stdio(false);
 
     Options opt = getOptions(argc, argv);
-    State state(opt);
-    state.viewport = Viewport(0, 2);
+    State state;
+
+    if(opt.deserializationPath.has_value()) {
+        state = deserialize(*opt.deserializationPath);
+    } else {
+        state = State(opt);
+        state.viewport = Viewport(0, 2);
+    }
 
     auto cudaCode = getCudaCode(state.expr);
 
