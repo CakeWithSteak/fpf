@@ -98,7 +98,6 @@ int main(int argc, char** argv) {
         state.height = height;
         runtimeState.renderer.resize(width, height);
         runtimeState.forceRerender = true;
-        std::cout << "RESIZE to " << width << "x" << height << std::endl;
     });
 
     InputHandler input = initControls(state, runtimeState);
