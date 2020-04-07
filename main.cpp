@@ -85,13 +85,21 @@ int main(int argc, char** argv) {
 
     auto cudaCode = getCudaCode(state.expr);
 
-    Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, false);
+    Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, true);
     window.setSwapInterval(1);
     window.enableGLDebugMessages(glDebugCallback);
 
     Renderer renderer(state.width, state.height, state.viewport, state.mode, cudaCode);
 
     RuntimeState runtimeState{window, renderer};
+
+    window.setResizeCallback([&state, &runtimeState](Window& win, int width, int height){
+        state.width = width;
+        state.height = height;
+        runtimeState.renderer.resize(width, height);
+        runtimeState.forceRerender = true;
+        std::cout << "RESIZE to " << width << "x" << height << std::endl;
+    });
 
     InputHandler input = initControls(state, runtimeState);
 
@@ -103,7 +111,7 @@ int main(int argc, char** argv) {
 
     Timer timer;
     while(!window.shouldClose()) {
-        bool repaintNeeded = input.process(timer.getSeconds());
+        bool repaintNeeded = input.process(timer.getSeconds()) || runtimeState.forceRerender;
         timer.reset();
 
         if(repaintNeeded) {
@@ -112,6 +120,7 @@ int main(int argc, char** argv) {
             renderer.render(state.maxIters, state.metricArg, state.p, actualColorCutoff);
             window.poll(); // The Renderer call may take a long time, so we poll here to ensure responsiveness
             window.swapBuffers();
+            runtimeState.forceRerender = false;
         }
         window.poll();
         if(!repaintNeeded)

@@ -36,4 +36,5 @@ struct State {
 struct RuntimeState {
     Window& window;
     Renderer& renderer;
+    bool forceRerender = false;
 };
