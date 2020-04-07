@@ -2,9 +2,9 @@
 #include <string>
 
 const std::string vertexShaderCode {
-    #include "vertex.glsl"
+    #include "shaders/vertex.glsl"
 };
 
 const std::string fragmentShaderCode {
-    #include "frag.glsl"
+    #include "shaders/frag.glsl"
 };

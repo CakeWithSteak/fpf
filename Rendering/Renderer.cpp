@@ -1,6 +1,5 @@
 #include "glad/glad.h"
 #include "Renderer.h"
-#include "shaders.h"
 #include <vector>
 #include <stdexcept>
 #include <cuda_runtime.h>
@@ -58,61 +57,17 @@ void Renderer::initTexture() {
 }
 
 void Renderer::initShaders() {
-    shaderProgram = glCreateProgram();
+    shader.use();
 
-    unsigned int fragShader, vertShader;
+    shader.setUniform("distances", 0);
+    shader.setUniform("maxHue", mode.maxHue);
 
-    vertShader = glCreateShader(GL_VERTEX_SHADER);
-    auto vertSrcPtr = vertexShaderCode.c_str();
-    glShaderSource(vertShader, 1, &vertSrcPtr, nullptr);
-    glCompileShader(vertShader);
-
-    char infoLog[512];
-    int success;
-    glGetShaderiv(vertShader, GL_COMPILE_STATUS, &success);
-    if(!success) {
-        glGetShaderInfoLog(vertShader, sizeof(infoLog), nullptr, infoLog);
-        std::string str(infoLog);
-        throw std::runtime_error(("Failed to load vertex shader: " + str).c_str());
-    }
-
-    fragShader = glCreateShader(GL_FRAGMENT_SHADER);
-    auto fragSrcPtr = fragmentShaderCode.c_str();
-    glShaderSource(fragShader, 1, &fragSrcPtr, nullptr);
-    glCompileShader(fragShader);
-
-    glGetShaderiv(fragShader, GL_COMPILE_STATUS, &success);
-    if(!success) {
-        glGetShaderInfoLog(fragShader, sizeof(infoLog), nullptr, infoLog);
-        std::string str(infoLog);
-        throw std::runtime_error(("Failed to load fragment shader: " + str).c_str());
-    }
-
-    glAttachShader(shaderProgram, vertShader);
-    glAttachShader(shaderProgram, fragShader);
-
-    glLinkProgram(shaderProgram);
-
-    glDeleteShader(fragShader);
-    glDeleteShader(vertShader);
-
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if(!success) {
-        glGetProgramInfoLog(fragShader, sizeof(infoLog), nullptr, infoLog);
-        std::string str(infoLog);
-        throw std::runtime_error(("Failed to link shader program: " + str).c_str());
-    }
-
-    glUseProgram(shaderProgram);
-    glUniform1i(glGetUniformLocation(shaderProgram, "distances"), 0);
-    glUniform1f(glGetUniformLocation(shaderProgram, "maxHue"), mode.maxHue);
-
-    minimumUniform = glGetUniformLocation(shaderProgram, "minDist");
-    maximumUniform = glGetUniformLocation(shaderProgram, "maxDist");
+    minimumUniform = shader.getUniformLocation("minDist");
+    maximumUniform = shader.getUniformLocation("maxDist");
 
     if(mode.staticMinMax.has_value()) {
-        glUniform1f(minimumUniform, mode.staticMinMax->first);
-        glUniform1f(maximumUniform, mode.staticMinMax->second);
+        shader.setUniform(minimumUniform, mode.staticMinMax->first);
+        shader.setUniform(maximumUniform, mode.staticMinMax->second);
     }
 }
 
@@ -147,8 +102,8 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
 
     if(!mode.staticMinMax.has_value()) {
         auto [min, max] = interleavedMinmax(cudaBuffer, 2 * numBlocks);
-        glUniform1f(minimumUniform, min);
-        glUniform1f(maximumUniform, std::min(max, colorCutoff));
+        shader.setUniform(minimumUniform, min);
+        shader.setUniform(maximumUniform, std::min(max, colorCutoff));
         std::cout << "Min: " << min << " max: " << max << "\n";
     }
 
