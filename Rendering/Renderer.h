@@ -5,6 +5,8 @@
 #include "../Compilation/NvrtcCompiler.h"
 #include "../utils/PerformanceMonitor.h"
 #include "../modes.h"
+#include "Shader.h"
+#include "shaders.h"
 
 class Renderer {
     int width;
@@ -15,9 +17,11 @@ class Renderer {
     int numBlocks;
     unsigned int texture;
     unsigned int VAO;
-    unsigned int shaderProgram;
+
     int minimumUniform;
     int maximumUniform;
+    Shader shader{vertexShaderCode, fragmentShaderCode};
+
     cudaGraphicsResource_t cudaSurfaceRes = nullptr;
     cudaResourceDesc cudaSurfaceDesc;
     dist_t* cudaBuffer = nullptr;
