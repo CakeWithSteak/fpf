@@ -41,6 +41,7 @@ public:
 
     void render(dist_t maxIters, float metricArg, const std::complex<float>& p, float colorCutoff);
     std::string getPerformanceReport();
+    void resize(int newWidth, int newHeight);
 };
 
 

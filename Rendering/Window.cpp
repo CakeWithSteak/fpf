@@ -2,7 +2,7 @@
 #include "glad/glad.h"
 #include "Window.h"
 
-void Window::init(const std::string& title) {
+void Window::init(const std::string& title, bool resizable) {
     glfwSetErrorCallback([]([[maybe_unused]] int unused, const char* err) {
         std::cerr << "GLFW error: " << err << std::endl;
     });
@@ -13,7 +13,7 @@ void Window::init(const std::string& title) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_RESIZABLE, false);
+    glfwWindowHint(GLFW_RESIZABLE, resizable);
 
 
     handle = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
@@ -21,13 +21,25 @@ void Window::init(const std::string& title) {
         throw std::runtime_error("Failed to open window");
     }
 
+
     glfwMakeContextCurrent(handle);
 
     gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress));
     glViewport(0, 0, width, height);
     glClearColor(0, 0, 0, 0);
 
-    //glfwSetInputMode(handle, GLFW_STICKY_KEYS, true);
+    if(resizable) {
+        glfwSetWindowUserPointer(handle, this);
+        glfwSetWindowSizeCallback(handle, [](GLFWwindow* handle, int newWidth, int newHeight){
+           glViewport(0, 0, newWidth, newHeight);
+           Window& window = *static_cast<Window*>(glfwGetWindowUserPointer(handle));
+           if(window.resizeCallback.has_value())
+               window.resizeCallback.value()(window, newWidth, newHeight);
+        });
+
+        glfwSetWindowAspectRatio(handle, width, height);
+        glfwSetWindowSizeLimits(handle, 100, 100, GLFW_DONT_CARE, GLFW_DONT_CARE);
+    }
 }
 
 void Window::setSwapInterval(int interval) {
@@ -85,4 +97,8 @@ void Window::minimize() {
 void Window::restore() {
     glfwRestoreWindow(handle);
     glfwFocusWindow(handle);
+}
+
+void Window::setResizeCallback(std::function<void(Window&, int, int)> callback) {
+    resizeCallback = callback;
 }

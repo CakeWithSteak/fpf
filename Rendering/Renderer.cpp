@@ -118,13 +118,12 @@ void Renderer::initShaders() {
 
 void Renderer::initCuda() {
     CUDA_SAFE(cudaSetDevice(0));
-    numBlocks = (width * height) / 1024;
-    if((width * height) % 1024 != 0)
-        ++numBlocks;
+    numBlocks = (width * height + 1024 - 1) / 1024; //Ceiled division
     CUDA_SAFE(cudaMallocManaged(&cudaBuffer, 2 * numBlocks * sizeof(int))); //Buffer for min/max fpdist values
     CUDA_SAFE(cudaGraphicsGLRegisterImage(&cudaSurfaceRes, texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
     cudaSurfaceDesc.resType = cudaResourceTypeArray;
 }
+
 
 Renderer::~Renderer() {
     CUDA_SAFE(cudaGraphicsUnregisterResource(cudaSurfaceRes));
@@ -170,6 +169,19 @@ void Renderer::initKernel(std::string_view cudaCode) {
 
 std::string Renderer::getPerformanceReport() {
     return pm.generateReports();
+}
+
+void Renderer::resize(int newWidth, int newHeight) {
+    width = newWidth;
+    height = newHeight;
+
+    CUDA_SAFE(cudaFree(cudaBuffer));
+    CUDA_SAFE(cudaGraphicsUnregisterResource(cudaSurfaceRes));
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDeleteTextures(1, &texture);
+
+    initTexture();
+    initCuda();
 }
 
 std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size) {
