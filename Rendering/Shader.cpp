@@ -43,7 +43,7 @@ Shader::Shader(std::string vertexSrc, std::string fragSrc) {
 
     glGetProgramiv(program, GL_LINK_STATUS, &success);
     if(!success) {
-        glGetProgramInfoLog(fragShader, sizeof(infoLog), nullptr, infoLog);
+        glGetProgramInfoLog(program, sizeof(infoLog), nullptr, infoLog);
         std::string str(infoLog);
         throw std::runtime_error(("Failed to link shader program: " + str).c_str());
     }
