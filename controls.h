@@ -36,5 +36,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
 
     }, GLFW_MOUSE_BUTTON_1);
 
+    in.addTrigger([&rs](){rs.renderer.hidePath();}, GLFW_KEY_H);
+
     return in;
 }
