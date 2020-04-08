@@ -68,6 +68,7 @@ public:
     std::string getPerformanceReport();
     void resize(int newWidth, int newHeight);
     int generatePath(const std::complex<float>& z, float tolerance, const std::complex<float>& p);
+    void hidePath();
 };
 
 

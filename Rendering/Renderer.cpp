@@ -37,7 +37,6 @@ void Renderer::init(std::string_view cudaCode) {
     glBindVertexArray(overlayVAO);
     glBindBuffer(GL_ARRAY_BUFFER, overlayLineVBO);
 
-    //glBufferStorage(GL_ARRAY_BUFFER, 2 * MAX_PATH_STEPS * sizeof(float), nullptr, GL_MAP_WRITE_BIT); todo
     glBufferData(GL_ARRAY_BUFFER, 2 * MAX_PATH_STEPS * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
 
     //Line vertices
@@ -207,7 +206,7 @@ int Renderer::generatePath(const std::complex<float>& z, float metricArg, const 
     CUDA_SAFE(cuLaunchKernel(pathKernel, 1, 1, 1, 1, 1, 1, 0, nullptr, args, nullptr));
     CUDA_SAFE(cudaDeviceSynchronize());
     CUDA_SAFE(cudaGraphicsUnmapResources(1, &cudaBufferRes));
-    pathEnabled = true; //todo add a key to remove the line
+    pathEnabled = true;
     pm.exit(PERF_OVERLAY_GEN);
     return *cudaPathLengthPtr;
 }
@@ -221,6 +220,10 @@ void Renderer::refreshPathIfNeeded(const std::complex<float>& p, float metricArg
         lastTolerance = tolerance;
         generatePath(pathStart, tolerance, p);
     }
+}
+
+void Renderer::hidePath() {
+    pathEnabled = false;
 }
 
 std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size) {
