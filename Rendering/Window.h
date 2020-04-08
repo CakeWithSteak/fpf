@@ -30,4 +30,5 @@ public:
     void enableGLDebugMessages(GLDEBUGPROC messageFunc);
     [[nodiscard]] bool isKeyPressed(int key);
     void setResizeCallback(std::function<void(Window&, int, int)> callback);
+    [[nodiscard]] std::optional<std::pair<double, double>> tryGetClickPosition(int button);
 };

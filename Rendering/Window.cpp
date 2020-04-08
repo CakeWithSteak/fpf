@@ -33,6 +33,8 @@ void Window::init(const std::string& title, bool resizable) {
         glfwSetWindowSizeCallback(handle, [](GLFWwindow* handle, int newWidth, int newHeight){
            glViewport(0, 0, newWidth, newHeight);
            Window& window = *static_cast<Window*>(glfwGetWindowUserPointer(handle));
+           window.width = newWidth;
+           window.height = newHeight;
            if(window.resizeCallback.has_value())
                window.resizeCallback.value()(window, newWidth, newHeight);
         });
@@ -101,4 +103,13 @@ void Window::restore() {
 
 void Window::setResizeCallback(std::function<void(Window&, int, int)> callback) {
     resizeCallback = callback;
+}
+
+std::optional<std::pair<double, double>> Window::tryGetClickPosition(int button) {
+    if(glfwGetMouseButton(handle, button) == GLFW_PRESS) {
+        double x,y;
+        glfwGetCursorPos(handle, &x, &y);
+        return {{x, y}};
+    }
+    return {};
 }

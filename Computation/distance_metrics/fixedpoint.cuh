@@ -1,6 +1,6 @@
 #pragma once
 #include "../kernel_types.h"
-#include "utils.cuh"
+#include "../utils.cuh"
 
 __device__ __inline__ dist_t fixedPointDist(complex z, dist_t maxIters, complex p, float tsquare) {
     float2 last = z;

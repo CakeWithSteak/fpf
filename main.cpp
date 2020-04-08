@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
 
     auto cudaCode = getCudaCode(state.expr);
 
-    Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, true);
+    Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, false);
     window.setSwapInterval(1);
     window.enableGLDebugMessages(glDebugCallback);
 

@@ -26,10 +26,14 @@ std::vector<char*> getCompileArgs(const ModeInfo& mode) {
     return res;
 }
 
-CUfunction NvrtcCompiler::Compile(std::string_view code, std::string_view filename, std::string_view functionName, const ModeInfo& mode) {
+std::vector<CUfunction>
+NvrtcCompiler::Compile(std::string_view code, std::string_view filename, std::vector<std::string_view> functionNames, const ModeInfo& mode) {
     nvrtcProgram program;
     NVRTC_SAFE(nvrtcCreateProgram(&program, code.data(), filename.data(), 0, nullptr, nullptr));
-    NVRTC_SAFE(nvrtcAddNameExpression(program, functionName.data()));
+
+    for(auto name : functionNames)
+        NVRTC_SAFE(nvrtcAddNameExpression(program, name.data()));
+
     const auto compileArgs = getCompileArgs(mode);
     nvrtcResult compileResult = nvrtcCompileProgram(program, compileArgs.size(), compileArgs.data());
     if(compileResult != NVRTC_SUCCESS) {
@@ -44,17 +48,20 @@ CUfunction NvrtcCompiler::Compile(std::string_view code, std::string_view filena
     auto ptx = std::make_unique<char[]>(ptxSize);
     //char* ptx = new char[ptxSize];
     NVRTC_SAFE(nvrtcGetPTX(program, ptx.get()));
-    const char* loweredName; //The mangled name of the function
-    NVRTC_SAFE(nvrtcGetLoweredName(program, functionName.data(), &loweredName));
+
+    std::vector<const char*> loweredNames(functionNames.size()); //The mangled names of the functions
+    for(int i = 0; i < functionNames.size(); ++i)
+        NVRTC_SAFE(nvrtcGetLoweredName(program, functionNames[i].data(), &loweredNames[i]));
 
     CUDA_SAFE(cuModuleLoadDataEx(&module, ptx.get(), 0, nullptr, nullptr));
 
-    CUfunction function;
-    CUDA_SAFE(cuModuleGetFunction(&function, module, loweredName));
+    std::vector<CUfunction> functions(functionNames.size());
+    for(int i = 0; i < functions.size(); ++i)
+        CUDA_SAFE(cuModuleGetFunction(&functions[i], module, loweredNames[i]));
     NVRTC_SAFE(nvrtcDestroyProgram(&program));
     for(char* arg : compileArgs)
         delete[] arg;
-    return function;
+    return functions;
 }
 
 void NvrtcCompiler::Unload() {

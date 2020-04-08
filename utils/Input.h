@@ -31,6 +31,7 @@ public:
     void addToggle(bool& val, int key, const std::string& displayName);
     void addViewport(Viewport& v, int upKey, int downKey, int leftKey, int rightKey, int zoomInKey, int zoomOutKey, int resetKey, float moveStep, float zoomStep);
     void addTrigger(const std::function<void()>& handler, int triggerKey);
+    void addTrigger(const std::function<void(double, double)>& handler, int triggerButton);
 
     explicit InputHandler(Window& window) : window(window) {}
     ~InputHandler();
@@ -81,6 +82,14 @@ class TriggerBinding : public InputBinding {
 public:
     virtual bool process(Window& window, float dt) override;
     TriggerBinding(const std::function<void()>& handler, int triggerKey) : handler(handler), triggerKey(triggerKey) {}
+};
+
+class MouseTriggerBinding : public InputBinding {
+    std::function<void(double, double)> handler;
+    int triggerButton;
+public:
+    virtual bool process(Window& window, float dt) override;
+    MouseTriggerBinding(const std::function<void(double, double)>& handler, int triggerButton) : handler(handler), triggerButton(triggerButton) {}
 };
 
 template<typename T>

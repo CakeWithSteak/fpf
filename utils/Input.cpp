@@ -23,6 +23,10 @@ void InputHandler::addTrigger(const std::function<void()>& handler, int triggerK
     bindings.push_back(new TriggerBinding(handler, triggerKey));
 }
 
+void InputHandler::addTrigger(const std::function<void(double, double)>& handler, int triggerButton) {
+    bindings.push_back(new MouseTriggerBinding(handler, triggerButton));
+}
+
 InputHandler::~InputHandler() {
     for(auto binding : bindings)
         delete binding;
@@ -75,6 +79,15 @@ bool ViewportBinding::process(Window &window, float dt) {
 bool TriggerBinding::process(Window& window, [[maybe_unused]] float dt) {
     if(window.isKeyPressed(triggerKey)) {
         handler();
+        return true;
+    }
+    return false;
+}
+
+bool MouseTriggerBinding::process(Window& window, float dt) {
+    auto pos = window.tryGetClickPosition(triggerButton);
+    if(pos.has_value()) {
+        handler(pos->first, pos->second);
         return true;
     }
     return false;

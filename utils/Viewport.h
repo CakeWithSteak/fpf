@@ -29,6 +29,7 @@ public:
 
     [[nodiscard]] const fcomplex& getCenter() const;
     [[nodiscard]] float getBreadth() const;
+    fcomplex resolveScreenCoords(double x, double y, double width, double height) const;
 
 private:
     friend class boost::serialization::access;
