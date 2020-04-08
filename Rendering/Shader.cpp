@@ -72,3 +72,7 @@ void Shader::setUniform(int location, int val) {
 void Shader::setUniform(int location, float val) {
     glUniform1f(location, val);
 }
+
+void Shader::setUniform(int location, float v1, float v2) {
+    glUniform2f(location, v1, v2);
+}

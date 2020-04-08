@@ -27,5 +27,15 @@ InputHandler initControls(State& s, RuntimeState& rs) {
     in.addTrigger([&rs](){rs.window.setShouldClose(true);}, GLFW_KEY_ESCAPE);
     in.addTrigger([&s, &rs](){rs.window.minimize(); save(s); rs.window.restore();}, GLFW_KEY_TAB);
 
+    //This uses the metric arg for tolerance even if it means something else, and could thus lead to wildly unexpected results in julia mode
+    //fixme
+    in.addTrigger([&s, &rs](double x, double y){
+        auto z = s.viewport.resolveScreenCoords(x, y, rs.window.getWidth(), rs.window.getHeight());
+        std::cout << "Rendering path overlay from " << z << ".\n";
+        auto length = rs.renderer.generatePathOverlay(z, s.metricArg, s.p);
+        std::cout << "Path length: " << length << std::endl;
+
+    }, GLFW_MOUSE_BUTTON_1);
+
     return in;
 }

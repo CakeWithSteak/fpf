@@ -16,7 +16,7 @@ add_executable(fixed_point_fractals main.cpp Rendering/glad/glad.c Rendering/Win
 target_include_directories(fixed_point_fractals PRIVATE ${CMAKE_BINARY_DIR})
 target_include_directories(fixed_point_fractals PRIVATE /usr/local/cuda/include)
 
-target_compile_options(fixed_point_fractals PRIVATE -O3 -g)
+target_compile_options(fixed_point_fractals PRIVATE -O0 -g)
 
 target_link_libraries(fixed_point_fractals boost_program_options)
 target_link_libraries(fixed_point_fractals boost_serialization)

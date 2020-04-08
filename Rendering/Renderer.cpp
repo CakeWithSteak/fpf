@@ -22,12 +22,31 @@ float data[] = {
 };
 
 void Renderer::init(std::string_view cudaCode) {
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
+    unsigned int VAOs[2];
+    glGenVertexArrays(2, VAOs);
+    mainVAO = VAOs[0];
+    overlayVAO = VAOs[1];
 
-    unsigned int VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    unsigned int VBOs[2];
+    glGenBuffers(2, VBOs);
+    unsigned int mainVBO = VBOs[0];
+    overlayLineVBO = VBOs[1];
+
+    //Init overlay structures
+    glBindVertexArray(overlayVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, overlayLineVBO);
+
+    //glBufferStorage(GL_ARRAY_BUFFER, 2 * MAX_PATH_STEPS * sizeof(float), nullptr, GL_MAP_WRITE_BIT); todo
+    glBufferData(GL_ARRAY_BUFFER, 2 * MAX_PATH_STEPS * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+
+    //Line vertices
+    glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof(float) * 2, nullptr);
+    glEnableVertexAttribArray(0);
+
+    //Init main structures
+    glBindVertexArray(mainVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, mainVBO);
+
     glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_STATIC_DRAW);
 
     //Position
@@ -38,10 +57,13 @@ void Renderer::init(std::string_view cudaCode) {
     glVertexAttribPointer(1, 2, GL_FLOAT, false, sizeof(float) * 4, (void*)(sizeof(float) * 2));
     glEnableVertexAttribArray(1);
 
+    glLineWidth(2);
+    glPointSize(4);
+
     initTexture();
     initShaders();
     initCuda();
-    initKernel(cudaCode);
+    initKernels(cudaCode);
 }
 
 void Renderer::initTexture() {
@@ -57,26 +79,33 @@ void Renderer::initTexture() {
 }
 
 void Renderer::initShaders() {
-    shader.use();
+    mainShader.use();
 
-    shader.setUniform("distances", 0);
-    shader.setUniform("maxHue", mode.maxHue);
+    mainShader.setUniform("distances", 0);
+    mainShader.setUniform("maxHue", mode.maxHue);
 
-    minimumUniform = shader.getUniformLocation("minDist");
-    maximumUniform = shader.getUniformLocation("maxDist");
+    minimumUniform = mainShader.getUniformLocation("minDist");
+    maximumUniform = mainShader.getUniformLocation("maxDist");
+    viewCenterUniform = overlayShader.getUniformLocation("viewportCenter");
+    viewBreadthUniform = overlayShader.getUniformLocation("viewportBreadth");
 
     if(mode.staticMinMax.has_value()) {
-        shader.setUniform(minimumUniform, mode.staticMinMax->first);
-        shader.setUniform(maximumUniform, mode.staticMinMax->second);
+        mainShader.setUniform(minimumUniform, mode.staticMinMax->first);
+        mainShader.setUniform(maximumUniform, mode.staticMinMax->second);
     }
 }
 
-void Renderer::initCuda() {
+void Renderer::initCuda(bool registerPathRes) {
     CUDA_SAFE(cudaSetDevice(0));
     numBlocks = (width * height + 1024 - 1) / 1024; //Ceiled division
     CUDA_SAFE(cudaMallocManaged(&cudaBuffer, 2 * numBlocks * sizeof(int))); //Buffer for min/max fpdist values
     CUDA_SAFE(cudaGraphicsGLRegisterImage(&cudaSurfaceRes, texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
     cudaSurfaceDesc.resType = cudaResourceTypeArray;
+
+    if(registerPathRes) {
+        CUDA_SAFE(cudaMallocManaged(&cudaPathLengthPtr, sizeof(int)));
+        CUDA_SAFE(cudaGraphicsGLRegisterBuffer(&cudaBufferRes, overlayLineVBO, cudaGraphicsRegisterFlagsWriteDiscard));
+    }
 }
 
 
@@ -100,14 +129,26 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
     CUDA_SAFE(cudaDestroySurfaceObject(surface));
     CUDA_SAFE(cudaGraphicsUnmapResources(1, &cudaSurfaceRes));
 
+    mainShader.use();
     if(!mode.staticMinMax.has_value()) {
         auto [min, max] = interleavedMinmax(cudaBuffer, 2 * numBlocks);
-        shader.setUniform(minimumUniform, min);
-        shader.setUniform(maximumUniform, std::min(max, colorCutoff));
+        mainShader.setUniform(minimumUniform, min);
+        mainShader.setUniform(maximumUniform, std::min(max, colorCutoff));
         std::cout << "Min: " << min << " max: " << max << "\n";
     }
 
+    glBindVertexArray(mainVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+    if(overlayEnabled) {
+        pm.enter(PERF_OVERLAY_RENDER);
+        glBindVertexArray(overlayVAO);
+        overlayShader.use();
+        overlayShader.setUniform(viewCenterUniform, viewport.getCenter().real(), viewport.getCenter().imag());
+        overlayShader.setUniform(viewBreadthUniform, viewport.getBreadth());
+        glDrawArrays(GL_LINE_STRIP, 0, *cudaPathLengthPtr);
+        glDrawArrays(GL_POINTS, 0, *cudaPathLengthPtr);
+        pm.exit(PERF_OVERLAY_RENDER);
+    }
     pm.exit(PERF_RENDER);
 }
 
@@ -118,8 +159,10 @@ cudaSurfaceObject_t Renderer::createSurface() {
     return surface;
 }
 
-void Renderer::initKernel(std::string_view cudaCode) {
-    kernel = compiler.Compile(cudaCode, "runtime.cu", "kernel", mode);
+void Renderer::initKernels(std::string_view cudaCode) {
+    auto funcs = compiler.Compile(cudaCode, "runtime.cu", {"kernel", "genFixedPointPath"}, mode);
+    kernel = funcs[0];
+    pathKernel = funcs[1];
 }
 
 std::string Renderer::getPerformanceReport() {
@@ -136,7 +179,28 @@ void Renderer::resize(int newWidth, int newHeight) {
     glDeleteTextures(1, &texture);
 
     initTexture();
-    initCuda();
+    initCuda(false);
+}
+
+int Renderer::generatePathOverlay(const std::complex<float>& z, float tolerance, const std::complex<float>& p) {
+    pm.enter(PERF_OVERLAY_GEN);
+    float re = z.real();
+    float im = z.imag();
+    float pre = p.real();
+    float pim = p.imag();
+    tolerance *= tolerance;
+    int maxPathSteps = MAX_PATH_STEPS; //cuLaunchKernel doesn't take const pointers so we have to make a non-const copy
+
+    void* bufferPtr;
+    CUDA_SAFE(cudaGraphicsMapResources(1, &cudaBufferRes));
+    CUDA_SAFE(cudaGraphicsResourceGetMappedPointer(&bufferPtr, nullptr, cudaBufferRes));
+    void* args[] = {&re, &im, &maxPathSteps, &tolerance, &bufferPtr, &cudaPathLengthPtr, &pre, &pim};
+    CUDA_SAFE(cuLaunchKernel(pathKernel, 1, 1, 1, 1, 1, 1, 0, nullptr, args, nullptr));
+    CUDA_SAFE(cudaDeviceSynchronize());
+    CUDA_SAFE(cudaGraphicsUnmapResources(1, &cudaBufferRes));
+    overlayEnabled = true; //todo add a key to remove the line
+    pm.exit(PERF_OVERLAY_GEN);
+    return *cudaPathLengthPtr;
 }
 
 std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size) {

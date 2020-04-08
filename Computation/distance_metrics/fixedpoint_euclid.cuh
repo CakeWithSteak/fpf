@@ -1,6 +1,6 @@
 #pragma once
 #include "../kernel_types.h"
-#include "utils.cuh"
+#include "../utils.cuh"
 
 //Euclidean distance from fixed point
 

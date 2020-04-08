@@ -20,6 +20,7 @@
 #include "kernel_types.h"
 #include "math.cuh"
 #include "metrics.h"
+#include "utils.cuh"
 DEFER_TO_NVRTC_PREPROCESSOR #include <cooperative_groups.h>
 
 namespace cg = cooperative_groups;
@@ -76,6 +77,22 @@ __global__ void kernel(float re0, float re1, float im0, float im1, dist_t maxIte
         }
         if (tid == 0) reinterpret_cast<dist2 *>(minmaxOut)[blockIdx.x] = make_dist2(min_, max_);
     }
+}
+
+__global__ void genFixedPointPath(float re, float im, int maxSteps, float tsquare, complex* output, int* outputLength, float pre, float pim) {
+    complex z = make_complex(re, im);
+    complex p = make_complex(pre, pim);
+    complex last = z;
+    output[0] = z;
+    int i = 1;
+    for(; i < maxSteps; ++i) {
+        z = F(z, p);
+        output[i] = z;
+        if(withinTolerance(z, last, tsquare))
+            break;
+        last = z;
+    }
+    *outputLength = min(i + 1, maxSteps);
 }
 
 __device__ __inline__ complex F(complex z, complex p) {

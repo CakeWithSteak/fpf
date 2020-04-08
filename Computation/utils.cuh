@@ -1,5 +1,5 @@
 #pragma once
-#include "../kernel_types.h"
+#include "kernel_types.h"
 
 __device__ __inline__ float distSquare(complex a, complex b) {
     float xdist = a.x - b.x;
