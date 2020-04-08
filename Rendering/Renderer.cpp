@@ -5,6 +5,7 @@
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include <driver_types.h>
+#include <cassert>
 #include "../Computation/safeCall.h"
 
 std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size);
@@ -139,7 +140,8 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
 
     glBindVertexArray(mainVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    if(overlayEnabled) {
+    if(pathEnabled) {
+        refreshPathIfNeeded(p, metricArg);
         pm.enter(PERF_OVERLAY_RENDER);
         glBindVertexArray(overlayVAO);
         overlayShader.use();
@@ -182,8 +184,13 @@ void Renderer::resize(int newWidth, int newHeight) {
     initCuda(false);
 }
 
-int Renderer::generatePathOverlay(const std::complex<float>& z, float tolerance, const std::complex<float>& p) {
+int Renderer::generatePath(const std::complex<float>& z, float metricArg, const std::complex<float>& p) {
     pm.enter(PERF_OVERLAY_GEN);
+    lastP = p;
+    float tolerance = (mode.argIsTolerance) ? metricArg : DEFAULT_PATH_TOLERANCE;
+    lastTolerance = tolerance;
+    pathStart = z;
+
     float re = z.real();
     float im = z.imag();
     float pre = p.real();
@@ -198,9 +205,20 @@ int Renderer::generatePathOverlay(const std::complex<float>& z, float tolerance,
     CUDA_SAFE(cuLaunchKernel(pathKernel, 1, 1, 1, 1, 1, 1, 0, nullptr, args, nullptr));
     CUDA_SAFE(cudaDeviceSynchronize());
     CUDA_SAFE(cudaGraphicsUnmapResources(1, &cudaBufferRes));
-    overlayEnabled = true; //todo add a key to remove the line
+    pathEnabled = true; //todo add a key to remove the line
     pm.exit(PERF_OVERLAY_GEN);
     return *cudaPathLengthPtr;
+}
+
+void Renderer::refreshPathIfNeeded(const std::complex<float>& p, float metricArg) {
+    assert(pathEnabled);
+    float tolerance = (mode.argIsTolerance) ? metricArg : DEFAULT_PATH_TOLERANCE;
+    if(std::abs(lastP - p) > PATH_PARAM_UPDATE_THRESHOLD ||
+       std::abs(lastTolerance - tolerance) > PATH_TOL_UPDATE_THRESHOLD) {
+        lastP = p;
+        lastTolerance = tolerance;
+        generatePath(pathStart, tolerance, p);
+    }
 }
 
 std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size) {

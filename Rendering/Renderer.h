@@ -13,7 +13,11 @@ class Renderer {
     int height;
     const Viewport& viewport;
     ModeInfo mode;
-    bool overlayEnabled = false;
+
+    bool pathEnabled = false;
+    std::complex<float> pathStart;
+    std::complex<float> lastP;
+    float lastTolerance;
 
     int numBlocks;
     unsigned int texture;
@@ -42,7 +46,11 @@ class Renderer {
     static constexpr size_t PERF_RENDER = 1;
     static constexpr size_t PERF_OVERLAY_GEN = 2;
     static constexpr size_t PERF_OVERLAY_RENDER = 3;
+
     static constexpr int MAX_PATH_STEPS = 256;
+    static constexpr float PATH_PARAM_UPDATE_THRESHOLD = 0.01f;
+    static constexpr float PATH_TOL_UPDATE_THRESHOLD = 0.001f;
+    static constexpr float DEFAULT_PATH_TOLERANCE = 0.001f;
 
     void init(std::string_view cudaCode);
     void initTexture();
@@ -50,6 +58,7 @@ class Renderer {
     void initCuda(bool registerPathRes = true);
     void initKernels(std::string_view cudaCode);
     cudaSurfaceObject_t createSurface();
+    void refreshPathIfNeeded(const std::complex<float>& p, float tolerance);
 public:
     Renderer(int width, int height, const Viewport& viewport, const ModeInfo& mode, std::string_view cudaCode)
             : width(width), height(height), viewport(viewport), mode(mode) {init(cudaCode);}
@@ -58,7 +67,7 @@ public:
     void render(dist_t maxIters, float metricArg, const std::complex<float>& p, float colorCutoff);
     std::string getPerformanceReport();
     void resize(int newWidth, int newHeight);
-    int generatePathOverlay(const std::complex<float>& z, float tolerance, const std::complex<float>& p);
+    int generatePath(const std::complex<float>& z, float tolerance, const std::complex<float>& p);
 };
 
 
