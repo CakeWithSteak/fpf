@@ -112,7 +112,9 @@ void Renderer::initCuda(bool registerPathRes) {
 
 Renderer::~Renderer() {
     CUDA_SAFE(cudaGraphicsUnregisterResource(cudaSurfaceRes));
+    CUDA_SAFE(cudaGraphicsUnregisterResource(cudaBufferRes));
     CUDA_SAFE(cudaFree(cudaBuffer));
+    CUDA_SAFE(cudaFree(cudaPathLengthPtr));
 }
 
 void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float>& p, float colorCutoff) {
