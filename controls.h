@@ -9,7 +9,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
     constexpr int ITER_STEP = 2;
     constexpr float PARAM_STEP = 0.05f;
     constexpr float COLOR_CUTOFF_STEP = 1.0f;
-    constexpr float DEFAULT_PATH_TOLERANCE = 0.001f;
+
 
     InputHandler in(rs.window);
     in.addViewport(s.viewport, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_KP_ADD, GLFW_KEY_KP_SUBTRACT, GLFW_KEY_HOME, MOVE_STEP, ZOOM_STEP);
@@ -28,11 +28,10 @@ InputHandler initControls(State& s, RuntimeState& rs) {
     in.addTrigger([&rs](){rs.window.setShouldClose(true);}, GLFW_KEY_ESCAPE);
     in.addTrigger([&s, &rs](){rs.window.minimize(); save(s); rs.window.restore();}, GLFW_KEY_TAB);
 
-    in.addTrigger([&s, &rs, DEFAULT_PATH_TOLERANCE](double x, double y){
+    in.addTrigger([&s, &rs](double x, double y){
         auto z = s.viewport.resolveScreenCoords(x, y, rs.window.getWidth(), rs.window.getHeight());
-        float pathTolerance = (s.mode.argIsTolerance) ? s.metricArg : DEFAULT_PATH_TOLERANCE;
         std::cout << "Rendering path overlay from " << z << ".\n";
-        auto length = rs.renderer.generatePathOverlay(z, pathTolerance, s.p);
+        auto length = rs.renderer.generatePath(z, s.metricArg, s.p);
         std::cout << "Path length: " << length << std::endl;
 
     }, GLFW_MOUSE_BUTTON_1);
