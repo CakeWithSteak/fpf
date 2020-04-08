@@ -16,6 +16,7 @@ struct ModeInfo {
     float argStep;
     float argMin;
     float argMax;
+    bool argIsTolerance = false; // Used for path tracing
     float defaultColorCutoff = -1;
     bool disableArg = false;
     bool disableIterations = false;

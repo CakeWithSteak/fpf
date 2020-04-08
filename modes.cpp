@@ -14,6 +14,7 @@ const std::map<DistanceMetric, ModeInfo> modes {
             .argStep = 0.0025f,
             .argMin = 0.0f,
             .argMax = 2.0f,
+            .argIsTolerance = true
         }},
         {JULIA, {
             .metric = JULIA,
@@ -25,7 +26,6 @@ const std::map<DistanceMetric, ModeInfo> modes {
             .argStep = 0.5f,
             .argMin = 0.0f,
             .argMax = 200.0f,
-
         }},
         {FIXEDPOINT_EUCLIDEAN, {
            .metric = FIXEDPOINT_EUCLIDEAN,
@@ -37,6 +37,7 @@ const std::map<DistanceMetric, ModeInfo> modes {
            .argStep = 0.0025f,
            .argMin = 0.0f,
            .argMax = 2.0f,
+           .argIsTolerance = true
         }},
         {VECTORFIELD_MAGNITUDE, {
            .metric = VECTORFIELD_MAGNITUDE,
@@ -48,6 +49,7 @@ const std::map<DistanceMetric, ModeInfo> modes {
            .argStep = 0.0f,
            .argMin = 0.0f,
            .argMax = 0.0f,
+           .argIsTolerance = false,
            .defaultColorCutoff = 20.0f,
            .disableArg = true,
            .disableIterations = true
@@ -62,6 +64,7 @@ const std::map<DistanceMetric, ModeInfo> modes {
             .argStep = 0.0f,
             .argMin = 0.0f,
             .argMax = 0.0f,
+            .argIsTolerance = false,
             .defaultColorCutoff = -1.0f,
             .disableArg = true,
             .disableIterations = true,
