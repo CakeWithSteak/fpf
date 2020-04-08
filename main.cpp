@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
 
     auto cudaCode = getCudaCode(state.expr);
 
-    Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, false);
+    Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, true);
     window.setSwapInterval(1);
     window.enableGLDebugMessages(glDebugCallback);
 
@@ -110,6 +110,7 @@ int main(int argc, char** argv) {
 
     Timer timer;
     while(!window.shouldClose()) {
+        window.poll();
         bool repaintNeeded = input.process(timer.getSeconds()) || runtimeState.forceRerender;
         timer.reset();
 
@@ -117,11 +118,9 @@ int main(int argc, char** argv) {
             glClear(GL_COLOR_BUFFER_BIT);
             float actualColorCutoff = state.colorCutoffEnabled ? state.colorCutoff : std::numeric_limits<float>::max();
             renderer.render(state.maxIters, state.metricArg, state.p, actualColorCutoff);
-            window.poll(); // The Renderer call may take a long time, so we poll here to ensure responsiveness
             window.swapBuffers();
             runtimeState.forceRerender = false;
         }
-        window.poll();
         if(!repaintNeeded)
             std::this_thread::sleep_for(40ms);
     }

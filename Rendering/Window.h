@@ -5,6 +5,10 @@
 #include <functional>
 #include "GLFW/glfw3.h"
 
+#if (!(GLFW_VERSION_MAJOR > 3) && (GLFW_VERSION_MINOR < 3))
+#warning "GLFW version 3.3 or newer is recommended"
+#endif
+
 class Window {
     int width;
     int height;

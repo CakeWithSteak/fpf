@@ -12,6 +12,7 @@ add_custom_command(OUTPUT kernel.ii
         IMPLICIT_DEPENDS CXX VERBATIM)
 
 add_executable(fixed_point_fractals main.cpp Rendering/glad/glad.c Rendering/Window.cpp Rendering/Renderer.cpp utils/Viewport.cpp utils/Timer.cpp Computation/kernel_types.h Compilation/NvrtcCompiler.cpp kernel.ii Computation/dummy.cu Compilation/compileExpression.cpp Compilation/expr2cuda/expression_tree/ConstantNode.cpp Compilation/expr2cuda/expression_tree/ExpressionNode.cpp Compilation/expr2cuda/expression_tree/OperatorNode.cpp Compilation/expr2cuda/expression_tree/RootNode.cpp Compilation/expr2cuda/expression_tree/VariableNode.cpp Compilation/expr2cuda/token_transformations/infixtoprefix.cpp Compilation/expr2cuda/token_transformations/token_prep.cpp Compilation/expr2cuda/token_transformations/tokenize.cpp Compilation/expr2cuda/tree_transformations/buildTree.cpp Compilation/expr2cuda/tree_transformations/coalesceConstants.cpp Compilation/expr2cuda/tree_transformations/coalesceConstants.h Compilation/expr2cuda/expression_tree/nodeType.h utils/PerformanceMonitor.cpp utils/PerformanceMonitor.h Computation/metrics.h modes.h cli.cpp cli.h modes.cpp utils/Input.cpp utils/Input.h controls.h utils/isordered.h utils/State.h utils/serialization.cpp utils/serialization.h Rendering/Shader.cpp Rendering/Shader.h)
+find_library(GLFW_LIB NAMES libglfw3.a) # By default cmake seems to grab the system-installed dynamic libglfw3, which is at 3.2 while we need 3.3
 
 target_include_directories(fixed_point_fractals PRIVATE ${CMAKE_BINARY_DIR})
 target_include_directories(fixed_point_fractals PRIVATE /usr/local/cuda/include)
@@ -20,7 +21,7 @@ target_compile_options(fixed_point_fractals PRIVATE -O0 -g)
 
 target_link_libraries(fixed_point_fractals boost_program_options)
 target_link_libraries(fixed_point_fractals boost_serialization)
-target_link_libraries(fixed_point_fractals glfw)
+target_link_libraries(fixed_point_fractals ${GLFW_LIB})
 target_link_libraries(fixed_point_fractals GL)
 target_link_libraries(fixed_point_fractals pthread)
 target_link_libraries(fixed_point_fractals X11)
