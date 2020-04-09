@@ -24,3 +24,29 @@ void save(State& state) {
     std::cin >> filename;
     serialize(state, filename);
 }
+
+// Serialize std::optional
+namespace boost::serialization {
+    template <class Archive, class T>
+    void save(Archive& ar, const std::optional<T>& val, unsigned int version) {
+        ar << val.has_value();
+        ar << val.value_or(T());
+    }
+
+    template <class Archive, class T>
+    void load(Archive& ar, std::optional<T>& val, unsigned int version) {
+        bool hasValue;
+        ar >> hasValue;
+        T loadedVal;
+        ar >> loadedVal;
+        if(hasValue) {
+            val = {loadedVal};
+        }
+    }
+
+    template<class Archive, class T>
+    void serialize(Archive & ar, std::optional<T>& t, const unsigned int version)
+    {
+        boost::serialization::split_free(ar, t, version);
+    }
+}

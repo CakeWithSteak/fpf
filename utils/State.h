@@ -20,8 +20,9 @@ struct State {
     float colorCutoff;
     int width, height;
     ModeInfo mode; //Only the DistanceMetric is serialized
+    std::optional<std::complex<float>> pathStart = {};
 
-    State(const Options& opt) {
+    explicit State(const Options& opt) {
         expr = opt.expression;
         mode = opt.mode;
         width = opt.width;

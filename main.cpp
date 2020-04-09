@@ -102,11 +102,15 @@ int main(int argc, char** argv) {
 
     InputHandler input = initControls(state, runtimeState);
 
+    if(state.pathStart.has_value())
+        renderer.generatePath(state.pathStart.value(), state.metricArg, state.p);
+
     //First render
     glClear(GL_COLOR_BUFFER_BIT);
     renderer.render(state.maxIters, state.metricArg, state.p, state.colorCutoffEnabled ? state.colorCutoff : std::numeric_limits<float>::max());
     window.swapBuffers();
     window.poll();
+
 
     Timer timer;
     while(!window.shouldClose()) {
