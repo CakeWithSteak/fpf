@@ -2,6 +2,7 @@
 #include "utils/Input.h"
 #include "utils/State.h"
 #include "utils/serialization.h"
+#include "utils/imageExport.h"
 
 InputHandler initControls(State& s, RuntimeState& rs) {
     constexpr float MOVE_STEP = 0.8f;
@@ -37,6 +38,17 @@ InputHandler initControls(State& s, RuntimeState& rs) {
     }, GLFW_MOUSE_BUTTON_1);
 
     in.addTrigger([&s, &rs](){rs.renderer.hidePath(); s.pathStart = {};}, GLFW_KEY_H);
+
+    in.addTrigger([&rs](){
+        rs.window.minimize();
+        std::cout << "Save image as> ";
+        std::filesystem::path filename;
+        std::cin >> filename;
+        filename.replace_extension("png");
+        auto pixels = rs.renderer.exportImageData();
+        exportImage(filename, rs.window.getWidth(), rs.window.getHeight(), pixels);
+        rs.window.restore();
+    }, GLFW_KEY_INSERT);
 
     return in;
 }

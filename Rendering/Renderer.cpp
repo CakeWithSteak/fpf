@@ -173,6 +173,7 @@ std::string Renderer::getPerformanceReport() {
 }
 
 void Renderer::resize(int newWidth, int newHeight) {
+    std::cout << "RESIZE" << std::endl;
     width = newWidth;
     height = newHeight;
 
@@ -224,6 +225,14 @@ void Renderer::refreshPathIfNeeded(const std::complex<float>& p, float metricArg
 
 void Renderer::hidePath() {
     pathEnabled = false;
+}
+
+std::vector<unsigned char> Renderer::exportImageData() {
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    long size = width * height * 3;
+    std::vector<unsigned char> data(size);
+    glReadnPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, size, data.data());
+    return data;
 }
 
 std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size) {
