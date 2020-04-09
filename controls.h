@@ -30,13 +30,13 @@ InputHandler initControls(State& s, RuntimeState& rs) {
 
     in.addTrigger([&s, &rs](double x, double y){
         auto z = s.viewport.resolveScreenCoords(x, y, rs.window.getWidth(), rs.window.getHeight());
+        s.pathStart = z;
         std::cout << "Rendering path overlay from " << z << ".\n";
         auto length = rs.renderer.generatePath(z, s.metricArg, s.p);
         std::cout << "Path length: " << length << std::endl;
-
     }, GLFW_MOUSE_BUTTON_1);
 
-    in.addTrigger([&rs](){rs.renderer.hidePath();}, GLFW_KEY_H);
+    in.addTrigger([&s, &rs](){rs.renderer.hidePath(); s.pathStart = {};}, GLFW_KEY_H);
 
     return in;
 }

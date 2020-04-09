@@ -3,7 +3,6 @@
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/complex.hpp>
 #include <boost/serialization/string.hpp>
-#include "../Computation/metrics.h"
 #include "State.h"
 
 
@@ -19,6 +18,7 @@ void serialize(Archive& ar, State& s, const unsigned int version) {
     ar & s.width;
     ar & s.height;
     ar & s.mode;
+    ar & s.pathStart;
 }
 
 void save(State& state);
