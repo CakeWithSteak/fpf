@@ -25,7 +25,7 @@ const std::map<DistanceMetric, ModeInfo> modes {
             .argInitValue = 10.0f,
             .argStep = 0.5f,
             .argMin = 0.0f,
-            .argMax = 200.0f,
+            .argMax = std::numeric_limits<float>::max(),
         }},
         {FIXEDPOINT_EUCLIDEAN, {
            .metric = FIXEDPOINT_EUCLIDEAN,
