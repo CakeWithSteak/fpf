@@ -10,6 +10,7 @@ struct Options {
     int width;
     int height;
     std::filesystem::path refsPath;
+    std::optional<float> metricArg;
     std::optional<std::filesystem::path> deserializationPath = {};
 };
 

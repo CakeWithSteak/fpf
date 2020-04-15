@@ -27,7 +27,7 @@ struct State {
         mode = opt.mode;
         width = opt.width;
         height = opt.height;
-        metricArg = mode.argInitValue;
+        metricArg = (opt.metricArg.has_value()) ? opt.metricArg.value() : mode.argInitValue;
         colorCutoffEnabled = (mode.defaultColorCutoff != -1);
         colorCutoff = colorCutoffEnabled ? mode.defaultColorCutoff : 10.0f;
     }
