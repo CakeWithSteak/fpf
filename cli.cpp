@@ -29,7 +29,8 @@ Options getOptions(int argc, char** argv) {
        ("mode", po::value<std::string>(), "Fractal construction mode: fixed/fixed-dist/julia")
        ("expression", po::value<std::string>(), "The function to generate the fractal")
        ("width,w", po::value<int>()->default_value(1024), "Window width")
-       ("height,h", po::value<int>()->default_value(1024), "Window height");
+       ("height,h", po::value<int>()->default_value(1024), "Window height")
+       ("refs-path", po::value<std::string>()->default_value("./refs.txt"), "References file path");
 
     po::positional_options_description pos;
     pos.add("mode", 1);
@@ -42,6 +43,7 @@ Options getOptions(int argc, char** argv) {
     Options opt;
     opt.width = vm["width"].as<int>();
     opt.height = vm["height"].as<int>();
+    opt.refsPath = vm["refs-path"].as<std::string>();
 
     if(vm.count("mode")) {
         auto modeStr = vm["mode"].as<std::string>();

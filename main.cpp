@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
 
     Renderer renderer(state.width, state.height, state.viewport, state.mode, cudaCode);
 
-    RuntimeState runtimeState{window, renderer};
+    RuntimeState runtimeState{.window = window, .renderer = renderer, .refsPath = opt.refsPath};
 
     window.setResizeCallback([&state, &runtimeState](Window& win, int width, int height){
         state.width = width;

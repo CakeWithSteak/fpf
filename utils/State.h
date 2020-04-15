@@ -38,4 +38,5 @@ struct RuntimeState {
     Window& window;
     Renderer& renderer;
     bool forceRerender = false;
+    std::filesystem::path refsPath;
 };

@@ -9,6 +9,7 @@ struct Options {
     std::string expression;
     int width;
     int height;
+    std::filesystem::path refsPath;
     std::optional<std::filesystem::path> deserializationPath = {};
 };
 

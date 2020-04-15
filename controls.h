@@ -39,7 +39,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
 
     in.addTrigger([&s, &rs](){rs.renderer.hidePath(); s.pathStart = {};}, GLFW_KEY_H);
 
-    in.addTrigger([&rs](){
+    in.addTrigger([&s, &rs](){
         rs.window.minimize();
         std::cout << "Save image as> ";
         std::filesystem::path filename;
@@ -47,6 +47,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
         filename.replace_extension("png");
         auto pixels = rs.renderer.exportImageData();
         exportImage(filename, rs.window.getWidth(), rs.window.getHeight(), pixels);
+        writeImageInfoToReferences(rs.refsPath, filename, s);
         rs.window.restore();
     }, GLFW_KEY_INSERT);
 
