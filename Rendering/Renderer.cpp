@@ -173,7 +173,6 @@ std::string Renderer::getPerformanceReport() {
 }
 
 void Renderer::resize(int newWidth, int newHeight) {
-    std::cout << "RESIZE" << std::endl;
     width = newWidth;
     height = newHeight;
 

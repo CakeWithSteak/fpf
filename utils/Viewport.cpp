@@ -59,7 +59,6 @@ inline void Viewport::debugPrintState() {
 }
 
 fcomplex Viewport::resolveScreenCoords(double x, double y, double width, double height) const {
-    std::cout << "Resolving screen coords: " << x << ", " << y << std::endl;
     float re = breadth * (2 * (x / width) - 1) + center.real();
     float im = breadth * (1 - 2*y / height) + center.imag();
     return {re, im};
