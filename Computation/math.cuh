@@ -111,3 +111,8 @@ __device__ __inline__ complex cimag(complex z) {
 __device__ __inline__ complex carg(complex z) {
     return make_complex(atan2(z.y, z.x), 0);
 }
+
+__device__ __inline__ complex cexp(complex z) {
+    float temp = expf(z.x);
+    return make_complex(temp * cosf(z.y), temp * sinf(z.y));
+}

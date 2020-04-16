@@ -24,6 +24,8 @@ const std::map<std::string, OperatorTraits> operatorLookup {
         {"Re", {"Re", true, 1, "creal"}},
         {"Im", {"Im", true, 1, "cimag"}},
         {"arg", {"arg", true, 1, "carg"}},
+
+        {"exp", {"exp", true, 1, "cexp"}},
 };
 
 //Maps the unary operator to its function form
