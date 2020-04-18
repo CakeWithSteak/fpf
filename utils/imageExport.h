@@ -4,5 +4,5 @@
 
 using path = std::filesystem::path;
 
-void exportImage(const path& filename, int width, int height, const std::vector<unsigned char>& data);
+void exportImage(const path& filename, int width, int height, std::vector<unsigned char>& data);
 void writeImageInfoToReferences(const path& referencesPath, const path& imagePath, const State& state);
