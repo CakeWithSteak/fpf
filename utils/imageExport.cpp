@@ -5,7 +5,21 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "thirdparty/stb_image_write.h"
 
-void exportImage(const std::filesystem::path& filename, int width, int height, const std::vector<unsigned char>& data) {
+void flipImage(std::vector<unsigned char>& data, int width, int height) {
+    const int c = 3;
+    for(int y = 0; y < height / 2; ++y) {
+        for(int x = 0; x < width; ++x) {
+            int iTop = c * ((y * width) + x);
+            int iBottom = c * (((height - y - 1) * width) + x);
+            std::swap(data[iTop], data[iBottom]);
+            std::swap(data[iTop + 1], data[iBottom + 1]);
+            std::swap(data[iTop + 2], data[iBottom + 2]);
+        }
+    }
+}
+
+void exportImage(const std::filesystem::path& filename, int width, int height, std::vector<unsigned char>& data) {
+    flipImage(data, width, height);
     stbi_write_png(filename.c_str(), width, height, 3, data.data(), 0);
 }
 
