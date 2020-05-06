@@ -17,7 +17,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
     auto& mode = s.mode;
 
     if(!mode.disableIterations)
-        in.addScalar(s.maxIters, GLFW_KEY_KP_MULTIPLY, GLFW_KEY_KP_DIVIDE, ITER_STEP, "Max itertations", 1, 1024);
+        in.addScalar(s.maxIters, GLFW_KEY_KP_MULTIPLY, GLFW_KEY_KP_DIVIDE, ITER_STEP, "Max iterations", 1, 1024);
 
     if(!mode.disableArg)
         in.addScalar(s.metricArg, GLFW_KEY_0, GLFW_KEY_9, mode.argStep, mode.argDisplayName, mode.argMin, mode.argMax);
@@ -29,15 +29,17 @@ InputHandler initControls(State& s, RuntimeState& rs) {
     in.addTrigger([&rs](){rs.window.setShouldClose(true);}, GLFW_KEY_ESCAPE);
     in.addTrigger([&s, &rs](){rs.window.minimize(); save(s); rs.window.restore();}, GLFW_KEY_TAB);
 
-    in.addTrigger([&s, &rs](double x, double y){
-        auto z = s.viewport.resolveScreenCoords(x, y, rs.window.getWidth(), rs.window.getHeight());
-        s.pathStart = z;
-        std::cout << "Rendering path overlay from " << z << ".\n";
-        auto length = rs.renderer.generatePath(z, s.metricArg, s.p);
-        std::cout << "Path length: " << length << std::endl;
-    }, GLFW_MOUSE_BUTTON_1);
+    if(!mode.disablePath) {
+        in.addTrigger([&s, &rs](double x, double y) {
+            auto z = s.viewport.resolveScreenCoords(x, y, rs.window.getWidth(), rs.window.getHeight());
+            s.pathStart = z;
+            std::cout << "Rendering path overlay from " << z << ".\n";
+            auto length = rs.renderer.generatePath(z, s.metricArg, s.p);
+            std::cout << "Path length: " << length << std::endl;
+        }, GLFW_MOUSE_BUTTON_1);
 
-    in.addTrigger([&s, &rs](){rs.renderer.hidePath(); s.pathStart = {};}, GLFW_KEY_H);
+        in.addTrigger([&s, &rs](){rs.renderer.hidePath(); s.pathStart = {};}, GLFW_KEY_H);
+    }
 
     in.addTrigger([&s, &rs](){
         rs.window.minimize();

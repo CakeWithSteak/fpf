@@ -9,5 +9,5 @@ using dist2 = float2;
 using complex = float2;
 
 #ifdef BUILD_FOR_NVRTC
-__device__ __inline__ complex F(complex z, complex p); //Forward declaration for generated code
+__device__ __inline__ complex F(complex z, complex p, complex c); //Forward declaration for generated code
 #endif

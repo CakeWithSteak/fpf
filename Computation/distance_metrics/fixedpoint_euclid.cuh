@@ -4,12 +4,12 @@
 
 //Euclidean distance from fixed point
 
-__device__ __inline__ dist_t fixedPointDistEuclid(complex z, dist_t maxIters, complex p, float tsquare) {
+__device__ __inline__ dist_t fixedPointDistEuclid(complex z, dist_t maxIters, complex p, float tsquare, complex c) {
     const complex original = z;
     complex last = z;
     dist_t i = 0;
     for(; i < maxIters; ++i) {
-        z = F(z, p);
+        z = F(z, p, c);
         if(withinTolerance(z, last, tsquare))
             break;
         last = z;

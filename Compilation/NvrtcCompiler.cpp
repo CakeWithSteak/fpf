@@ -17,7 +17,10 @@ std::vector<char*> getCompileArgs(const ModeInfo& mode) {
     args.push_back("--include-path=/usr/local/cuda/include/");
     args.push_back("-std=c++14");
     args.push_back("-ewp");
-    args.push_back(defineMacro(mode.internalName));
+    args.push_back(defineMacro(mode.metricInternalName));
+    if(mode.capturing)
+        args.push_back(defineMacro("CAPTURING"));
+
     std::vector<char*> res;
     for(int i = 0; i < args.size(); ++i) {
         res.push_back(new char[args[i].size() + 1]);

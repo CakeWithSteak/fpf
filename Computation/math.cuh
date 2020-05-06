@@ -9,15 +9,15 @@
 #include "kernel_macros.cuh"
 #include "kernel_stdint.cuh"
 
-DEFER_TO_NVRTC_PREPROCESSOR #include <cuComplex.h>
-DEFER_TO_NVRTC_PREPROCESSOR #define make_complex make_float2
+RUNTIME #include <cuComplex.h>
+RUNTIME #define make_complex make_float2
 
 //Aliases for functions defined in cuComplex
-DEFER_TO_NVRTC_PREPROCESSOR #define cadd cuCaddf
-DEFER_TO_NVRTC_PREPROCESSOR #define csub cuCsubf
-DEFER_TO_NVRTC_PREPROCESSOR #define cmul cuCmulf
-DEFER_TO_NVRTC_PREPROCESSOR #define cdiv cuCdivf
-DEFER_TO_NVRTC_PREPROCESSOR #define cconj cuConjf
+RUNTIME #define cadd cuCaddf
+RUNTIME #define csub cuCsubf
+RUNTIME #define cmul cuCmulf
+RUNTIME #define cdiv cuCdivf
+RUNTIME #define cconj cuConjf
 
 __device__ __inline__ complex ccos(complex z) {
     return make_complex(
