@@ -8,7 +8,7 @@ const std::map<DistanceMetric, ModeInfo> modes {
             .metric = FIXEDPOINT_ITERATIONS,
             .displayName = "Fixed point distance (iterations)",
             .cliName = "fixed",
-            .internalName = "FIXEDPOINT_ITERATIONS",
+            .metricInternalName = "FIXEDPOINT_ITERATIONS",
             .argDisplayName = "Tolerance",
             .argInitValue = 0.01f,
             .argStep = 0.0025f,
@@ -20,7 +20,7 @@ const std::map<DistanceMetric, ModeInfo> modes {
             .metric = JULIA,
             .displayName = "Julia set",
             .cliName = "julia",
-            .internalName = "JULIA",
+            .metricInternalName = "JULIA",
             .argDisplayName = "Escape radius",
             .argInitValue = 10.0f,
             .argStep = 0.5f,
@@ -31,7 +31,7 @@ const std::map<DistanceMetric, ModeInfo> modes {
            .metric = FIXEDPOINT_EUCLIDEAN,
            .displayName = "Fixed point distance (Euclidean)",
            .cliName = "fixed-dist",
-           .internalName = "FIXEDPOINT_EUCLIDEAN",
+           .metricInternalName = "FIXEDPOINT_EUCLIDEAN",
            .argDisplayName = "Tolerance",
            .argInitValue = 0.01f,
            .argStep = 0.0025f,
@@ -43,7 +43,7 @@ const std::map<DistanceMetric, ModeInfo> modes {
            .metric = VECTORFIELD_MAGNITUDE,
            .displayName = "Displacement",
            .cliName = "displacement",
-           .internalName = "VECTORFIELD_MAGNITUDE",
+           .metricInternalName = "VECTORFIELD_MAGNITUDE",
            .argDisplayName = "",
            .argInitValue = 0.0f,
            .argStep = 0.0f,
@@ -58,7 +58,7 @@ const std::map<DistanceMetric, ModeInfo> modes {
             .metric = VECTORFIELD_ANGLE,
             .displayName = "Direction",
             .cliName = "direction",
-            .internalName = "VECTORFIELD_ANGLE",
+            .metricInternalName = "VECTORFIELD_ANGLE",
             .argDisplayName = "",
             .argInitValue = 0.0f,
             .argStep = 0.0f,
@@ -71,5 +71,33 @@ const std::map<DistanceMetric, ModeInfo> modes {
             .maxHue = 1.0f, // The point of setting a max hue is to prevent high values bleeding into small ones -
                             // but this is exactly what we want with angles (eg 1° and 359° should look similar)
             .staticMinMax = {{0, TAU}}
+        }},
+        {CAPTURING_JULIA, {
+            .metric = JULIA, //fixme This will not serialize properly
+            .displayName = "Julia set with capture",
+            .cliName = "julia-capt",
+            .metricInternalName = "JULIA",
+            .argDisplayName = "Escape radius",
+            .argInitValue = 2.0f,
+            .argStep = 0.2f,
+            .argMin = 0.0f,
+            .argMax = std::numeric_limits<float>::max(),
+            .capturing = true,
+            .disablePath = true,
+            .initMaxIters = 512
+        }},
+        {CAPTURING_FIXEDPOINT, {
+          .metric = FIXEDPOINT_ITERATIONS,
+          .displayName = "Fixed point with capture",
+          .cliName = "fixed-capt",
+          .metricInternalName = "FIXEDPOINT_ITERATIONS",
+          .argDisplayName = "Tolerance",
+          .argInitValue = 0.00035f,
+          .argStep = 0.00025f,
+          .argMin = 0.0f,
+          .argMax = 2.0f,
+          .capturing = true,
+          .disablePath = true,
+          .initMaxIters = 512
         }},
 };

@@ -12,7 +12,7 @@
 //A struct encompassing program state useful for event handlers and serialization
 struct State {
     std::string expr;
-    int maxIters = 128;
+    int maxIters;
     float metricArg;
     std::complex<float> p{0};
     Viewport viewport;
@@ -30,6 +30,7 @@ struct State {
         metricArg = (opt.metricArg.has_value()) ? opt.metricArg.value() : mode.argInitValue;
         colorCutoffEnabled = (mode.defaultColorCutoff != -1);
         colorCutoff = colorCutoffEnabled ? mode.defaultColorCutoff : 10.0f;
+        maxIters = mode.initMaxIters;
     }
     State() = default;
 };

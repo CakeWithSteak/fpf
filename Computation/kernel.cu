@@ -1,6 +1,6 @@
 /*
  * This file is preprocessed to create kernel.ii, which is included in runtime_template.h
- * Normal preprocessor directives are processed build-time, while the ones marked with DEFER_TO_NVRTC_PREPROCESSOR
+ * Normal preprocessor directives are processed build-time, while the ones marked with RUNTIME
  *  are processed runtime by NVRTC.
  */
 
@@ -21,7 +21,7 @@
 #include "math.cuh"
 #include "metrics.h"
 #include "utils.cuh"
-DEFER_TO_NVRTC_PREPROCESSOR #include <cooperative_groups.h>
+RUNTIME #include <cooperative_groups.h>
 
 namespace cg = cooperative_groups;
 
@@ -50,7 +50,13 @@ __global__ void kernel(float re0, float re1, float im0, float im1, dist_t maxIte
     if (!threadIsExcessive) {
         //Find a z for this thread
         float2 z = getZ(re0, re1, im0, im1, surfW, surfH, x, y);
-        fpDist = DIST_F(z, maxIters, make_complex(pre, pim), metricArg);
+
+RUNTIME #ifdef CAPTURING
+        fpDist = DIST_F(make_complex(0,0), maxIters, make_complex(pre, pim), metricArg, z); //todo make starting z user chosen
+RUNTIME #else
+        fpDist = DIST_F(z, maxIters, make_complex(pre, pim), metricArg, z);
+RUNTIME #endif
+
     }
     warp.sync();
 
@@ -86,7 +92,7 @@ __global__ void genFixedPointPath(float re, float im, int maxSteps, float tsquar
     output[0] = z;
     int i = 1;
     for(; i < maxSteps; ++i) {
-        z = F(z, p);
+        z = F(z, p, z);
         output[i] = z;
         if(withinTolerance(z, last, tsquare))
             break;
@@ -95,7 +101,7 @@ __global__ void genFixedPointPath(float re, float im, int maxSteps, float tsquar
     *outputLength = min(i + 1, maxSteps);
 }
 
-__device__ __inline__ complex F(complex z, complex p) {
+__device__ __inline__ complex F(complex z, complex p, complex c) {
     /*Generated code goes here*/
 //}
 #ifndef BUILD_FOR_NVRTC

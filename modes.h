@@ -10,7 +10,7 @@ struct ModeInfo {
     DistanceMetric metric;
     std::string displayName;
     std::string cliName;
-    std::string internalName;
+    std::string metricInternalName;
     std::string argDisplayName;
     float argInitValue;
     float argStep;
@@ -22,6 +22,9 @@ struct ModeInfo {
     bool disableIterations = false;
     float maxHue = 0.8f;
     std::optional<std::pair<dist_t, dist_t>> staticMinMax = {};
+    bool capturing = false;
+    bool disablePath = false;
+    int initMaxIters = 128;
 
     template<class Archive>
     void save(Archive& ar, const unsigned int version) const
