@@ -86,13 +86,22 @@ RUNTIME #endif
 }
 
 __global__ void genFixedPointPath(float re, float im, int maxSteps, float tsquare, complex* output, int* outputLength, float pre, float pim) {
-    complex z = make_complex(re, im);
-    complex p = make_complex(pre, pim);
-    complex last = z;
+    complex c = make_complex(re, im);
+RUNTIME #ifdef CAPTURING
+    complex z = make_complex(0,0); //todo make user-chosen
+    output[0] = c;
+    output[1] = z;
+    int i = 2;
+RUNTIME #else
+    complex z = c;
     output[0] = z;
     int i = 1;
+RUNTIME #endif
+
+    complex p = make_complex(pre, pim);
+    complex last = z;
     for(; i < maxSteps; ++i) {
-        z = F(z, p, z);
+        z = F(z, p, c);
         output[i] = z;
         if(withinTolerance(z, last, tsquare))
             break;
