@@ -1,8 +1,7 @@
 #pragma once
 #include "kernel_types.h"
 
-//todo could ref be faster?
-// __device__ __inline__ DIST_F(complex z, dist_t maxIters, complex p, float arg, complex c) //todo maybe reorder?
+// __device__ __inline__ DIST_F(complex z, dist_t maxIters, complex p, float arg, complex c)
 
 #ifdef BUILD_FOR_NVRTC
 #include "kernel_macros.cuh"
