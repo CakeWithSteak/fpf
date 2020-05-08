@@ -15,13 +15,15 @@ using limits = std::numeric_limits<T>;
 
 class InputBinding {
 public:
-    virtual bool process(Window& window, float dt) = 0;
+    virtual bool process(Window& window, float dt, float multiplier) = 0;
     virtual ~InputBinding() = default;
 };
 
 class InputHandler {
     Window& window;
     std::vector<InputBinding*> bindings;
+    std::optional<int> multiplierKey;
+    float multiplier = 1.f;
 public:
     bool process(float dt);
 
@@ -33,7 +35,9 @@ public:
     void addTrigger(const std::function<void()>& handler, int triggerKey);
     void addTrigger(const std::function<void(double, double)>& handler, int triggerButton);
 
-    explicit InputHandler(Window& window) : window(window) {}
+    InputHandler(Window& window, const std::optional<int>& multiplierKey = {}, float multiplier = 1.f) : window(window),
+                                                                                                         multiplierKey(multiplierKey),
+                                                                                                         multiplier(multiplier) {}
     ~InputHandler();
 };
 
@@ -43,9 +47,8 @@ class ScalarBinding : public InputBinding {
     T step, min, max;
     int upKey, downKey;
     std::string displayName;
-    bool isUncomparable;
 public:
-    virtual bool process(Window& window, float dt) override;
+    virtual bool process(Window& window, float dt, float multiplier) override;
     ScalarBinding(T& val, int upKey, int downKey, T step, std::string displayName, T min = limits<T>::lowest(), T max = limits<T>::max()) :
         val(val), min(min), max(max), upKey(upKey), downKey(downKey), step(step), displayName(displayName) {}
 };
@@ -57,7 +60,7 @@ class ToggleBinding : public InputBinding {
     int key;
     std::string displayName;
 public:
-    virtual bool process(Window& window, float dt) override;
+    virtual bool process(Window& window, float dt, float multiplier) override;
     ToggleBinding(bool& val, int key, std::string displayName) :
         val(val), key(key), displayName(displayName) {}
 };
@@ -69,7 +72,7 @@ class ViewportBinding : public InputBinding {
     std::complex<float> resetPoint;
     float resetZoom;
 public:
-    virtual bool process(Window& window, float dt) override;
+    virtual bool process(Window& window, float dt, float multiplier) override;
     ViewportBinding(Viewport& v, int upKey, int downKey, int leftKey, int rightKey, int zoomInKey, int zoomOutKey,
         int resetKey, float moveStep, float zoomStep) : v(v), upKey(upKey),
         downKey(downKey), leftKey(leftKey), rightKey(rightKey), zoomInKey(zoomInKey), zoomOutKey(zoomOutKey),
@@ -80,7 +83,7 @@ class TriggerBinding : public InputBinding {
     std::function<void()> handler;
     int triggerKey;
 public:
-    virtual bool process(Window& window, float dt) override;
+    virtual bool process(Window& window, float dt, float multiplier) override;
     TriggerBinding(const std::function<void()>& handler, int triggerKey) : handler(handler), triggerKey(triggerKey) {}
 };
 
@@ -88,7 +91,7 @@ class MouseTriggerBinding : public InputBinding {
     std::function<void(double, double)> handler;
     int triggerButton;
 public:
-    virtual bool process(Window& window, float dt) override;
+    virtual bool process(Window& window, float dt, float multiplier) override;
     MouseTriggerBinding(const std::function<void(double, double)>& handler, int triggerButton) : handler(handler), triggerButton(triggerButton) {}
 };
 
@@ -98,17 +101,17 @@ void InputHandler::addScalar(T& val, int upKey, int downKey, T step, const std::
 }
 
 template<typename T>
-bool ScalarBinding<T>::process(Window& window, float dt) {
+bool ScalarBinding<T>::process(Window& window, float dt, float multiplier) {
     if constexpr(std::is_integral_v<T>)
         dt = 1;
 
     bool inputReceived = false;
     if(window.isKeyPressed(upKey)) {
-        val += step * dt;
+        val += step * dt * multiplier;
         inputReceived = true;
     }
     if(window.isKeyPressed(downKey)) {
-        val -= step * dt;
+        val -= step * dt * multiplier;
         inputReceived = true;
     }
 

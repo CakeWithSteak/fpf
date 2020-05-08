@@ -10,9 +10,9 @@ InputHandler initControls(State& s, RuntimeState& rs) {
     constexpr int ITER_STEP = 2;
     constexpr float PARAM_STEP = 0.05f;
     constexpr float COLOR_CUTOFF_STEP = 1.0f;
+    constexpr float FAST_MODE_MULTIPLIER = 6.f;
 
-
-    InputHandler in(rs.window);
+    InputHandler in(rs.window, GLFW_KEY_LEFT_SHIFT, FAST_MODE_MULTIPLIER);
     in.addViewport(s.viewport, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_KP_ADD, GLFW_KEY_KP_SUBTRACT, GLFW_KEY_HOME, MOVE_STEP, ZOOM_STEP);
     auto& mode = s.mode;
 
