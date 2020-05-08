@@ -3,8 +3,10 @@
 bool InputHandler::process(float dt) {
     dt = std::clamp(dt, 0.0f, 1.0f);
     bool inputReceived = false;
+    float mult = (multiplierKey.has_value() &&  window.isKeyPressed(*multiplierKey)) ? multiplier : 1.f;
+
     for(auto binding : bindings) {
-        if(binding->process(window, dt))
+        if(binding->process(window, dt, mult))
             inputReceived = true;
     }
     return inputReceived;
@@ -32,7 +34,7 @@ InputHandler::~InputHandler() {
         delete binding;
 }
 
-bool ToggleBinding::process(Window &window, [[maybe_unused]] float dt) {
+bool ToggleBinding::process(Window& window, float dt, float multiplier) {
     if(window.isKeyPressed(key) && timer.get() > cooldown) {
         val = !val;
         std::cout << displayName << " " << (val ? "on" : "off") << std::endl;
@@ -42,30 +44,30 @@ bool ToggleBinding::process(Window &window, [[maybe_unused]] float dt) {
     return false;
 }
 
-bool ViewportBinding::process(Window &window, float dt) {
+bool ViewportBinding::process(Window& window, float dt, float multiplier) {
     bool inputReceived = false;
     if(window.isKeyPressed(upKey)) {
-        v.move(Viewport::Direction::UP, moveStep * dt);
+        v.move(Viewport::Direction::UP, moveStep * dt * multiplier);
         inputReceived = true;
     }
     if(window.isKeyPressed(downKey)) {
-        v.move(Viewport::Direction::DOWN, moveStep * dt);
+        v.move(Viewport::Direction::DOWN, moveStep * dt * multiplier);
         inputReceived = true;
     }
     if(window.isKeyPressed(leftKey)) {
-        v.move(Viewport::Direction::LEFT, moveStep * dt);
+        v.move(Viewport::Direction::LEFT, moveStep * dt * multiplier);
         inputReceived = true;
     }
     if(window.isKeyPressed(rightKey)) {
-        v.move(Viewport::Direction::RIGHT, moveStep * dt);
+        v.move(Viewport::Direction::RIGHT, moveStep * dt * multiplier);
         inputReceived = true;
     }
     if(window.isKeyPressed(zoomInKey)) {
-        v.zoom(zoomStep * dt);
+        v.zoom(zoomStep * dt * multiplier);
         inputReceived = true;
     }
     if(window.isKeyPressed(zoomOutKey)) {
-        v.zoom(-zoomStep * dt);
+        v.zoom(-zoomStep * dt * multiplier);
         inputReceived = true;
     }
     if(window.isKeyPressed(resetKey)) {
@@ -76,7 +78,7 @@ bool ViewportBinding::process(Window &window, float dt) {
     return inputReceived;
 }
 
-bool TriggerBinding::process(Window& window, [[maybe_unused]] float dt) {
+bool TriggerBinding::process(Window& window, float dt, [[maybe_unused]] float multiplier) {
     if(window.isKeyPressed(triggerKey)) {
         handler();
         return true;
@@ -84,7 +86,7 @@ bool TriggerBinding::process(Window& window, [[maybe_unused]] float dt) {
     return false;
 }
 
-bool MouseTriggerBinding::process(Window& window, float dt) {
+bool MouseTriggerBinding::process(Window& window, float dt, [[maybe_unused]] float multiplier) {
     auto pos = window.tryGetClickPosition(triggerButton);
     if(pos.has_value()) {
         handler(pos->first, pos->second);
