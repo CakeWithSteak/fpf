@@ -8,6 +8,7 @@ extern const std::map<DistanceMetric, ModeInfo> modes;
 
 struct ModeInfo {
     DistanceMetric metric;
+    DistanceMetric serializedName = metric;
     std::string displayName;
     std::string cliName;
     std::string metricInternalName;
@@ -29,7 +30,7 @@ struct ModeInfo {
     template<class Archive>
     void save(Archive& ar, const unsigned int version) const
     {
-        ar << metric;
+        ar << serializedName;
     }
 
     template<class Archive>
