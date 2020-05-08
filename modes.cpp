@@ -73,7 +73,8 @@ const std::map<DistanceMetric, ModeInfo> modes {
             .staticMinMax = {{0, TAU}}
         }},
         {CAPTURING_JULIA, {
-            .metric = JULIA, //fixme This will not serialize properly
+            .metric = JULIA,
+            .serializedName = CAPTURING_JULIA,
             .displayName = "Julia set with capture",
             .cliName = "julia-capt",
             .metricInternalName = "JULIA",
@@ -87,6 +88,7 @@ const std::map<DistanceMetric, ModeInfo> modes {
         }},
         {CAPTURING_FIXEDPOINT, {
           .metric = FIXEDPOINT_ITERATIONS,
+          .serializedName = CAPTURING_FIXEDPOINT,
           .displayName = "Fixed point with capture",
           .cliName = "fixed-capt",
           .metricInternalName = "FIXEDPOINT_ITERATIONS",
