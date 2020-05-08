@@ -52,7 +52,7 @@ __global__ void kernel(float re0, float re1, float im0, float im1, dist_t maxIte
         float2 z = getZ(re0, re1, im0, im1, surfW, surfH, x, y);
 
 RUNTIME #ifdef CAPTURING
-        fpDist = DIST_F(make_complex(0,0), maxIters, make_complex(pre, pim), metricArg, z); //todo make starting z user chosen
+        fpDist = DIST_F(make_complex(0,0), maxIters, make_complex(pre, pim), metricArg, z);
 RUNTIME #else
         fpDist = DIST_F(z, maxIters, make_complex(pre, pim), metricArg, z);
 RUNTIME #endif
@@ -88,7 +88,7 @@ RUNTIME #endif
 __global__ void genFixedPointPath(float re, float im, int maxSteps, float tsquare, complex* output, int* outputLength, float pre, float pim) {
     complex c = make_complex(re, im);
 RUNTIME #ifdef CAPTURING
-    complex z = make_complex(0,0); //todo make user-chosen
+    complex z = make_complex(0,0);
     output[0] = c;
     output[1] = z;
     int i = 2;

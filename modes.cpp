@@ -83,7 +83,6 @@ const std::map<DistanceMetric, ModeInfo> modes {
             .argMin = 0.0f,
             .argMax = std::numeric_limits<float>::max(),
             .capturing = true,
-            //.disablePath = true,
             .initMaxIters = 512
         }},
         {CAPTURING_FIXEDPOINT, {
@@ -97,7 +96,6 @@ const std::map<DistanceMetric, ModeInfo> modes {
           .argMin = 0.0f,
           .argMax = 2.0f,
           .capturing = true,
-          //.disablePath = true,
           .initMaxIters = 512
         }},
 };
