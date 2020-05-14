@@ -37,7 +37,7 @@ void Renderer::init(std::string_view cudaCode) {
     glBindVertexArray(overlayVAO);
     glBindBuffer(GL_ARRAY_BUFFER, overlayLineVBO);
 
-    glBufferData(GL_ARRAY_BUFFER, 2 * MAX_PATH_STEPS * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 2 * std::max(MAX_PATH_STEPS, LINE_TRANS_NUM_POINTS) * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
 
     //Line vertices
     glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof(float) * 2, nullptr);
@@ -104,14 +104,14 @@ void Renderer::initCuda(bool registerPathRes) {
 
     if(registerPathRes) {
         CUDA_SAFE(cudaMallocManaged(&cudaPathLengthPtr, sizeof(int)));
-        CUDA_SAFE(cudaGraphicsGLRegisterBuffer(&cudaBufferRes, overlayLineVBO, cudaGraphicsRegisterFlagsWriteDiscard));
+        CUDA_SAFE(cudaGraphicsGLRegisterBuffer(&overlayBufferRes, overlayLineVBO, cudaGraphicsRegisterFlagsWriteDiscard));
     }
 }
 
 
 Renderer::~Renderer() {
     CUDA_SAFE(cudaGraphicsUnregisterResource(cudaSurfaceRes));
-    CUDA_SAFE(cudaGraphicsUnregisterResource(cudaBufferRes));
+    CUDA_SAFE(cudaGraphicsUnregisterResource(overlayBufferRes));
     CUDA_SAFE(cudaFree(cudaBuffer));
     CUDA_SAFE(cudaFree(cudaPathLengthPtr));
 }
@@ -141,15 +141,15 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
 
     glBindVertexArray(mainVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    if(pathEnabled) {
-        refreshPathIfNeeded(p, metricArg);
+    if(isOverlayEnabled()) {
+        refreshOverlayIfNeeded(p, metricArg);
         pm.enter(PERF_OVERLAY_RENDER);
         glBindVertexArray(overlayVAO);
         overlayShader.use();
         overlayShader.setUniform(viewCenterUniform, viewport.getCenter().real(), viewport.getCenter().imag());
         overlayShader.setUniform(viewBreadthUniform, viewport.getBreadth());
-        glDrawArrays(GL_LINE_STRIP, 0, *cudaPathLengthPtr);
-        glDrawArrays(GL_POINTS, 0, *cudaPathLengthPtr);
+        glDrawArrays(GL_LINE_STRIP, 0, getOverlayLength());
+        glDrawArrays(GL_POINTS, 0, getOverlayLength());
         pm.exit(PERF_OVERLAY_RENDER);
     }
     pm.exit(PERF_RENDER);
@@ -163,9 +163,10 @@ cudaSurfaceObject_t Renderer::createSurface() {
 }
 
 void Renderer::initKernels(std::string_view cudaCode) {
-    auto funcs = compiler.Compile(cudaCode, "runtime.cu", {"kernel", "genFixedPointPath"}, mode);
+    auto funcs = compiler.Compile(cudaCode, "runtime.cu", {"kernel", "genFixedPointPath", "transformLine"}, mode);
     kernel = funcs[0];
     pathKernel = funcs[1];
+    lineTransformKernel = funcs[2];
 }
 
 std::string Renderer::getPerformanceReport() {
@@ -192,38 +193,33 @@ int Renderer::generatePath(const std::complex<float>& z, float metricArg, const 
     lastTolerance = tolerance;
     pathStart = z;
 
-    float re = z.real();
-    float im = z.imag();
-    float pre = p.real();
-    float pim = p.imag();
-    tolerance *= tolerance;
-    int maxPathSteps = MAX_PATH_STEPS; //cuLaunchKernel doesn't take const pointers so we have to make a non-const copy
-
     void* bufferPtr;
-    CUDA_SAFE(cudaGraphicsMapResources(1, &cudaBufferRes));
-    CUDA_SAFE(cudaGraphicsResourceGetMappedPointer(&bufferPtr, nullptr, cudaBufferRes));
-    void* args[] = {&re, &im, &maxPathSteps, &tolerance, &bufferPtr, &cudaPathLengthPtr, &pre, &pim};
-    CUDA_SAFE(cuLaunchKernel(pathKernel, 1, 1, 1, 1, 1, 1, 0, nullptr, args, nullptr));
+    CUDA_SAFE(cudaGraphicsMapResources(1, &overlayBufferRes));
+    CUDA_SAFE(cudaGraphicsResourceGetMappedPointer(&bufferPtr, nullptr, overlayBufferRes));
+    launch_kernel_generic(pathKernel, 1, 1, z.real(), z.imag(), MAX_PATH_STEPS, tolerance * tolerance, bufferPtr, cudaPathLengthPtr, p.real(), p.imag());
     CUDA_SAFE(cudaDeviceSynchronize());
-    CUDA_SAFE(cudaGraphicsUnmapResources(1, &cudaBufferRes));
+    CUDA_SAFE(cudaGraphicsUnmapResources(1, &overlayBufferRes));
     pathEnabled = true;
     pm.exit(PERF_OVERLAY_GEN);
     return *cudaPathLengthPtr;
 }
 
-void Renderer::refreshPathIfNeeded(const std::complex<float>& p, float metricArg) {
-    assert(pathEnabled);
+void Renderer::refreshOverlayIfNeeded(const std::complex<float>& p, float metricArg) {
     float tolerance = (mode.argIsTolerance) ? metricArg : DEFAULT_PATH_TOLERANCE;
     if(std::abs(lastP - p) > PATH_PARAM_UPDATE_THRESHOLD ||
-       std::abs(lastTolerance - tolerance) > PATH_TOL_UPDATE_THRESHOLD) {
+      (std::abs(lastTolerance - tolerance) > PATH_TOL_UPDATE_THRESHOLD && pathEnabled)) {
         lastP = p;
         lastTolerance = tolerance;
-        generatePath(pathStart, tolerance, p);
+        if(pathEnabled)
+            generatePath(pathStart, tolerance, p);
+        else if(lineTransEnabled)
+            generateLineTransformImpl(p);
     }
 }
 
-void Renderer::hidePath() {
+void Renderer::hideOverlay() {
     pathEnabled = false;
+    lineTransEnabled = false;
 }
 
 std::vector<unsigned char> Renderer::exportImageData() {
@@ -232,6 +228,47 @@ std::vector<unsigned char> Renderer::exportImageData() {
     std::vector<unsigned char> data(size);
     glReadnPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, size, data.data());
     return data;
+}
+
+void Renderer::generateLineTransform(const std::complex<float>& start, const std::complex<float>& end, int iteration,
+                                     const std::complex<float>& p) {
+    lineTransStart = start;
+    lineTransEnd = end;
+    lineTransIteration = iteration;
+    lineTransEnabled = true;
+    generateLineTransformImpl(p);
+}
+
+void Renderer::setLineTransformIteration(int iteration, const std::complex<float>& p) {
+    lineTransIteration = iteration;
+    generateLineTransformImpl(p);
+}
+
+
+void Renderer::generateLineTransformImpl(const std::complex<float>& p) {
+    pm.enter(PERF_LINE_TRANS_GEN);
+    constexpr int BLOCK_SIZE = 1024;
+    lastP = p;
+
+    void* bufferPtr;
+    CUDA_SAFE(cudaGraphicsMapResources(1, &overlayBufferRes));
+    CUDA_SAFE(cudaGraphicsResourceGetMappedPointer(&bufferPtr, nullptr, overlayBufferRes));
+
+    launch_kernel_generic(lineTransformKernel, LINE_TRANS_NUM_POINTS, BLOCK_SIZE, lineTransStart.real(), lineTransEnd.real(),
+            lineTransStart.imag(), lineTransEnd.imag(), p.real(), p.imag(), LINE_TRANS_NUM_POINTS, lineTransIteration, bufferPtr);
+
+    CUDA_SAFE(cudaDeviceSynchronize());
+    CUDA_SAFE(cudaGraphicsUnmapResources(1, &overlayBufferRes));
+    pm.exit(PERF_LINE_TRANS_GEN);
+}
+
+int Renderer::getOverlayLength() {
+    if(pathEnabled)
+        return *cudaPathLengthPtr;
+    else if(lineTransEnabled)
+        return LINE_TRANS_NUM_POINTS;
+    else
+        assert(false && "getOverlayLength called without overlay active");
 }
 
 std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size) {

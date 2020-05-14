@@ -13,20 +13,28 @@ bool InputHandler::process(float dt) {
 }
 
 
-void InputHandler::addToggle(bool& val, int key, const std::string& displayName) {
-    bindings.push_back(new ToggleBinding(val, key, displayName));
+InputBinding&  InputHandler::addToggle(bool& val, int key, const std::string& displayName) {
+    auto b = new ToggleBinding(val, key, displayName);
+    bindings.push_back(b);
+    return *b;
 }
 
-void InputHandler::addViewport(Viewport& v, int upKey, int downKey, int leftKey, int rightKey, int zoomInKey, int zoomOutKey, int resetKey, float moveStep, float zoomStep) {
-    bindings.push_back(new ViewportBinding(v, upKey, downKey, leftKey, rightKey, zoomInKey, zoomOutKey, resetKey, moveStep, zoomStep));
+InputBinding&  InputHandler::addViewport(Viewport& v, int upKey, int downKey, int leftKey, int rightKey, int zoomInKey, int zoomOutKey, int resetKey, float moveStep, float zoomStep) {
+    auto b = new ViewportBinding(v, upKey, downKey, leftKey, rightKey, zoomInKey, zoomOutKey, resetKey, moveStep, zoomStep);
+    bindings.push_back(b);
+    return *b;
 }
 
-void InputHandler::addTrigger(const std::function<void()>& handler, int triggerKey) {
-    bindings.push_back(new TriggerBinding(handler, triggerKey));
+InputBinding&  InputHandler::addTrigger(const std::function<void()>& handler, int triggerKey) {
+    auto b = new TriggerBinding(handler, triggerKey);
+    bindings.push_back(b);
+    return *b;
 }
 
-void InputHandler::addTrigger(const std::function<void(double, double)>& handler, int triggerButton) {
-    bindings.push_back(new MouseTriggerBinding(handler, triggerButton));
+InputBinding&  InputHandler::addTrigger(const std::function<void(double, double)>& handler, int triggerButton) {
+    auto b = new MouseTriggerBinding(handler, triggerButton);
+    bindings.push_back(b);
+    return *b;
 }
 
 InputHandler::~InputHandler() {
@@ -79,8 +87,9 @@ bool ViewportBinding::process(Window& window, float dt, float multiplier) {
 }
 
 bool TriggerBinding::process(Window& window, float dt, [[maybe_unused]] float multiplier) {
-    if(window.isKeyPressed(triggerKey)) {
+    if(window.isKeyPressed(triggerKey) && timer.get() > cooldown) {
         handler();
+        timer.reset();
         return true;
     }
     return false;
@@ -88,8 +97,9 @@ bool TriggerBinding::process(Window& window, float dt, [[maybe_unused]] float mu
 
 bool MouseTriggerBinding::process(Window& window, float dt, [[maybe_unused]] float multiplier) {
     auto pos = window.tryGetClickPosition(triggerButton);
-    if(pos.has_value()) {
+    if(pos.has_value() && timer.get() > cooldown) {
         handler(pos->first, pos->second);
+        timer.reset();
         return true;
     }
     return false;
