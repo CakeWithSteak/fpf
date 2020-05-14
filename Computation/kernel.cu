@@ -110,6 +110,8 @@ RUNTIME #endif
     *outputLength = min(i + 1, maxSteps);
 }
 
+#include "transform_line.cuh"
+
 __device__ __inline__ complex F(complex z, complex p, complex c) {
     /*Generated code goes here*/
 //}

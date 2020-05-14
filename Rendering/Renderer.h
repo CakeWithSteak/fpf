@@ -19,6 +19,11 @@ class Renderer {
     std::complex<float> lastP;
     float lastTolerance;
 
+    bool lineTransEnabled = false;
+    std::complex<float> lineTransStart;
+    std::complex<float> lineTransEnd;
+    int lineTransIteration;
+
     int numBlocks;
     unsigned int texture;
     unsigned int mainVAO;
@@ -33,24 +38,28 @@ class Renderer {
     int viewBreadthUniform;
 
     cudaGraphicsResource_t cudaSurfaceRes = nullptr;
-    cudaGraphicsResource_t cudaBufferRes = nullptr;
+    cudaGraphicsResource_t overlayBufferRes = nullptr;
     cudaResourceDesc cudaSurfaceDesc;
     dist_t* cudaBuffer = nullptr;
     int* cudaPathLengthPtr = nullptr;
     NvrtcCompiler compiler;
     CUfunction kernel;
     CUfunction pathKernel;
+    CUfunction lineTransformKernel;
 
-    PerformanceMonitor pm{"CUDA kernel time", "Total render time", "Overlay computation time", "Overlay render time"};
+    PerformanceMonitor pm{"Main kernel time", "Total render time", "Orbit compute time", "Overlay render time", "Line transform compute time"};
     static constexpr size_t PERF_KERNEL = 0;
     static constexpr size_t PERF_RENDER = 1;
     static constexpr size_t PERF_OVERLAY_GEN = 2;
     static constexpr size_t PERF_OVERLAY_RENDER = 3;
+    static constexpr size_t PERF_LINE_TRANS_GEN = 4;
 
     static constexpr int MAX_PATH_STEPS = 256;
     static constexpr float PATH_PARAM_UPDATE_THRESHOLD = 0.01f;
     static constexpr float PATH_TOL_UPDATE_THRESHOLD = 0.001f;
     static constexpr float DEFAULT_PATH_TOLERANCE = 0.001f;
+
+    static constexpr int LINE_TRANS_NUM_POINTS = 100'000;
 
     void init(std::string_view cudaCode);
     void initTexture();
@@ -58,7 +67,10 @@ class Renderer {
     void initCuda(bool registerPathRes = true);
     void initKernels(std::string_view cudaCode);
     cudaSurfaceObject_t createSurface();
-    void refreshPathIfNeeded(const std::complex<float>& p, float tolerance);
+    void refreshOverlayIfNeeded(const std::complex<float>& p, float metricArg);
+    void generateLineTransformImpl(const std::complex<float>& p);
+    inline bool isOverlayEnabled() { return pathEnabled || lineTransEnabled; }
+    int getOverlayLength();
 public:
     Renderer(int width, int height, const Viewport& viewport, const ModeInfo& mode, std::string_view cudaCode)
             : width(width), height(height), viewport(viewport), mode(mode) {init(cudaCode);}
@@ -68,8 +80,11 @@ public:
     std::string getPerformanceReport();
     void resize(int newWidth, int newHeight);
     int generatePath(const std::complex<float>& z, float tolerance, const std::complex<float>& p);
-    void hidePath();
+    void hideOverlay();
     std::vector<unsigned char> exportImageData();
+    void generateLineTransform(const std::complex<float>& start, const std::complex<float>& end, int iteration,
+                               const std::complex<float>& p);
+    void setLineTransformIteration(int iteration, const std::complex<float>& p);
 };
 
 

@@ -29,16 +29,58 @@ InputHandler initControls(State& s, RuntimeState& rs) {
     in.addTrigger([&rs](){rs.window.setShouldClose(true);}, GLFW_KEY_ESCAPE);
     in.addTrigger([&s, &rs](){rs.window.minimize(); save(s); rs.window.restore();}, GLFW_KEY_TAB);
 
-    if(!mode.disablePath) {
-        in.addTrigger([&s, &rs](double x, double y) {
+    if(!mode.disableOverlays) {
+        rs.mouseBinding = &in.addTrigger([&s, &rs](double x, double y) {
             auto z = s.viewport.resolveScreenCoords(x, y, rs.window.getWidth(), rs.window.getHeight());
-            s.pathStart = z;
-            std::cout << "Rendering path overlay from " << z << ".\n";
-            auto length = rs.renderer.generatePath(z, s.metricArg, s.p);
-            std::cout << "Path length: " << length << std::endl;
+            if(!s.lineTransEnabled) { //Path mode
+                s.pathStart = z;
+                std::cout << "Rendering path overlay from " << z << ".\n";
+                auto length = rs.renderer.generatePath(z, s.metricArg, s.p);
+                std::cout << "Path length: " << length << std::endl;
+            } else { // Line transform mode
+                if(!s.lineTransStart.has_value()) { //First click to select start point todo maybe mark this point somehow
+                    s.lineTransStart = z;
+                    std::cout << "Set line transform start point to" << *s.lineTransStart << "." << std::endl;
+                } else if(!s.lineTransEnd.has_value()) { //Second click to select endpoint
+                    s.lineTransEnd = z;
+                    rs.renderer.generateLineTransform(*s.lineTransStart, *s.lineTransEnd, s.lineTransIteration, s.p);
+                    std::cout << "Rendering line transform overlay from " << *s.lineTransStart << " to " << *s.lineTransEnd
+                        << "." << std::endl;
+                }
+            }
         }, GLFW_MOUSE_BUTTON_1);
 
-        in.addTrigger([&s, &rs](){rs.renderer.hidePath(); s.pathStart = {};}, GLFW_KEY_H);
+        in.addTrigger([&s, &rs]() {
+            rs.renderer.hideOverlay();
+            s.pathStart = {}; s.lineTransStart = {}; s.lineTransEnd = {};
+            s.lineTransEnabled = false;
+            rs.mouseBinding->setCooldown(0ms); // If we were in line trans mode we need to unset the cooldown
+        }, GLFW_KEY_H);
+
+        in.addTrigger([&s, &rs]() {
+            if(s.lineTransEnabled)
+                 return;
+            s.lineTransEnabled = true;
+            std::cout << "Line transform mode enabled. Click two points to start." << std::endl;
+            s.lineTransIteration = 0;
+            rs.mouseBinding->setCooldown(200ms);
+        }, GLFW_KEY_T);
+
+        in.addTrigger([&s, &rs]() {
+            if(s.lineTransEnabled && s.lineTransEnd.has_value()) {
+                ++s.lineTransIteration;
+                rs.renderer.setLineTransformIteration(s.lineTransIteration, s.p);
+                std::cout << "Line transform iteration: " << s.lineTransIteration << "." << std::endl;
+            }
+        }, GLFW_KEY_RIGHT_SHIFT).setCooldown(150ms);
+
+        in.addTrigger([&s, &rs]() {
+            if(s.lineTransEnabled && s.lineTransEnd.has_value()) {
+                --s.lineTransIteration;
+                rs.renderer.setLineTransformIteration(s.lineTransIteration, s.p);
+                std::cout << "Line transform iteration: " << s.lineTransIteration << "." << std::endl;
+            }
+        }, GLFW_KEY_RIGHT_CONTROL).setCooldown(150ms);
     }
 
     in.addTrigger([&s, &rs](){

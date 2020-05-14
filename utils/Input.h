@@ -14,9 +14,15 @@ template <typename T>
 using limits = std::numeric_limits<T>;
 
 class InputBinding {
+protected:
+    Timer timer;
+    std::chrono::milliseconds cooldown = 0ms;
 public:
     virtual bool process(Window& window, float dt, float multiplier) = 0;
     virtual ~InputBinding() = default;
+    virtual void setCooldown(const std::chrono::milliseconds& val) {
+        cooldown = val;
+    }
 };
 
 class InputHandler {
@@ -28,12 +34,12 @@ public:
     bool process(float dt);
 
     template <typename T>
-    void addScalar(T& val, int upKey, int downKey, T step, const std::string& displayName, T min = limits<T>::lowest(), T max = limits<T>::max());
+    InputBinding& addScalar(T& val, int upKey, int downKey, T step, const std::string& displayName, T min = limits<T>::lowest(), T max = limits<T>::max());
 
-    void addToggle(bool& val, int key, const std::string& displayName);
-    void addViewport(Viewport& v, int upKey, int downKey, int leftKey, int rightKey, int zoomInKey, int zoomOutKey, int resetKey, float moveStep, float zoomStep);
-    void addTrigger(const std::function<void()>& handler, int triggerKey);
-    void addTrigger(const std::function<void(double, double)>& handler, int triggerButton);
+    InputBinding& addToggle(bool& val, int key, const std::string& displayName);
+    InputBinding& addViewport(Viewport& v, int upKey, int downKey, int leftKey, int rightKey, int zoomInKey, int zoomOutKey, int resetKey, float moveStep, float zoomStep);
+    InputBinding& addTrigger(const std::function<void()>& handler, int triggerKey);
+    InputBinding& addTrigger(const std::function<void(double, double)>& handler, int triggerButton);
 
     InputHandler(Window& window, const std::optional<int>& multiplierKey = {}, float multiplier = 1.f) : window(window),
                                                                                                          multiplierKey(multiplierKey),
@@ -54,15 +60,13 @@ public:
 };
 
 class ToggleBinding : public InputBinding {
-    constexpr static auto cooldown = 400ms;
-    Timer timer;
     bool& val;
     int key;
     std::string displayName;
 public:
     virtual bool process(Window& window, float dt, float multiplier) override;
     ToggleBinding(bool& val, int key, std::string displayName) :
-        val(val), key(key), displayName(displayName) {}
+        val(val), key(key), displayName(displayName) { cooldown = 400ms; }
 };
 
 class ViewportBinding : public InputBinding {
@@ -96,8 +100,10 @@ public:
 };
 
 template<typename T>
-void InputHandler::addScalar(T& val, int upKey, int downKey, T step, const std::string& displayName, T min, T max) {
-    bindings.push_back(new ScalarBinding(val, upKey, downKey, step, displayName, min, max));
+InputBinding& InputHandler::addScalar(T& val, int upKey, int downKey, T step, const std::string& displayName, T min, T max) {
+    auto b = new ScalarBinding(val, upKey, downKey, step, displayName, min, max);
+    bindings.push_back(b);
+    return *b;
 }
 
 template<typename T>
@@ -106,11 +112,11 @@ bool ScalarBinding<T>::process(Window& window, float dt, float multiplier) {
         dt = 1;
 
     bool inputReceived = false;
-    if(window.isKeyPressed(upKey)) {
+    if(window.isKeyPressed(upKey) && timer.get() > cooldown) {
         val += step * dt * multiplier;
         inputReceived = true;
     }
-    if(window.isKeyPressed(downKey)) {
+    if(window.isKeyPressed(downKey) && timer.get() > cooldown) {
         val -= step * dt * multiplier;
         inputReceived = true;
     }
@@ -119,6 +125,7 @@ bool ScalarBinding<T>::process(Window& window, float dt, float multiplier) {
         if constexpr(is_ordered_v<T>)
             val = std::clamp(val, min, max);
         std::cout << displayName << ": " << val << std::endl;
+        timer.reset();
     }
 
     return inputReceived;

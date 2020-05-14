@@ -105,6 +105,9 @@ int main(int argc, char** argv) {
     if(state.pathStart.has_value())
         renderer.generatePath(state.pathStart.value(), state.metricArg, state.p);
 
+    if(state.lineTransEnabled)
+        renderer.generateLineTransform(*state.lineTransStart, *state.lineTransEnd, state.lineTransIteration, state.p);
+
     //First render
     glClear(GL_COLOR_BUFFER_BIT);
     renderer.render(state.maxIters, state.metricArg, state.p, state.colorCutoffEnabled ? state.colorCutoff : std::numeric_limits<float>::max());

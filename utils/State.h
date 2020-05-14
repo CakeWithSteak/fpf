@@ -21,6 +21,10 @@ struct State {
     int width, height;
     ModeInfo mode; //Only the DistanceMetric is serialized
     std::optional<std::complex<float>> pathStart = {};
+    std::optional<std::complex<float>> lineTransStart = {};
+    std::optional<std::complex<float>> lineTransEnd = {};
+    int lineTransIteration = 0;
+    bool lineTransEnabled = false; // Never serialised, inferred from lineTransEnd during deserialization
 
     explicit State(const Options& opt) {
         expr = opt.expression;
@@ -33,6 +37,51 @@ struct State {
         maxIters = mode.initMaxIters;
     }
     State() = default;
+
+    template<class Archive>
+    void save(Archive& ar, const unsigned int version) const
+    {
+        ar & expr;
+        ar & maxIters;
+        ar & metricArg;
+        ar & p;
+        ar & viewport;
+        ar & colorCutoffEnabled;
+        ar & colorCutoff;
+        ar & width;
+        ar & height;
+        ar & mode;
+        ar & pathStart;
+        ar & lineTransIteration;
+        if(lineTransEnd.has_value()) { // Only serialize line trans mode if both the start and the end of the line are given, otherwise things will probably break
+            ar & lineTransStart;
+            ar & lineTransEnd;
+        } else {
+            ar & std::optional<std::complex<float>>();
+            ar & std::optional<std::complex<float>>();
+        }
+    }
+
+    template<class Archive>
+    void load(Archive & ar, const unsigned int version)
+    {
+        ar & expr;
+        ar & maxIters;
+        ar & metricArg;
+        ar & p;
+        ar & viewport;
+        ar & colorCutoffEnabled;
+        ar & colorCutoff;
+        ar & width;
+        ar & height;
+        ar & mode;
+        ar & pathStart;
+        ar & lineTransIteration;
+        ar & lineTransStart;
+        ar & lineTransEnd;
+        lineTransEnabled = lineTransEnd.has_value();
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 struct RuntimeState {
@@ -40,4 +89,5 @@ struct RuntimeState {
     Renderer& renderer;
     bool forceRerender = false;
     std::filesystem::path refsPath;
+    InputBinding* mouseBinding;
 };
