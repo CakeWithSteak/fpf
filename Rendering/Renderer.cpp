@@ -239,10 +239,14 @@ void Renderer::generateLineTransform(const std::complex<float>& start, const std
     generateLineTransformImpl(p);
 }
 
-void Renderer::setLineTransformIteration(int iteration, const std::complex<float>& p) {
+void Renderer::setLineTransformIteration(int iteration, const std::complex<float>& p, bool disableIncremental) {
     auto lastIterations = lineTransIteration;
     lineTransIteration = iteration;
-    generateLineTransformImpl(p, lastIterations);
+
+    if(!disableIncremental)
+        generateLineTransformImpl(p, lastIterations);
+    else
+        generateLineTransformImpl(p);
 }
 
 
@@ -253,7 +257,7 @@ void Renderer::generateLineTransformImpl(const std::complex<float>& p, int lastI
 
     int itersToDo;
     bool incremental = false;
-    if(lastIterations == -1 || lineTransIteration < lastIterations) {
+    if(lastIterations == -1 || lineTransIteration < lastIterations || mode.capturing) {
         itersToDo = lineTransIteration;
     } else {
         itersToDo = lineTransIteration - lastIterations;
