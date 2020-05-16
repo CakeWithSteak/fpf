@@ -75,7 +75,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
         }, GLFW_KEY_RIGHT_SHIFT).setCooldown(150ms);
 
         in.addTrigger([&s, &rs]() {
-            if(s.lineTransEnabled && s.lineTransEnd.has_value()) {
+            if(s.lineTransEnabled && s.lineTransEnd.has_value() && s.lineTransIteration != 0) {
                 --s.lineTransIteration;
                 rs.renderer.setLineTransformIteration(s.lineTransIteration, s.p);
                 std::cout << "Line transform iteration: " << s.lineTransIteration << "." << std::endl;
