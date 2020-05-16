@@ -84,7 +84,7 @@ public:
     std::vector<unsigned char> exportImageData();
     void generateLineTransform(const std::complex<float>& start, const std::complex<float>& end, int iteration,
                                const std::complex<float>& p);
-    void setLineTransformIteration(int iteration, const std::complex<float>& p);
+    void setLineTransformIteration(int iteration, const std::complex<float>& p, bool disableIncremental = false);
 };
 
 

@@ -69,7 +69,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
         in.addTrigger([&s, &rs]() {
             if(s.lineTransEnabled && s.lineTransEnd.has_value()) {
                 ++s.lineTransIteration;
-                rs.renderer.setLineTransformIteration(s.lineTransIteration, s.p);
+                rs.renderer.setLineTransformIteration(s.lineTransIteration, s.p, s.forceDisableIncrementalLineTracing);
                 std::cout << "Line transform iteration: " << s.lineTransIteration << "." << std::endl;
             }
         }, GLFW_KEY_RIGHT_SHIFT).setCooldown(150ms);
@@ -77,7 +77,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
         in.addTrigger([&s, &rs]() {
             if(s.lineTransEnabled && s.lineTransEnd.has_value() && s.lineTransIteration != 0) {
                 --s.lineTransIteration;
-                rs.renderer.setLineTransformIteration(s.lineTransIteration, s.p);
+                rs.renderer.setLineTransformIteration(s.lineTransIteration, s.p, false);
                 std::cout << "Line transform iteration: " << s.lineTransIteration << "." << std::endl;
             }
         }, GLFW_KEY_RIGHT_CONTROL).setCooldown(150ms);

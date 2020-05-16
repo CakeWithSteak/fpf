@@ -10,8 +10,6 @@ __device__ __inline__ complex getZOnLine(float re1, float re2, float im1, float 
     );
 }
 
-//todo capturing
-//fixme incremental line transform is incorrect for capturing modes
 __global__ void transformLine(float re1, float re2, float im1, float im2, float pre, float pim, int numPoints, int iteration, bool incremental, complex* output) {
     int tid = threadIdx.x + blockDim.x * blockIdx.x;
     if(tid >= numPoints)
@@ -21,8 +19,13 @@ __global__ void transformLine(float re1, float re2, float im1, float im2, float 
     if(incremental) {
         z = output[tid];
     } else {
+RUNTIME #ifdef CAPTURING
+        c = getZOnLine(re1, re2, im1, im2, numPoints, tid);
+        z = make_complex(0, 0);
+RUNTIME #else
         z = getZOnLine(re1, re2, im1, im2, numPoints, tid);
         c = z;
+RUNTIME #endif
     }
 
     const complex p = make_complex(pre, pim);

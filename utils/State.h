@@ -25,6 +25,7 @@ struct State {
     std::optional<std::complex<float>> lineTransEnd = {};
     int lineTransIteration = 0;
     bool lineTransEnabled = false; // Never serialised, inferred from lineTransEnd during deserialization
+    bool forceDisableIncrementalLineTracing = false;
 
     explicit State(const Options& opt) {
         expr = opt.expression;
@@ -32,6 +33,7 @@ struct State {
         width = opt.width;
         height = opt.height;
         metricArg = (opt.metricArg.has_value()) ? opt.metricArg.value() : mode.argInitValue;
+        forceDisableIncrementalLineTracing = opt.forceDisableIncrementalLineTracing;
         colorCutoffEnabled = (mode.defaultColorCutoff != -1);
         colorCutoff = colorCutoffEnabled ? mode.defaultColorCutoff : 10.0f;
         maxIters = mode.initMaxIters;
@@ -60,6 +62,7 @@ struct State {
             ar & std::optional<std::complex<float>>();
             ar & std::optional<std::complex<float>>();
         }
+        ar & forceDisableIncrementalLineTracing;
     }
 
     template<class Archive>
@@ -80,6 +83,7 @@ struct State {
         ar & lineTransStart;
         ar & lineTransEnd;
         lineTransEnabled = lineTransEnd.has_value();
+        ar & forceDisableIncrementalLineTracing;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
