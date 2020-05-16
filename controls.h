@@ -60,6 +60,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
         in.addTrigger([&s, &rs]() {
             if(s.lineTransEnabled)
                  return;
+            rs.renderer.hideOverlay();
             s.lineTransEnabled = true;
             std::cout << "Line transform mode enabled. Click two points to start." << std::endl;
             s.lineTransIteration = 0;
