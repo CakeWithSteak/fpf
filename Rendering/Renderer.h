@@ -59,7 +59,7 @@ class Renderer {
     static constexpr float PATH_TOL_UPDATE_THRESHOLD = 0.001f;
     static constexpr float DEFAULT_PATH_TOLERANCE = 0.001f;
 
-    static constexpr int LINE_TRANS_NUM_POINTS = 100'000;
+    static constexpr int LINE_TRANS_NUM_POINTS = 500'000;
 
     void init(std::string_view cudaCode);
     void initTexture();

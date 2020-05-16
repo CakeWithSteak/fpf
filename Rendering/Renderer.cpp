@@ -148,7 +148,7 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
         overlayShader.use();
         overlayShader.setUniform(viewCenterUniform, viewport.getCenter().real(), viewport.getCenter().imag());
         overlayShader.setUniform(viewBreadthUniform, viewport.getBreadth());
-        glDrawArrays(GL_LINE_STRIP, 0, getOverlayLength());
+        //glDrawArrays(GL_LINE_STRIP, 0, getOverlayLength());
         glDrawArrays(GL_POINTS, 0, getOverlayLength());
         pm.exit(PERF_OVERLAY_RENDER);
     }
