@@ -148,8 +148,9 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
         overlayShader.use();
         overlayShader.setUniform(viewCenterUniform, viewport.getCenter().real(), viewport.getCenter().imag());
         overlayShader.setUniform(viewBreadthUniform, viewport.getBreadth());
-        glDrawArrays(GL_LINE_STRIP, 0, getOverlayLength());
         glDrawArrays(GL_POINTS, 0, getOverlayLength());
+        if(connectOverlayPoints)
+            glDrawArrays(GL_LINE_STRIP, 0, getOverlayLength());
         pm.exit(PERF_OVERLAY_RENDER);
     }
     pm.exit(PERF_RENDER);
@@ -283,6 +284,10 @@ int Renderer::getOverlayLength() {
         return LINE_TRANS_NUM_POINTS;
     else
         assert(false && "getOverlayLength called without overlay active");
+}
+
+void Renderer::togglePointConnections() {
+    connectOverlayPoints = !connectOverlayPoints;
 }
 
 std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size) {

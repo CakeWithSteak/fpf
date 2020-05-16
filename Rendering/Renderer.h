@@ -14,6 +14,8 @@ class Renderer {
     const Viewport& viewport;
     ModeInfo mode;
 
+    bool connectOverlayPoints = true;
+
     bool pathEnabled = false;
     std::complex<float> pathStart;
     std::complex<float> lastP;
@@ -85,6 +87,7 @@ public:
     void generateLineTransform(const std::complex<float>& start, const std::complex<float>& end, int iteration,
                                const std::complex<float>& p);
     void setLineTransformIteration(int iteration, const std::complex<float>& p, bool disableIncremental = false);
+    void togglePointConnections();
 };
 
 
