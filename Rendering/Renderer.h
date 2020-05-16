@@ -68,7 +68,7 @@ class Renderer {
     void initKernels(std::string_view cudaCode);
     cudaSurfaceObject_t createSurface();
     void refreshOverlayIfNeeded(const std::complex<float>& p, float metricArg);
-    void generateLineTransformImpl(const std::complex<float>& p);
+    void generateLineTransformImpl(const std::complex<float>& p, int lastIterations = -1);
     inline bool isOverlayEnabled() { return pathEnabled || lineTransEnabled; }
     int getOverlayLength();
 public:
