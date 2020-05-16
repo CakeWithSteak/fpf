@@ -148,7 +148,7 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
         overlayShader.use();
         overlayShader.setUniform(viewCenterUniform, viewport.getCenter().real(), viewport.getCenter().imag());
         overlayShader.setUniform(viewBreadthUniform, viewport.getBreadth());
-        //glDrawArrays(GL_LINE_STRIP, 0, getOverlayLength());
+        glDrawArrays(GL_LINE_STRIP, 0, getOverlayLength());
         glDrawArrays(GL_POINTS, 0, getOverlayLength());
         pm.exit(PERF_OVERLAY_RENDER);
     }
@@ -240,22 +240,32 @@ void Renderer::generateLineTransform(const std::complex<float>& start, const std
 }
 
 void Renderer::setLineTransformIteration(int iteration, const std::complex<float>& p) {
+    auto lastIterations = lineTransIteration;
     lineTransIteration = iteration;
-    generateLineTransformImpl(p);
+    generateLineTransformImpl(p, lastIterations);
 }
 
 
-void Renderer::generateLineTransformImpl(const std::complex<float>& p) {
+void Renderer::generateLineTransformImpl(const std::complex<float>& p, int lastIterations) {
     pm.enter(PERF_LINE_TRANS_GEN);
     constexpr int BLOCK_SIZE = 1024;
     lastP = p;
+
+    int itersToDo;
+    bool incremental = false;
+    if(lastIterations == -1 || lineTransIteration < lastIterations) {
+        itersToDo = lineTransIteration;
+    } else {
+        itersToDo = lineTransIteration - lastIterations;
+        incremental = true;
+    }
 
     void* bufferPtr;
     CUDA_SAFE(cudaGraphicsMapResources(1, &overlayBufferRes));
     CUDA_SAFE(cudaGraphicsResourceGetMappedPointer(&bufferPtr, nullptr, overlayBufferRes));
 
     launch_kernel_generic(lineTransformKernel, LINE_TRANS_NUM_POINTS, BLOCK_SIZE, lineTransStart.real(), lineTransEnd.real(),
-            lineTransStart.imag(), lineTransEnd.imag(), p.real(), p.imag(), LINE_TRANS_NUM_POINTS, lineTransIteration, bufferPtr);
+            lineTransStart.imag(), lineTransEnd.imag(), p.real(), p.imag(), LINE_TRANS_NUM_POINTS, itersToDo, incremental, bufferPtr);
 
     CUDA_SAFE(cudaDeviceSynchronize());
     CUDA_SAFE(cudaGraphicsUnmapResources(1, &overlayBufferRes));
