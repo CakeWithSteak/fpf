@@ -41,6 +41,15 @@ std::string getReferenceString(const path& imagePath, const State& state) {
         ss << state.pathStart.value();
     else
         ss << "None";
+
+    if(state.lineTransEnd.has_value()) {
+        ss << "\t" << state.lineTransStart.value()
+           << "\t" << state.lineTransEnd.value()
+           << "\t" << state.lineTransIteration;
+    } else {
+        ss << "\tNone\tNone\tNone";
+    }
+
     ss << "\n";
 
     return ss.str();
