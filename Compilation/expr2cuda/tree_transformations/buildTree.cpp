@@ -2,7 +2,6 @@
 #include <stack>
 #include "buildTree.h"
 #include "../utils.h"
-#include "../expression_tree/RootNode.h"
 #include "../expression_tree/OperatorNode.h"
 #include "../expression_tree/VariableNode.h"
 #include "../expression_tree/ConstantNode.h"

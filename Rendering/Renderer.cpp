@@ -97,7 +97,7 @@ void Renderer::initShaders() {
 
 void Renderer::initCuda(bool registerPathRes) {
     CUDA_SAFE(cudaSetDevice(0));
-    numBlocks = (width * height + 1024 - 1) / 1024; //Ceiled division
+    numBlocks = ceilDivide(width * height, 1024);
     CUDA_SAFE(cudaMallocManaged(&cudaBuffer, 2 * numBlocks * sizeof(int))); //Buffer for min/max fpdist values
     CUDA_SAFE(cudaGraphicsGLRegisterImage(&cudaSurfaceRes, texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
     cudaSurfaceDesc.resType = cudaResourceTypeArray;
