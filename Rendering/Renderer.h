@@ -26,7 +26,7 @@ class Renderer {
     std::complex<float> lineTransEnd;
     int lineTransIteration;
 
-    int numBlocks;
+    unsigned int numBlocks;
     unsigned int texture;
     unsigned int mainVAO;
     unsigned int overlayVAO;

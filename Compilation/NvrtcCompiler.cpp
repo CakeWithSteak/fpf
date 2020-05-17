@@ -49,7 +49,6 @@ NvrtcCompiler::Compile(std::string_view code, std::string_view filename, std::ve
     size_t ptxSize;
     NVRTC_SAFE(nvrtcGetPTXSize(program, &ptxSize));
     auto ptx = std::make_unique<char[]>(ptxSize);
-    //char* ptx = new char[ptxSize];
     NVRTC_SAFE(nvrtcGetPTX(program, ptx.get()));
 
     std::vector<const char*> loweredNames(functionNames.size()); //The mangled names of the functions

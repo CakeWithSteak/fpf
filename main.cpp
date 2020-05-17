@@ -109,11 +109,7 @@ int main(int argc, char** argv) {
         renderer.generateLineTransform(*state.lineTransStart, *state.lineTransEnd, state.lineTransIteration, state.p);
 
     //First render
-    glClear(GL_COLOR_BUFFER_BIT);
-    renderer.render(state.maxIters, state.metricArg, state.p, state.colorCutoffEnabled ? state.colorCutoff : std::numeric_limits<float>::max());
-    window.swapBuffers();
-    window.poll();
-
+    runtimeState.forceRerender = true;
 
     Timer timer;
     while(!window.shouldClose()) {
