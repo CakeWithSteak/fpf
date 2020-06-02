@@ -1,6 +1,7 @@
 #pragma once
 #include <boost/serialization/split_member.hpp>
 #include "../Computation/metrics.h"
+#include <string>
 
 struct ModeInfo;
 

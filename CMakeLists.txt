@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
+set(CMAKE_CUDA_HOST_COMPILER /usr/bin/g++-8)
 project(fixed_point_fractals LANGUAGES C CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CUDA_HOST_COMPILER /usr/bin/g++-8)
 
 add_custom_command(OUTPUT kernel.ii
         COMMAND cpp -DBUILD_FOR_NVRTC -x c++ -P -std=c++17 -I ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} ${CMAKE_SOURCE_DIR}/Computation/kernel.cu |
@@ -17,7 +17,7 @@ find_library(GLFW_LIB NAMES libglfw3.a) # By default cmake seems to grab the sys
 target_include_directories(fixed_point_fractals PRIVATE ${CMAKE_BINARY_DIR})
 target_include_directories(fixed_point_fractals PRIVATE /usr/local/cuda/include)
 
-target_compile_options(fixed_point_fractals PRIVATE -O0 -g)
+target_compile_options(fixed_point_fractals PRIVATE)
 
 target_link_libraries(fixed_point_fractals boost_program_options)
 target_link_libraries(fixed_point_fractals boost_serialization)

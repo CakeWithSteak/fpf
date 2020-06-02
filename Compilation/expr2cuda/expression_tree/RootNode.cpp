@@ -1,4 +1,5 @@
 #include "RootNode.h"
+#include <stdexcept>
 
 std::optional<OperatorTraits> RootNode::getOperator() const {
     return {};
