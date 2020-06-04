@@ -100,4 +100,17 @@ const std::map<DistanceMetric, ModeInfo> modes {
           .capturing = true,
           .initMaxIters = 512
         }},
+        {ATTRACTOR, {
+           .metric = ATTRACTOR,
+           .displayName = "By attractor",
+           .cliName = "attractor",
+           .metricInternalName = "ATTRACTOR",
+           .argDisplayName = "Tolerance",
+           .argInitValue = 0.005f,
+           .argStep = 0.0025f,
+           .argMin = 0.0f,
+           .argMax = 2.0f,
+           .argIsTolerance = true,
+           .isAttractor = true
+        }},
 };

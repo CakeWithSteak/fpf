@@ -21,20 +21,28 @@
 #include "math.cuh"
 #include "metrics.h"
 #include "utils.cuh"
+#include "attractor.cuh"
 RUNTIME #include <cooperative_groups.h>
 
 namespace cg = cooperative_groups;
 
-__device__ __inline__ float2 getZ(float re0, float re1, float im0, float im1, int width, int height, int x, int y) {
-    float reStep = (re1 - re0) / width;
-    float imStep = (im1 - im0) / height;
-    return make_complex(
-        re0 + reStep * x,
-        im0 + imStep * (width - y)
-    );
+__device__ __inline__ complex pickStartingZ(const complex& z) {
+RUNTIME #ifdef CAPTURING
+    return make_complex(0,0);
+RUNTIME #else
+    return z;
+RUNTIME #endif
 }
 
-__global__ void kernel(float re0, float re1, float im0, float im1, dist_t maxIters, dist_t* minmaxOut, cudaSurfaceObject_t surface, int surfW, int surfH, float pre, float pim, float metricArg) {
+__device__ __inline__ dist_t callDistanceFunction(complex z, dist_t arg1, complex p, float arg2, const complex* attractors, size_t numAttractors) {
+RUNTIME #ifdef ATTRACTOR
+    return whichAttractor(pickStartingZ(z), arg1, p, arg2, z, attractors, numAttractors);
+RUNTIME #else
+    return DIST_F(pickStartingZ(z), arg1, p, arg2, z);
+RUNTIME #endif
+}
+
+__global__ void kernel(float re0, float re1, float im0, float im1, dist_t maxIters, dist_t* minmaxOut, cudaSurfaceObject_t surface, int surfW, int surfH, float pre, float pim, float metricArg, const complex* attractors, size_t numAttractors) {
     __shared__ dist2 minmaxBlock[32];
     cg::thread_block block = cg::this_thread_block();
     cg::thread_block_tile<32> warp = cg::tiled_partition<32>(block);
@@ -50,13 +58,7 @@ __global__ void kernel(float re0, float re1, float im0, float im1, dist_t maxIte
     if (!threadIsExcessive) {
         //Find a z for this thread
         float2 z = getZ(re0, re1, im0, im1, surfW, surfH, x, y);
-
-RUNTIME #ifdef CAPTURING
-        fpDist = DIST_F(make_complex(0,0), maxIters, make_complex(pre, pim), metricArg, z);
-RUNTIME #else
-        fpDist = DIST_F(z, maxIters, make_complex(pre, pim), metricArg, z);
-RUNTIME #endif
-
+        fpDist = callDistanceFunction(z, maxIters, make_complex(pre, pim), metricArg, attractors, numAttractors);
     }
     warp.sync();
 
@@ -81,7 +83,7 @@ RUNTIME #endif
             min_ = min(min_, warp.shfl_down(min_, delta));
             max_ = max(max_, warp.shfl_down(max_, delta));
         }
-        if (tid == 0) reinterpret_cast<dist2 *>(minmaxOut)[blockIdx.x] = make_dist2(min_, max_);
+        if (tid == 0) reinterpret_cast<dist2*>(minmaxOut)[blockIdx.x] = make_dist2(min_, max_);
     }
 }
 

@@ -7,8 +7,7 @@
 #include <driver_types.h>
 #include <cassert>
 #include "../Computation/safeCall.h"
-
-std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size);
+#include "utils.h"
 
 float data[] = {
     //XY position and UV coordinates
@@ -102,6 +101,11 @@ void Renderer::initCuda(bool registerPathRes) {
     CUDA_SAFE(cudaGraphicsGLRegisterImage(&cudaSurfaceRes, texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
     cudaSurfaceDesc.resType = cudaResourceTypeArray;
 
+    if(mode.isAttractor) {
+        size_t numAttractors = static_cast<int>(width * ATTRACTOR_RESOLUTION_MULT) * static_cast<int>(height * ATTRACTOR_RESOLUTION_MULT);
+        CUDA_SAFE(cudaMallocManaged(&attractorsBuffer, numAttractors * sizeof(HostComplex))); //todo use unmanaged mem instead
+    }
+
     if(registerPathRes) {
         CUDA_SAFE(cudaMallocManaged(&cudaPathLengthPtr, sizeof(int)));
         CUDA_SAFE(cudaGraphicsGLRegisterBuffer(&overlayBufferRes, overlayLineVBO, cudaGraphicsRegisterFlagsWriteDiscard));
@@ -114,17 +118,20 @@ Renderer::~Renderer() {
     CUDA_SAFE(cudaGraphicsUnregisterResource(overlayBufferRes));
     CUDA_SAFE(cudaFree(cudaBuffer));
     CUDA_SAFE(cudaFree(cudaPathLengthPtr));
+    CUDA_SAFE(cudaFree(attractorsBuffer));
 }
 
 void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float>& p, float colorCutoff) {
     pm.enter(PERF_RENDER);
     auto [start, end] = viewport.getCorners();
 
+    size_t numAttractors = (mode.isAttractor) ? findAttractors(maxIters, metricArg, p) : 0;
+
     CUDA_SAFE(cudaGraphicsMapResources(1, &cudaSurfaceRes));
     auto surface = createSurface();
 
     pm.enter(PERF_KERNEL);
-    launch_kernel(kernel, start.real(), end.real(), start.imag(), end.imag(), maxIters, cudaBuffer, surface, width, height, p.real(), p.imag(), prepMetricArg(mode.metric, metricArg));
+    launch_kernel(kernel, start.real(), end.real(), start.imag(), end.imag(), maxIters, cudaBuffer, surface, width, height, p.real(), p.imag(), prepMetricArg(mode.metric, metricArg), attractorsBuffer, numAttractors);
     CUDA_SAFE(cudaDeviceSynchronize());
     pm.exit(PERF_KERNEL);
 
@@ -164,10 +171,11 @@ cudaSurfaceObject_t Renderer::createSurface() {
 }
 
 void Renderer::initKernels(std::string_view cudaCode) {
-    auto funcs = compiler.Compile(cudaCode, "runtime.cu", {"kernel", "genFixedPointPath", "transformLine"}, mode);
+    auto funcs = compiler.Compile(cudaCode, "runtime.cu", {"kernel", "genFixedPointPath", "transformLine", "findAttractors"}, mode);
     kernel = funcs[0];
     pathKernel = funcs[1];
     lineTransformKernel = funcs[2];
+    findAttractorsKernel = funcs[3];
 }
 
 std::string Renderer::getPerformanceReport() {
@@ -179,6 +187,7 @@ void Renderer::resize(int newWidth, int newHeight) {
     height = newHeight;
 
     CUDA_SAFE(cudaFree(cudaBuffer));
+    CUDA_SAFE(cudaFree(attractorsBuffer));
     CUDA_SAFE(cudaGraphicsUnregisterResource(cudaSurfaceRes));
     glBindTexture(GL_TEXTURE_2D, 0);
     glDeleteTextures(1, &texture);
@@ -290,14 +299,18 @@ void Renderer::togglePointConnections() {
     connectOverlayPoints = !connectOverlayPoints;
 }
 
-std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size) {
-    dist_t min = std::numeric_limits<dist_t>::max();
-    dist_t max = std::numeric_limits<dist_t>::lowest();
-    for(int i = 0; i < size; i += 2) {
-        if(buffer[i] < min)
-            min = buffer[i];
-        if(buffer[i + 1] > max)
-            max = buffer[i + 1];
-    }
-    return {min, max};
+size_t Renderer::findAttractors(dist_t maxIters, float metricArg, const std::complex<float>& p) {
+    constexpr int BLOCK_SIZE = 256;
+    pm.enter(PERF_ATTRACTOR);
+    int aWidth = width * ATTRACTOR_RESOLUTION_MULT;
+    int aHeight = height * ATTRACTOR_RESOLUTION_MULT;
+    auto [start, end] = viewport.getCorners();
+    auto tolerance = (mode.argIsTolerance) ? metricArg : 0.05f;
+    launch_kernel_generic(findAttractorsKernel, aWidth * aHeight, BLOCK_SIZE, start.real(), end.real(), start.imag(), end.imag(), maxIters, p.real(), p.imag(), tolerance * tolerance, aWidth, aHeight, attractorsBuffer);
+    CUDA_SAFE(cudaDeviceSynchronize());
+    auto res = deduplicateWithTol(attractorsBuffer, aWidth * aHeight, tolerance * tolerance);
+    CUDA_SAFE(cudaMemPrefetchAsync(attractorsBuffer, res, 0));
+
+    pm.exit(PERF_ATTRACTOR);
+    return res;
 }

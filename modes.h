@@ -27,6 +27,7 @@ struct ModeInfo {
     bool capturing = false;
     bool disableOverlays = false;
     int initMaxIters = 128;
+    bool isAttractor = false;
 
     template<class Archive>
     void save(Archive& ar, const unsigned int version) const
