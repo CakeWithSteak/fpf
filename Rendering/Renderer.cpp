@@ -103,7 +103,8 @@ void Renderer::initCuda(bool registerPathRes) {
 
     if(mode.isAttractor) {
         size_t numAttractors = static_cast<int>(width * ATTRACTOR_RESOLUTION_MULT) * static_cast<int>(height * ATTRACTOR_RESOLUTION_MULT);
-        CUDA_SAFE(cudaMallocManaged(&attractorsBuffer, numAttractors * sizeof(HostComplex))); //todo use unmanaged mem instead
+        CUDA_SAFE(cudaMalloc(&attractorsDeviceBuffer, numAttractors * sizeof(HostComplex)));
+        attractorsHostBuffer = std::make_unique<HostComplex[]>(numAttractors);
     }
 
     if(registerPathRes) {
@@ -118,7 +119,7 @@ Renderer::~Renderer() {
     CUDA_SAFE(cudaGraphicsUnregisterResource(overlayBufferRes));
     CUDA_SAFE(cudaFree(cudaBuffer));
     CUDA_SAFE(cudaFree(cudaPathLengthPtr));
-    CUDA_SAFE(cudaFree(attractorsBuffer));
+    CUDA_SAFE(cudaFree(attractorsDeviceBuffer));
 }
 
 void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float>& p, float colorCutoff) {
@@ -131,7 +132,7 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
     auto surface = createSurface();
 
     pm.enter(PERF_KERNEL);
-    launch_kernel(kernel, start.real(), end.real(), start.imag(), end.imag(), maxIters, cudaBuffer, surface, width, height, p.real(), p.imag(), prepMetricArg(mode.metric, metricArg), attractorsBuffer, numAttractors);
+    launch_kernel(kernel, start.real(), end.real(), start.imag(), end.imag(), maxIters, cudaBuffer, surface, width, height, p.real(), p.imag(), prepMetricArg(mode.metric, metricArg), attractorsDeviceBuffer, numAttractors);
     CUDA_SAFE(cudaDeviceSynchronize());
     pm.exit(PERF_KERNEL);
 
@@ -187,7 +188,7 @@ void Renderer::resize(int newWidth, int newHeight) {
     height = newHeight;
 
     CUDA_SAFE(cudaFree(cudaBuffer));
-    CUDA_SAFE(cudaFree(attractorsBuffer));
+    CUDA_SAFE(cudaFree(attractorsDeviceBuffer));
     CUDA_SAFE(cudaGraphicsUnregisterResource(cudaSurfaceRes));
     glBindTexture(GL_TEXTURE_2D, 0);
     glDeleteTextures(1, &texture);
@@ -304,12 +305,15 @@ size_t Renderer::findAttractors(dist_t maxIters, float metricArg, const std::com
     pm.enter(PERF_ATTRACTOR);
     int aWidth = width * ATTRACTOR_RESOLUTION_MULT;
     int aHeight = height * ATTRACTOR_RESOLUTION_MULT;
+    size_t bufSize = aWidth * aHeight;
     auto [start, end] = viewport.getCorners();
     auto tolerance = (mode.argIsTolerance) ? metricArg : 0.05f;
-    launch_kernel_generic(findAttractorsKernel, aWidth * aHeight, BLOCK_SIZE, start.real(), end.real(), start.imag(), end.imag(), maxIters, p.real(), p.imag(), tolerance * tolerance, aWidth, aHeight, attractorsBuffer);
+    launch_kernel_generic(findAttractorsKernel, bufSize, BLOCK_SIZE, start.real(), end.real(), start.imag(), end.imag(), maxIters, p.real(), p.imag(), tolerance * tolerance, aWidth, aHeight, attractorsDeviceBuffer);
     CUDA_SAFE(cudaDeviceSynchronize());
-    auto res = deduplicateWithTol(attractorsBuffer, aWidth * aHeight, tolerance * tolerance);
-    CUDA_SAFE(cudaMemPrefetchAsync(attractorsBuffer, res, 0));
+
+    CUDA_SAFE(cudaMemcpy(attractorsHostBuffer.get(), attractorsDeviceBuffer, bufSize * sizeof(HostComplex), cudaMemcpyDeviceToHost));
+    auto res = deduplicateWithTol(attractorsHostBuffer.get(), aWidth * aHeight, tolerance * tolerance);
+    CUDA_SAFE(cudaMemcpy(attractorsDeviceBuffer, attractorsHostBuffer.get(), res * sizeof(HostComplex), cudaMemcpyHostToDevice));
 
     pm.exit(PERF_ATTRACTOR);
     return res;

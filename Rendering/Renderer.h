@@ -1,5 +1,6 @@
 #pragma once
 #include <complex>
+#include <memory>
 #include "../Computation/kernel.h"
 #include "../utils/Viewport.h"
 #include "../Compilation/NvrtcCompiler.h"
@@ -45,7 +46,8 @@ class Renderer {
     cudaResourceDesc cudaSurfaceDesc;
     dist_t* cudaBuffer = nullptr;
     int* cudaPathLengthPtr = nullptr;
-    HostComplex* attractorsBuffer = nullptr;
+    HostComplex* attractorsDeviceBuffer = nullptr;
+    std::unique_ptr<HostComplex[]> attractorsHostBuffer = nullptr;
 
     NvrtcCompiler compiler;
     CUfunction kernel;
