@@ -21,6 +21,8 @@ RUNTIME #elif defined(VECTORFIELD_MAGNITUDE)
 RUNTIME #define DIST_F vfMagnitude
 RUNTIME #elif defined(VECTORFIELD_ANGLE)
 RUNTIME #define DIST_F vfAngle
+RUNTIME #elif defined(ATTRACTOR)
+//ATTRACTOR is a special case handled in kernel.cu
 RUNTIME #else
 RUNTIME #error "Invalid distance metric."
 RUNTIME #endif
@@ -35,11 +37,12 @@ enum DistanceMetric {
     VECTORFIELD_ANGLE,
 
     CAPTURING_JULIA,
-    CAPTURING_FIXEDPOINT
+    CAPTURING_FIXEDPOINT,
+    ATTRACTOR
 };
 
 inline float prepMetricArg(DistanceMetric metric, float arg) {
-    if(metric == FIXEDPOINT_ITERATIONS || metric == JULIA || metric == FIXEDPOINT_EUCLIDEAN)
+    if(metric == FIXEDPOINT_ITERATIONS || metric == JULIA || metric == FIXEDPOINT_EUCLIDEAN || metric == ATTRACTOR)
         return arg * arg;
     return arg;
 }

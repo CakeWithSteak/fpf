@@ -7,6 +7,7 @@
 #include "../modes.h"
 #include "Shader.h"
 #include "shaders.h"
+#include "utils.h"
 
 class Renderer {
     int width;
@@ -44,17 +45,21 @@ class Renderer {
     cudaResourceDesc cudaSurfaceDesc;
     dist_t* cudaBuffer = nullptr;
     int* cudaPathLengthPtr = nullptr;
+    HostComplex* attractorsBuffer = nullptr;
+
     NvrtcCompiler compiler;
     CUfunction kernel;
     CUfunction pathKernel;
     CUfunction lineTransformKernel;
+    CUfunction findAttractorsKernel;
 
-    PerformanceMonitor pm{"Main kernel time", "Total render time", "Orbit compute time", "Overlay render time", "Line transform compute time"};
+    PerformanceMonitor pm{"Main kernel time", "Total render time", "Orbit compute time", "Overlay render time", "Line transform compute time", "Attractor compute time"};
     static constexpr size_t PERF_KERNEL = 0;
     static constexpr size_t PERF_RENDER = 1;
     static constexpr size_t PERF_OVERLAY_GEN = 2;
     static constexpr size_t PERF_OVERLAY_RENDER = 3;
     static constexpr size_t PERF_LINE_TRANS_GEN = 4;
+    static constexpr size_t PERF_ATTRACTOR = 5;
 
     static constexpr int MAX_PATH_STEPS = 256;
     static constexpr float PATH_PARAM_UPDATE_THRESHOLD = 0.01f;
@@ -62,6 +67,8 @@ class Renderer {
     static constexpr float DEFAULT_PATH_TOLERANCE = 0.001f;
 
     static constexpr int LINE_TRANS_NUM_POINTS = 500'000;
+
+    static constexpr float ATTRACTOR_RESOLUTION_MULT = 0.5f; // todo set dynamically or let it be user-controlled
 
     void init(std::string_view cudaCode);
     void initTexture();
@@ -73,6 +80,7 @@ class Renderer {
     void generateLineTransformImpl(const std::complex<float>& p, int lastIterations = -1);
     inline bool isOverlayEnabled() { return pathEnabled || lineTransEnabled; }
     int getOverlayLength();
+    size_t findAttractors(dist_t maxIters, float metricArg, const std::complex<float>& p);
 public:
     Renderer(int width, int height, const Viewport& viewport, const ModeInfo& mode, std::string_view cudaCode)
             : width(width), height(height), viewport(viewport), mode(mode) {init(cudaCode);}
