@@ -308,11 +308,11 @@ size_t Renderer::findAttractors(dist_t maxIters, float metricArg, const std::com
     size_t bufSize = aWidth * aHeight;
     auto [start, end] = viewport.getCorners();
     auto tolerance = (mode.argIsTolerance) ? metricArg : 0.05f;
-    launch_kernel_generic(findAttractorsKernel, bufSize, BLOCK_SIZE, start.real(), end.real(), start.imag(), end.imag(), maxIters, p.real(), p.imag(), tolerance * tolerance, aWidth, aHeight, attractorsDeviceBuffer);
+    launch_kernel_generic(findAttractorsKernel, bufSize, BLOCK_SIZE, start.real(), end.real(), start.imag(), end.imag(), maxIters, p.real(), p.imag(), tolerance * tolerance, aWidth, aHeight, attractorsDeviceBuffer, ATTRACTOR_MATCH_TOL);
     CUDA_SAFE(cudaDeviceSynchronize());
 
     CUDA_SAFE(cudaMemcpy(attractorsHostBuffer.get(), attractorsDeviceBuffer, bufSize * sizeof(HostComplex), cudaMemcpyDeviceToHost));
-    auto res = deduplicateWithTol(attractorsHostBuffer.get(), aWidth * aHeight, tolerance * tolerance, MAX_ATTRACTORS);
+    auto res = deduplicateWithTol(attractorsHostBuffer.get(), aWidth * aHeight, ATTRACTOR_MATCH_TOL, MAX_ATTRACTORS);
     CUDA_SAFE(cudaMemcpy(attractorsDeviceBuffer, attractorsHostBuffer.get(), res * sizeof(HostComplex), cudaMemcpyHostToDevice));
 
     std::cout << "Attractors: " << res;

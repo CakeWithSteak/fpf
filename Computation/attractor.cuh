@@ -1,5 +1,6 @@
 #include "kernel_types.h"
 #include "utils.cuh"
+#include "constants.h"
 
 #define NANF (0.0f / 0.0f)
 
@@ -44,7 +45,7 @@ __device__ __inline__ dist_t whichAttractor(complex z, dist_t maxIters, complex 
         return -1;
 
     for(int j = 0; j < numAttractors; ++j) {
-        if(withinTolerance(z, attractors[j], tsquare))
+        if(withinTolerance(z, attractors[j], KERNEL_ATTRACTOR_MAX_TOL))
             return j;
     }
     return -1;
