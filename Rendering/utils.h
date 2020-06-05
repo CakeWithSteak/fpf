@@ -11,5 +11,5 @@ struct HostComplex {
 #pragma pack(pop)
 
 std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size);
-size_t deduplicateWithTol(HostComplex* buffer, size_t size, float tsquare);
+size_t deduplicateWithTol(HostComplex *buffer, size_t size, float tsquare, size_t maxAttractors);
 bool withinTolerance(const HostComplex& a, const HostComplex& b, float tsquare);

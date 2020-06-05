@@ -15,9 +15,9 @@ std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size) {
     return {min, max};
 }
 
-size_t deduplicateWithTol(HostComplex* buffer, size_t size, float tsquare) {
+size_t deduplicateWithTol(HostComplex *buffer, size_t size, float tsquare, size_t maxAttractors) {
     int j = 0;
-    for(int i = 0; i < size; ++i) {
+    for(int i = 0; i < size && j < maxAttractors; ++i) {
         auto curr = buffer[i];
         if(std::isnan(curr.re))
             continue;

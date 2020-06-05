@@ -312,8 +312,13 @@ size_t Renderer::findAttractors(dist_t maxIters, float metricArg, const std::com
     CUDA_SAFE(cudaDeviceSynchronize());
 
     CUDA_SAFE(cudaMemcpy(attractorsHostBuffer.get(), attractorsDeviceBuffer, bufSize * sizeof(HostComplex), cudaMemcpyDeviceToHost));
-    auto res = deduplicateWithTol(attractorsHostBuffer.get(), aWidth * aHeight, tolerance * tolerance);
+    auto res = deduplicateWithTol(attractorsHostBuffer.get(), aWidth * aHeight, tolerance * tolerance, MAX_ATTRACTORS);
     CUDA_SAFE(cudaMemcpy(attractorsDeviceBuffer, attractorsHostBuffer.get(), res * sizeof(HostComplex), cudaMemcpyHostToDevice));
+
+    std::cout << "Attractors: " << res;
+    if(res == MAX_ATTRACTORS)
+        std::cout << " (max)";
+    std::cout << std::endl;
 
     pm.exit(PERF_ATTRACTOR);
     return res;
