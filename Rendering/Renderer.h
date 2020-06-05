@@ -70,7 +70,11 @@ class Renderer {
 
     static constexpr int LINE_TRANS_NUM_POINTS = 500'000;
 
-    static constexpr float ATTRACTOR_RESOLUTION_MULT = 0.5f; // todo set dynamically or let it be user-controlled
+    // Not really worth it to set this below 1 -- 0.5 is surprisingly only a 3% performance increase.
+    // Predictably the attractor compute time falls dramatically, but at the same time the main kernel time also grows for some reason
+    // despite the detected attractors being the same.
+    static constexpr float ATTRACTOR_RESOLUTION_MULT = 1.0f;
+    static constexpr size_t MAX_ATTRACTORS = 32;
 
     void init(std::string_view cudaCode);
     void initTexture();
