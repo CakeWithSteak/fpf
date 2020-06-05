@@ -9,6 +9,7 @@
 #include "Shader.h"
 #include "shaders.h"
 #include "utils.h"
+#include "../Computation/constants.h"
 
 class Renderer {
     int width;
@@ -75,6 +76,7 @@ class Renderer {
     // despite the detected attractors being the same.
     static constexpr float ATTRACTOR_RESOLUTION_MULT = 1.0f;
     static constexpr size_t MAX_ATTRACTORS = 32;
+    static constexpr float ATTRACTOR_MATCH_TOL = KERNEL_ATTRACTOR_MAX_TOL;
 
     void init(std::string_view cudaCode);
     void initTexture();
