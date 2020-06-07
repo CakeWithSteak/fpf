@@ -15,7 +15,6 @@ class Window {
     GLFWwindow* handle = nullptr;
     std::optional<std::function<void(Window&, int, int)>> resizeCallback;
     void init(const std::string& title, bool resizable);
-
 public:
     Window(int width, int height, const std::string& title, bool resizable) : width{width}, height{height} {init(title, resizable);}
     void setSwapInterval(int interval);
@@ -35,4 +34,5 @@ public:
     [[nodiscard]] bool isKeyPressed(int key);
     void setResizeCallback(std::function<void(Window&, int, int)> callback);
     [[nodiscard]] std::optional<std::pair<double, double>> tryGetClickPosition(int button);
+    void enforceAspectRatio();
 };
