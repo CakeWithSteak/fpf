@@ -141,7 +141,7 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
 
     mainShader.use();
     if(!mode.staticMinMax.has_value()) {
-        auto [min, max] = interleavedMinmax(cudaBuffer, 2 * numBlocks);
+        auto [min, max] = (mode.isAttractor) ? std::make_pair(0.0f, static_cast<dist_t>(numAttractors)) : interleavedMinmax(cudaBuffer, 2 * numBlocks);
         mainShader.setUniform(minimumUniform, min);
         mainShader.setUniform(maximumUniform, std::min(max, colorCutoff));
         std::cout << "Min: " << min << " max: " << max << "\n";

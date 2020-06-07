@@ -64,6 +64,8 @@ __global__ void kernel(float re0, float re1, float im0, float im1, dist_t maxIte
 
     if (!threadIsExcessive) surf2Dwrite(fpDist, surface, x * sizeof(int), y);
 
+RUNTIME #ifndef NO_MINMAX
+
     //Find the min/max of this warp and write it to minmaxBlock
     dist_t min_ = (fpDist == -1) ? maxIters + 2 : fpDist;
     dist_t max_ = fpDist;
@@ -85,6 +87,8 @@ __global__ void kernel(float re0, float re1, float im0, float im1, dist_t maxIte
         }
         if (tid == 0) reinterpret_cast<dist2*>(minmaxOut)[blockIdx.x] = make_dist2(min_, max_);
     }
+
+RUNTIME #endif
 }
 
 __global__ void genFixedPointPath(float re, float im, int maxSteps, float tsquare, complex* output, int* outputLength, float pre, float pim) {
