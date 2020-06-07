@@ -20,6 +20,8 @@ std::vector<char*> getCompileArgs(const ModeInfo& mode) {
     args.push_back(defineMacro(mode.metricInternalName));
     if(mode.capturing)
         args.push_back(defineMacro("CAPTURING"));
+    if(mode.staticMinMax.has_value() || mode.isAttractor)
+        args.push_back(defineMacro("NO_MINMAX"));
 
     std::vector<char*> res;
     for(int i = 0; i < args.size(); ++i) {
