@@ -314,7 +314,11 @@ size_t Renderer::findAttractors(dist_t maxIters, double metricArg, const std::co
     size_t bufSize = aWidth * aHeight;
     auto [start, end] = viewport.getCorners();
     auto tolerance = (mode.argIsTolerance) ? metricArg : 0.05f;
-    launch_kernel_generic(findAttractorsKernel, bufSize, BLOCK_SIZE, start.real(), end.real(), start.imag(), end.imag(), maxIters, p.real(), p.imag(), tolerance * tolerance, aWidth, aHeight, attractorsDeviceBuffer, ATTRACTOR_MATCH_TOL);
+
+    //todo finish
+    std::complex<float> fstart(start), fend(end), fp(p);
+    float ftol= tolerance, F_ATTRACTOR_MATCH_TOL = ATTRACTOR_MATCH_TOL;
+    launch_kernel_generic(findAttractorsKernel, bufSize, BLOCK_SIZE, fstart.real(), fend.real(), fstart.imag(), fend.imag(), maxIters, fp.real(), fp.imag(), ftol * ftol, aWidth, aHeight, attractorsDeviceBuffer, F_ATTRACTOR_MATCH_TOL);
     CUDA_SAFE(cudaDeviceSynchronize());
 
     CUDA_SAFE(cudaMemcpy(attractorsHostBuffer.get(), attractorsDeviceBuffer, bufSize * sizeof(HostComplex), cudaMemcpyDeviceToHost));
