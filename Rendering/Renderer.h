@@ -65,18 +65,18 @@ class Renderer {
     static constexpr size_t PERF_ATTRACTOR = 5;
 
     static constexpr int MAX_PATH_STEPS = 256;
-    static constexpr float PATH_PARAM_UPDATE_THRESHOLD = 0.01f;
-    static constexpr float PATH_TOL_UPDATE_THRESHOLD = 0.001f;
-    static constexpr float DEFAULT_PATH_TOLERANCE = 0.001f;
+    static constexpr double PATH_PARAM_UPDATE_THRESHOLD = 0.01f;
+    static constexpr double PATH_TOL_UPDATE_THRESHOLD = 0.001f;
+    static constexpr double DEFAULT_PATH_TOLERANCE = 0.001f;
 
     static constexpr int LINE_TRANS_NUM_POINTS = 500'000;
 
     // Not really worth it to set this below 1 -- 0.5 is surprisingly only a 3% performance increase.
     // Predictably the attractor compute time falls dramatically, but at the same time the main kernel time also grows for some reason
     // despite the detected attractors being the same.
-    static constexpr float ATTRACTOR_RESOLUTION_MULT = 1.0f;
+    static constexpr double ATTRACTOR_RESOLUTION_MULT = 1.0f;
     static constexpr size_t MAX_ATTRACTORS = 32;
-    static constexpr float ATTRACTOR_MATCH_TOL = KERNEL_ATTRACTOR_MAX_TOL;
+    static constexpr double ATTRACTOR_MATCH_TOL = KERNEL_ATTRACTOR_MAX_TOL;
 
     void init(std::string_view cudaCode);
     void initTexture();
