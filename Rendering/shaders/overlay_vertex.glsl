@@ -3,13 +3,13 @@ R"(
 
 layout (location = 0) in vec2 position;
 
-uniform vec2 viewportCenter;
-uniform float viewportBreadth;
+uniform dvec2 viewportCenter;
+uniform double viewportBreadth;
 
 out float index;
 
 vec2 viewportToGL(vec2 p) {
-    return (p - viewportCenter) / viewportBreadth;
+    return vec2((p - viewportCenter) / viewportBreadth); //Cast to float vec
 }
 
 void main() {

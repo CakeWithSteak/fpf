@@ -122,7 +122,7 @@ Renderer::~Renderer() {
     CUDA_SAFE(cudaFree(attractorsDeviceBuffer));
 }
 
-void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float>& p, float colorCutoff) {
+void Renderer::render(dist_t maxIters, double metricArg, const std::complex<double>& p, double colorCutoff) {
     pm.enter(PERF_RENDER);
     auto [start, end] = viewport.getCorners();
 
@@ -141,7 +141,7 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
 
     mainShader.use();
     if(!mode.staticMinMax.has_value()) {
-        auto [min, max] = (mode.isAttractor) ? std::make_pair(0.0f, static_cast<dist_t>(numAttractors)) : interleavedMinmax(cudaBuffer, 2 * numBlocks);
+        auto [min, max] = (mode.isAttractor) ? std::make_pair(0.0, static_cast<double>(numAttractors)) : interleavedMinmax(cudaBuffer, 2 * numBlocks);
         mainShader.setUniform(minimumUniform, min);
         mainShader.setUniform(maximumUniform, std::min(max, colorCutoff));
         std::cout << "Min: " << min << " max: " << max << "\n";
@@ -197,17 +197,21 @@ void Renderer::resize(int newWidth, int newHeight) {
     initCuda(false);
 }
 
-int Renderer::generatePath(const std::complex<float>& z, float metricArg, const std::complex<float>& p) {
+int Renderer::generatePath(const std::complex<double>& z, double metricArg, const std::complex<double>& p) {
     pm.enter(PERF_OVERLAY_GEN);
     lastP = p;
-    float tolerance = (mode.argIsTolerance) ? metricArg : DEFAULT_PATH_TOLERANCE;
+    double tolerance = (mode.argIsTolerance) ? metricArg : DEFAULT_PATH_TOLERANCE;
     lastTolerance = tolerance;
     pathStart = z;
 
     void* bufferPtr;
     CUDA_SAFE(cudaGraphicsMapResources(1, &overlayBufferRes));
     CUDA_SAFE(cudaGraphicsResourceGetMappedPointer(&bufferPtr, nullptr, overlayBufferRes));
-    launch_kernel_generic(pathKernel, 1, 1, z.real(), z.imag(), MAX_PATH_STEPS, tolerance * tolerance, bufferPtr, cudaPathLengthPtr, p.real(), p.imag());
+
+    //todo finish
+    std::complex<float> fz(z), fp(p);
+    launch_kernel_generic(pathKernel, 1, 1, fz.real(), fz.imag(), MAX_PATH_STEPS, tolerance * tolerance, bufferPtr, cudaPathLengthPtr, fp.real(), fp.imag());
+
     CUDA_SAFE(cudaDeviceSynchronize());
     CUDA_SAFE(cudaGraphicsUnmapResources(1, &overlayBufferRes));
     pathEnabled = true;
@@ -215,8 +219,8 @@ int Renderer::generatePath(const std::complex<float>& z, float metricArg, const 
     return *cudaPathLengthPtr;
 }
 
-void Renderer::refreshOverlayIfNeeded(const std::complex<float>& p, float metricArg) {
-    float tolerance = (mode.argIsTolerance) ? metricArg : DEFAULT_PATH_TOLERANCE;
+void Renderer::refreshOverlayIfNeeded(const std::complex<double>& p, double metricArg) {
+    double tolerance = (mode.argIsTolerance) ? metricArg : DEFAULT_PATH_TOLERANCE;
     if(std::abs(lastP - p) > PATH_PARAM_UPDATE_THRESHOLD ||
       (std::abs(lastTolerance - tolerance) > PATH_TOL_UPDATE_THRESHOLD && pathEnabled)) {
         lastP = p;
@@ -241,8 +245,8 @@ std::vector<unsigned char> Renderer::exportImageData() {
     return data;
 }
 
-void Renderer::generateLineTransform(const std::complex<float>& start, const std::complex<float>& end, int iteration,
-                                     const std::complex<float>& p) {
+void Renderer::generateLineTransform(const std::complex<double>& start, const std::complex<double>& end, int iteration,
+                                     const std::complex<double>& p) {
     lineTransStart = start;
     lineTransEnd = end;
     lineTransIteration = iteration;
@@ -250,7 +254,7 @@ void Renderer::generateLineTransform(const std::complex<float>& start, const std
     generateLineTransformImpl(p);
 }
 
-void Renderer::setLineTransformIteration(int iteration, const std::complex<float>& p, bool disableIncremental) {
+void Renderer::setLineTransformIteration(int iteration, const std::complex<double>& p, bool disableIncremental) {
     auto lastIterations = lineTransIteration;
     lineTransIteration = iteration;
 
@@ -261,7 +265,7 @@ void Renderer::setLineTransformIteration(int iteration, const std::complex<float
 }
 
 
-void Renderer::generateLineTransformImpl(const std::complex<float>& p, int lastIterations) {
+void Renderer::generateLineTransformImpl(const std::complex<double>& p, int lastIterations) {
     pm.enter(PERF_LINE_TRANS_GEN);
     constexpr int BLOCK_SIZE = 1024;
     lastP = p;
@@ -279,8 +283,10 @@ void Renderer::generateLineTransformImpl(const std::complex<float>& p, int lastI
     CUDA_SAFE(cudaGraphicsMapResources(1, &overlayBufferRes));
     CUDA_SAFE(cudaGraphicsResourceGetMappedPointer(&bufferPtr, nullptr, overlayBufferRes));
 
-    launch_kernel_generic(lineTransformKernel, LINE_TRANS_NUM_POINTS, BLOCK_SIZE, lineTransStart.real(), lineTransEnd.real(),
-            lineTransStart.imag(), lineTransEnd.imag(), p.real(), p.imag(), LINE_TRANS_NUM_POINTS, itersToDo, incremental, bufferPtr);
+    //todo finish
+    std::complex<float> flineTransStart(lineTransStart), flineTransEnd(lineTransEnd), fp(p);
+    launch_kernel_generic(lineTransformKernel, LINE_TRANS_NUM_POINTS, BLOCK_SIZE, flineTransStart.real(), flineTransEnd.real(),
+            flineTransStart.imag(), flineTransEnd.imag(), fp.real(), fp.imag(), LINE_TRANS_NUM_POINTS, itersToDo, incremental, bufferPtr);
 
     CUDA_SAFE(cudaDeviceSynchronize());
     CUDA_SAFE(cudaGraphicsUnmapResources(1, &overlayBufferRes));
@@ -300,7 +306,7 @@ void Renderer::togglePointConnections() {
     connectOverlayPoints = !connectOverlayPoints;
 }
 
-size_t Renderer::findAttractors(dist_t maxIters, float metricArg, const std::complex<float>& p) {
+size_t Renderer::findAttractors(dist_t maxIters, double metricArg, const std::complex<double>& p) {
     constexpr int BLOCK_SIZE = 256;
     pm.enter(PERF_ATTRACTOR);
     int aWidth = width * ATTRACTOR_RESOLUTION_MULT;

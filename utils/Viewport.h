@@ -2,11 +2,11 @@
 #include <complex>
 #include <boost/serialization/access.hpp>
 
-using fcomplex = std::complex<float>;
+using dcomplex = std::complex<double>;
 
 class Viewport {
-    fcomplex center;
-    float breadth;
+    dcomplex center;
+    double breadth;
     void debugPrintState();
 public:
     enum class Direction {
@@ -16,20 +16,20 @@ public:
         DOWN
     };
 
-    Viewport(const std::complex<float>& center, float breadth);
+    Viewport(const dcomplex& center, double breadth);
     Viewport() = default;
 
-    void move(Direction dir, float step);
-    void moveTo(const fcomplex& target);
-    void zoom(float step);
-    void zoomTo(float target);
+    void move(Direction dir, double step);
+    void moveTo(const dcomplex& target);
+    void zoom(double step);
+    void zoomTo(double target);
 
     //Returns bottom-left and top-right corners
-    [[nodiscard]] std::pair<fcomplex, fcomplex> getCorners() const;
+    [[nodiscard]] std::pair<dcomplex, dcomplex> getCorners() const;
 
-    [[nodiscard]] const fcomplex& getCenter() const;
-    [[nodiscard]] float getBreadth() const;
-    fcomplex resolveScreenCoords(double x, double y, double width, double height) const;
+    [[nodiscard]] const dcomplex& getCenter() const;
+    [[nodiscard]] double getBreadth() const;
+    dcomplex resolveScreenCoords(double x, double y, double width, double height) const;
 
 private:
     friend class boost::serialization::access;
