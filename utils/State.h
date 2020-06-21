@@ -25,6 +25,7 @@ struct State {
     int lineTransIteration = 0;
     bool lineTransEnabled = false; // Never serialised, inferred from lineTransEnd during deserialization
     bool forceDisableIncrementalLineTracing = false;
+    bool doublePrec = false;
 
     explicit State(const Options& opt) {
         expr = opt.expression;
@@ -36,6 +37,7 @@ struct State {
         colorCutoffEnabled = (mode.defaultColorCutoff != -1);
         colorCutoff = colorCutoffEnabled ? mode.defaultColorCutoff : 10.0f;
         maxIters = mode.initMaxIters;
+        doublePrec = opt.doublePrec;
     }
     State() = default;
 

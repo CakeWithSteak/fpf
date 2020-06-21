@@ -49,7 +49,7 @@ std::string getReferenceString(const path& imagePath, const State& state) {
     } else {
         ss << "\tNone\tNone\tNone";
     }
-
+    ss << "\t" << (state.doublePrec ? "On" : "Off");
     ss << "\n";
 
     return ss.str();
