@@ -3,11 +3,10 @@ R"(
 
 in vec2 vTexCoords;
 
-//todo decide between floats and doubles for shaders
 uniform sampler2D distances;
-uniform double minDist;
-uniform double maxDist;
-uniform double maxHue;
+uniform float minDist;
+uniform float maxDist;
+uniform float maxHue;
 
 out vec4 fragColor;
 
@@ -19,7 +18,7 @@ vec3 hsv2rgb(vec3 c)
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-double mapHue(double distance) {
+float mapHue(float distance) {
     if(minDist == maxDist) return 0;
 
     //Color cutoff may set a lower maxDist than the actual maximum we get from CUDA, so clamp it here.
@@ -29,7 +28,7 @@ double mapHue(double distance) {
 }
 
 void main() {
-    double distance = texture(distances, vTexCoords).r;
+    float distance = texture(distances, vTexCoords).r;
     if(distance == -1) {
         fragColor = vec4(0, 0, 0, 1);
     } else {

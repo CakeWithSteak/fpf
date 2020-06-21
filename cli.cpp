@@ -32,7 +32,8 @@ Options getOptions(int argc, char** argv) {
        ("height,h", po::value<int>()->default_value(1024), "Window height")
        ("refs-path", po::value<std::string>()->default_value("./refs.txt"), "References file path")
        ("metric-arg,m", po::value<float>(), "Metric argument")
-       ("no-incremental-t", po::bool_switch(), "Disable incremental calculation of the line transform");
+       ("no-incremental-t", po::bool_switch(), "Disable incremental calculation of the line transform")
+       ("double", po::bool_switch(), "Enable double precision mode");
 
     po::positional_options_description pos;
     pos.add("mode", 1);
@@ -47,6 +48,7 @@ Options getOptions(int argc, char** argv) {
     opt.height = vm["height"].as<int>();
     opt.refsPath = vm["refs-path"].as<std::string>();
     opt.forceDisableIncrementalLineTracing = vm["no-incremental-t"].as<bool>();
+    opt.doublePrec = vm["double"].as<bool>();
 
     if(vm.count("metric-arg")) {
         opt.metricArg = vm["metric-arg"].as<float>();

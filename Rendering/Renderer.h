@@ -16,6 +16,7 @@ class Renderer {
     int height;
     const Viewport& viewport;
     ModeInfo mode;
+    bool doublePrec;
 
     bool connectOverlayPoints = true;
 
@@ -45,7 +46,7 @@ class Renderer {
     cudaGraphicsResource_t cudaSurfaceRes = nullptr;
     cudaGraphicsResource_t overlayBufferRes = nullptr;
     cudaResourceDesc cudaSurfaceDesc;
-    dist_t* cudaBuffer = nullptr;
+    float* cudaBuffer = nullptr;
     int* cudaPathLengthPtr = nullptr;
     HostComplex* attractorsDeviceBuffer = nullptr;
     std::unique_ptr<HostComplex[]> attractorsHostBuffer = nullptr;
@@ -88,13 +89,13 @@ class Renderer {
     void generateLineTransformImpl(const std::complex<double>& p, int lastIterations = -1);
     inline bool isOverlayEnabled() { return pathEnabled || lineTransEnabled; }
     int getOverlayLength();
-    size_t findAttractors(dist_t maxIters, double metricArg, const std::complex<double>& p); //todo fixup dist_t
+    size_t findAttractors(int maxIters, double metricArg, const std::complex<double>& p);
 public:
-    Renderer(int width, int height, const Viewport& viewport, const ModeInfo& mode, std::string_view cudaCode)
-            : width(width), height(height), viewport(viewport), mode(mode) {init(cudaCode);}
+    Renderer(int width, int height, const Viewport& viewport, const ModeInfo& mode, std::string_view cudaCode, bool doublePrec)
+            : width(width), height(height), viewport(viewport), mode(mode), doublePrec(doublePrec) {init(cudaCode);}
     ~Renderer();
 
-    void render(dist_t maxIters, double metricArg, const std::complex<double>& p, double colorCutoff);
+    void render(int maxIters, double metricArg, const std::complex<double>& p, float colorCutoff);
     std::string getPerformanceReport();
     void resize(int newWidth, int newHeight);
     int generatePath(const std::complex<double>& z, double tolerance, const std::complex<double>& p);

@@ -38,7 +38,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
                 auto length = rs.renderer.generatePath(z, s.metricArg, s.p);
                 std::cout << "Path length: " << length << std::endl;
             } else { // Line transform mode
-                if(!s.lineTransStart.has_value()) { //First click to select start point todo maybe mark this point somehow
+                if(!s.lineTransStart.has_value()) { //First click to select start point
                     s.lineTransStart = z;
                     std::cout << "Set line transform start point to" << *s.lineTransStart << "." << std::endl;
                 } else if(!s.lineTransEnd.has_value()) { //Second click to select endpoint

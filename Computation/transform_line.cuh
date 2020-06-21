@@ -1,16 +1,16 @@
 #pragma once
-#include "kernel_types.h"
+#include "kernel_types.cuh"
 #include "kernel_macros.cuh"
 
-__device__ __inline__ complex getZOnLine(float re1, float re2, float im1, float im2, int numPoints, int tid) {
-    float f = static_cast<float>(tid) / (numPoints - 1);
+__device__ __inline__ complex getZOnLine(real re1, real re2, real im1, real im2, int numPoints, int tid) {
+    real f = static_cast<real>(tid) / (numPoints - 1);
     return make_complex(
             re1 + ((re2 - re1) * f),
             im1 + ((im2 - im1) * f)
     );
 }
 
-__global__ void transformLine(float re1, float re2, float im1, float im2, float pre, float pim, int numPoints, int iteration, bool incremental, complex* output) {
+__global__ void transformLine(real re1, real re2, real im1, real im2, real pre, real pim, int numPoints, int iteration, bool incremental, complex* output) {
     int tid = threadIdx.x + blockDim.x * blockIdx.x;
     if(tid >= numPoints)
         return;

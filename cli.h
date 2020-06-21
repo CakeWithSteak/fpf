@@ -13,6 +13,7 @@ struct Options {
     std::optional<float> metricArg;
     std::optional<std::filesystem::path> deserializationPath = {};
     bool forceDisableIncrementalLineTracing;
+    bool doublePrec;
 };
 
 Options getOptions(int argc, char** argv);
