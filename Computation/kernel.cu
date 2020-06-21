@@ -17,7 +17,7 @@
 #endif
 
 #include "kernel_macros.cuh"
-#include "kernel_types.h"
+#include "kernel_types.cuh"
 #include "math.cuh"
 #include "metrics.h"
 #include "utils.cuh"
@@ -34,7 +34,7 @@ RUNTIME #else
 RUNTIME #endif
 }
 
-__device__ __inline__ dist_t callDistanceFunction(complex z, dist_t arg1, complex p, float arg2, const complex* attractors, size_t numAttractors) {
+__device__ __inline__ dist_t callDistanceFunction(complex z, int arg1, complex p, real arg2, const float2* attractors, size_t numAttractors) {
 RUNTIME #ifdef ATTRACTOR
     return whichAttractor(pickStartingZ(z), arg1, p, arg2, z, attractors, numAttractors);
 RUNTIME #else
@@ -42,7 +42,7 @@ RUNTIME #else
 RUNTIME #endif
 }
 
-__global__ void kernel(float re0, float re1, float im0, float im1, dist_t maxIters, dist_t* minmaxOut, cudaSurfaceObject_t surface, int surfW, int surfH, float pre, float pim, float metricArg, const complex* attractors, size_t numAttractors) {
+__global__ void kernel(real re0, real re1, real im0, real im1, int maxIters, dist_t* minmaxOut, cudaSurfaceObject_t surface, int surfW, int surfH, real pre, real pim, real metricArg, const float2* attractors, size_t numAttractors) {
     __shared__ dist2 minmaxBlock[32];
     cg::thread_block block = cg::this_thread_block();
     cg::thread_block_tile<32> warp = cg::tiled_partition<32>(block);
@@ -57,12 +57,12 @@ __global__ void kernel(float re0, float re1, float im0, float im1, dist_t maxIte
     bool threadIsExcessive = i >= area;
     if (!threadIsExcessive) {
         //Find a z for this thread
-        float2 z = getZ(re0, re1, im0, im1, surfW, surfH, x, y);
+        complex z = getZ(re0, re1, im0, im1, surfW, surfH, x, y);
         fpDist = callDistanceFunction(z, maxIters, make_complex(pre, pim), metricArg, attractors, numAttractors);
     }
     warp.sync();
 
-    if (!threadIsExcessive) surf2Dwrite(fpDist, surface, x * sizeof(int), y);
+    if (!threadIsExcessive) surf2Dwrite(fpDist, surface, x * sizeof(dist_t), y);
 
 RUNTIME #ifndef NO_MINMAX
 
@@ -91,7 +91,7 @@ RUNTIME #ifndef NO_MINMAX
 RUNTIME #endif
 }
 
-__global__ void genFixedPointPath(float re, float im, int maxSteps, float tsquare, complex* output, int* outputLength, float pre, float pim) {
+__global__ void genFixedPointPath(real re, real im, int maxSteps, real tsquare, complex* output, int* outputLength, real pre, real pim) {
     complex c = make_complex(re, im);
 RUNTIME #ifdef CAPTURING
     complex z = make_complex(0,0);

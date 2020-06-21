@@ -11,7 +11,7 @@ std::string defineMacro(const std::string& name) {
     return prefix + name;
 }
 
-std::vector<char*> getCompileArgs(const ModeInfo& mode) {
+std::vector<char*> getCompileArgs(const ModeInfo& mode, bool doublePrec) {
     std::vector<std::string> args;
     args.push_back("--gpu-architecture=compute_61"); //todo autodetect sm
     args.push_back("--include-path=/usr/local/cuda/include/");
@@ -22,6 +22,10 @@ std::vector<char*> getCompileArgs(const ModeInfo& mode) {
         args.push_back(defineMacro("CAPTURING"));
     if(mode.staticMinMax.has_value() || mode.isAttractor)
         args.push_back(defineMacro("NO_MINMAX"));
+    if(doublePrec)
+        args.push_back(defineMacro("PREC_DOUBLE"));
+    else
+        args.push_back(defineMacro("PREC_FLOAT"));
 
     std::vector<char*> res;
     for(int i = 0; i < args.size(); ++i) {
@@ -32,14 +36,14 @@ std::vector<char*> getCompileArgs(const ModeInfo& mode) {
 }
 
 std::vector<CUfunction>
-NvrtcCompiler::Compile(std::string_view code, std::string_view filename, std::vector<std::string_view> functionNames, const ModeInfo& mode) {
+NvrtcCompiler::Compile(std::string_view code, std::string_view filename, std::vector<std::string_view> functionNames, const ModeInfo& mode, bool doublePrec) {
     nvrtcProgram program;
     NVRTC_SAFE(nvrtcCreateProgram(&program, code.data(), filename.data(), 0, nullptr, nullptr));
 
     for(auto name : functionNames)
         NVRTC_SAFE(nvrtcAddNameExpression(program, name.data()));
 
-    const auto compileArgs = getCompileArgs(mode);
+    const auto compileArgs = getCompileArgs(mode, doublePrec);
     nvrtcResult compileResult = nvrtcCompileProgram(program, compileArgs.size(), compileArgs.data());
     if(compileResult != NVRTC_SUCCESS) {
         size_t logSize;

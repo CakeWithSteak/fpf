@@ -1,13 +1,13 @@
 #pragma once
-#include "../kernel_types.h"
+#include "../kernel_types.cuh"
 #include "../utils.cuh"
 
 //Euclidean distance from fixed point
 
-__device__ __inline__ dist_t fixedPointDistEuclid(complex z, dist_t maxIters, complex p, float tsquare, complex c) {
+__device__ __inline__ dist_t fixedPointDistEuclid(complex z, int maxIters, complex p, real tsquare, complex c) {
     const complex original = z;
     complex last = z;
-    dist_t i = 0;
+    int i = 0;
     for(; i < maxIters; ++i) {
         z = F(z, p, c);
         if(withinTolerance(z, last, tsquare))

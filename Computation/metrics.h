@@ -1,7 +1,6 @@
 #pragma once
-#include "kernel_types.h"
 
-// __device__ __inline__ DIST_F(complex z, dist_t maxIters, complex p, float arg, complex c)
+// __device__ __inline__ dist_t DIST_F(complex z, int maxIters, complex p, real arg, complex c)
 
 #ifdef BUILD_FOR_NVRTC
 #include "kernel_macros.cuh"
@@ -41,7 +40,7 @@ enum DistanceMetric {
     ATTRACTOR
 };
 
-inline float prepMetricArg(DistanceMetric metric, float arg) {
+inline double prepMetricArg(DistanceMetric metric, double arg) {
     if(metric == FIXEDPOINT_ITERATIONS || metric == JULIA || metric == FIXEDPOINT_EUCLIDEAN || metric == ATTRACTOR)
         return arg * arg;
     return arg;

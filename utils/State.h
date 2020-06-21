@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <complex>
-#include "../Computation/kernel_types.h"
 #include "Viewport.h"
 #include "../Rendering/Window.h"
 #include "../Rendering/Renderer.h"
