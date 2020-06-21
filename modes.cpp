@@ -114,4 +114,18 @@ const std::map<DistanceMetric, ModeInfo> modes {
            .initMaxIters = 512,
            .isAttractor = true,
         }},
+        {PERIODIC, {
+           .metric = PERIODIC,
+           .displayName = "Periodicity",
+           .cliName = "periodic",
+           .metricInternalName = "PERIODIC",
+           .argDisplayName = "Tolerance",
+           .argInitValue = 0.0001f,
+           .argStep = 0.00025f,
+           .argMin = 0.0f,
+           .argMax = 2.0f,
+           .argIsTolerance = true,
+           .maxHue = 0.5f,
+           .staticMinMax = {{1, 2}}
+        }},
 };
