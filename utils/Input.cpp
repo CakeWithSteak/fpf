@@ -1,9 +1,9 @@
 #include "Input.h"
 
-bool InputHandler::process(float dt) {
-    dt = std::clamp(dt, 0.0f, 1.0f);
+bool InputHandler::process(double dt) {
+    dt = std::clamp(dt, 0.0, 1.0);
     bool inputReceived = false;
-    float mult = (multiplierKey.has_value() &&  window.isKeyPressed(*multiplierKey)) ? multiplier : 1.f;
+    double mult = (multiplierKey.has_value() &&  window.isKeyPressed(*multiplierKey)) ? multiplier : 1;
 
     for(auto binding : bindings) {
         if(binding->process(window, dt, mult))
@@ -19,7 +19,7 @@ InputBinding&  InputHandler::addToggle(bool& val, int key, const std::string& di
     return *b;
 }
 
-InputBinding&  InputHandler::addViewport(Viewport& v, int upKey, int downKey, int leftKey, int rightKey, int zoomInKey, int zoomOutKey, int resetKey, float moveStep, float zoomStep) {
+InputBinding&  InputHandler::addViewport(Viewport& v, int upKey, int downKey, int leftKey, int rightKey, int zoomInKey, int zoomOutKey, int resetKey, double moveStep, double zoomStep) {
     auto b = new ViewportBinding(v, upKey, downKey, leftKey, rightKey, zoomInKey, zoomOutKey, resetKey, moveStep, zoomStep);
     bindings.push_back(b);
     return *b;
@@ -42,7 +42,7 @@ InputHandler::~InputHandler() {
         delete binding;
 }
 
-bool ToggleBinding::process(Window& window, float dt, float multiplier) {
+bool ToggleBinding::process(Window& window, double dt, double multiplier) {
     if(window.isKeyPressed(key) && timer.get() > cooldown) {
         val = !val;
         std::cout << displayName << " " << (val ? "on" : "off") << std::endl;
@@ -52,7 +52,7 @@ bool ToggleBinding::process(Window& window, float dt, float multiplier) {
     return false;
 }
 
-bool ViewportBinding::process(Window& window, float dt, float multiplier) {
+bool ViewportBinding::process(Window& window, double dt, double multiplier) {
     bool inputReceived = false;
     if(window.isKeyPressed(upKey)) {
         v.move(Viewport::Direction::UP, moveStep * dt * multiplier);
@@ -86,7 +86,7 @@ bool ViewportBinding::process(Window& window, float dt, float multiplier) {
     return inputReceived;
 }
 
-bool TriggerBinding::process(Window& window, float dt, [[maybe_unused]] float multiplier) {
+bool TriggerBinding::process(Window& window, double dt, [[maybe_unused]] double multiplier) {
     if(window.isKeyPressed(triggerKey) && timer.get() > cooldown) {
         handler();
         timer.reset();
@@ -95,7 +95,7 @@ bool TriggerBinding::process(Window& window, float dt, [[maybe_unused]] float mu
     return false;
 }
 
-bool MouseTriggerBinding::process(Window& window, float dt, [[maybe_unused]] float multiplier) {
+bool MouseTriggerBinding::process(Window& window, double dt, [[maybe_unused]] double multiplier) {
     auto pos = window.tryGetClickPosition(triggerButton);
     if(pos.has_value() && timer.get() > cooldown) {
         handler(pos->first, pos->second);

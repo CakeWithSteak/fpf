@@ -3,9 +3,9 @@
 #include <algorithm>
 #include "utils.h"
 
-std::pair<dist_t, dist_t> interleavedMinmax(const dist_t* buffer, size_t size) {
-    dist_t min = std::numeric_limits<dist_t>::max();
-    dist_t max = std::numeric_limits<dist_t>::lowest();
+std::pair<double, double> interleavedMinmax(const dist_t* buffer, size_t size) {
+    double min = std::numeric_limits<dist_t>::max();
+    double max = std::numeric_limits<dist_t>::lowest();
     for(int i = 0; i < size; i += 2) {
         if(buffer[i] < min)
             min = buffer[i];
