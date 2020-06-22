@@ -10,14 +10,14 @@ __device__ __inline__ complex getZOnLine(real re1, real re2, real im1, real im2,
     );
 }
 
-__global__ void transformLine(real re1, real re2, real im1, real im2, real pre, real pim, int numPoints, int iteration, bool incremental, complex* output) {
+__global__ void transformLine(real re1, real re2, real im1, real im2, real pre, real pim, int numPoints, int iteration, bool incremental, double2* output) {
     int tid = threadIdx.x + blockDim.x * blockIdx.x;
     if(tid >= numPoints)
         return;
 
     complex z, c;
     if(incremental) {
-        z = output[tid];
+        z = double2_to_complex(output[tid]);
     } else {
 RUNTIME #ifdef CAPTURING
         c = getZOnLine(re1, re2, im1, im2, numPoints, tid);
@@ -33,5 +33,5 @@ RUNTIME #endif
     for(int i = 0; i < iteration; ++i) {
         z = F(z, p, c);
     }
-    output[tid] = z;
+    output[tid] = complex_to_double2(z);
 }

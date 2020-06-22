@@ -94,16 +94,16 @@ RUNTIME #ifndef NO_MINMAX
 RUNTIME #endif
 }
 
-__global__ void genFixedPointPath(real re, real im, int maxSteps, real tsquare, complex* output, int* outputLength, real pre, real pim) {
+__global__ void genFixedPointPath(real re, real im, int maxSteps, real tsquare, double2* output, int* outputLength, real pre, real pim) {
     complex c = make_complex(re, im);
 RUNTIME #ifdef CAPTURING
     complex z = make_complex(0,0);
-    output[0] = c;
-    output[1] = z;
+    output[0] = complex_to_double2(c);
+    output[1] = complex_to_double2(z);
     int i = 2;
 RUNTIME #else
     complex z = c;
-    output[0] = z;
+    output[0] = complex_to_double2(z);
     int i = 1;
 RUNTIME #endif
 
@@ -111,7 +111,7 @@ RUNTIME #endif
     complex last = z;
     for(; i < maxSteps; ++i) {
         z = F(z, p, c);
-        output[i] = z;
+        output[i] = complex_to_double2(z);
         if(withinTolerance(z, last, tsquare))
             break;
         last = z;

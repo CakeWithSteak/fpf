@@ -12,6 +12,8 @@ InputHandler initControls(State& s, RuntimeState& rs) {
     constexpr double COLOR_CUTOFF_STEP = 1.0f;
     constexpr double FAST_MODE_MULTIPLIER = 6.f;
 
+    std::cout << std::setprecision(12);
+
     InputHandler in(rs.window, GLFW_KEY_LEFT_SHIFT, FAST_MODE_MULTIPLIER);
     in.addViewport(s.viewport, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_KP_ADD, GLFW_KEY_KP_SUBTRACT, GLFW_KEY_HOME, MOVE_STEP, ZOOM_STEP);
     auto& mode = s.mode;
