@@ -32,17 +32,15 @@ void Renderer::init(std::string_view cudaCode) {
     unsigned int mainVBO = VBOs[0];
     overlayLineVBO = VBOs[1];
 
-    size_t overlayElemSize = doublePrec ? sizeof(double) : sizeof(float);
-    GLenum overlayElemType = doublePrec ? GL_DOUBLE : GL_FLOAT;
 
     //Init overlay structures
     glBindVertexArray(overlayVAO);
     glBindBuffer(GL_ARRAY_BUFFER, overlayLineVBO);
 
-    glBufferData(GL_ARRAY_BUFFER, 2 * std::max(MAX_PATH_STEPS, LINE_TRANS_NUM_POINTS) * overlayElemSize, nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 2 * std::max(MAX_PATH_STEPS, LINE_TRANS_NUM_POINTS) * sizeof(double), nullptr, GL_DYNAMIC_DRAW);
 
     //Line vertices
-    glVertexAttribPointer(0, 2, overlayElemType, false, overlayElemSize * 2, nullptr);
+    glVertexAttribLPointer(0, 2, GL_DOUBLE, sizeof(double) * 2, nullptr);
     glEnableVertexAttribArray(0);
 
     //Init main structures
