@@ -78,9 +78,12 @@ RUNTIME #ifndef NO_MINMAX
 
     //The first warp calculates the min/max of the whole block and writes it to the output buffer
     if (tid < 32) {
-        dist2 value = minmaxBlock[tid];
-        min_ = value.x;
-        max_ = value.y;
+        //Some warps at the end of the last block may have been excessive, in which case they didn't run, and therefore
+        // left (0,0) as their minmax, which would be incorrect, so we handle that here.
+        bool assignedThreadExcessive = (blockDim.x * blockIdx.x + tid * 32 >= area);
+        dist2 value =  minmaxBlock[tid];
+        min_ = assignedThreadExcessive ? maxIters + 2 : value.x;
+        max_ = assignedThreadExcessive ? -1 : value.y;
         for (int delta = 16; delta > 0; delta >>= 1) {
             min_ = min(min_, warp.shfl_down(min_, delta));
             max_ = max(max_, warp.shfl_down(max_, delta));
