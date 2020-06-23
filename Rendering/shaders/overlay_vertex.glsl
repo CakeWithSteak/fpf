@@ -1,6 +1,5 @@
 R"(
 #version 460 core
-#extension GL_EXT_vertex_attrib_64bit : require
 
 layout (location = 0) in dvec2 position;
 
