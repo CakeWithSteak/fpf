@@ -18,5 +18,5 @@ inline void printTokens(const TokenList& tl) {
     for(const auto& t : tl) {
         std::cout << t.value << " ";
     }
-    std::cout << "\n";
+    std::cout << std::endl;
 }

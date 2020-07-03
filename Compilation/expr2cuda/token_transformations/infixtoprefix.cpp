@@ -47,6 +47,8 @@ TokenList infixToPrefix(const TokenList& tl) {
                     output.push_front(operatorStack.top());
                     operatorStack.pop();
                 }
+                if(operatorStack.empty())
+                    throw std::runtime_error("Mismatched parentheses in expression.");
                 operatorStack.pop(); // Pop the left paren
                 break;
         }
