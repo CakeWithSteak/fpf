@@ -65,7 +65,7 @@ class Renderer {
     static constexpr size_t PERF_LINE_TRANS_GEN = 4;
     static constexpr size_t PERF_ATTRACTOR = 5;
 
-    static constexpr int MAX_PATH_STEPS = 256;
+    static constexpr int MAX_PATH_STEPS = 512;
     static constexpr double PATH_PARAM_UPDATE_THRESHOLD = 0.01f;
     static constexpr double PATH_TOL_UPDATE_THRESHOLD = 0.001f;
     static constexpr double DEFAULT_PATH_TOLERANCE = 0.001f;
