@@ -216,7 +216,7 @@ int Renderer::generatePath(const std::complex<double>& z, double metricArg, cons
         launch_kernel_generic(pathKernel, 1, 1, z.real(), z.imag(), MAX_PATH_STEPS, tolerance * tolerance, bufferPtr, cudaPathLengthPtr, p.real(), p.imag());
     } else {
         std::complex<float> fz(z), fp(p);
-        launch_kernel_generic(pathKernel, 1, 1, fz.real(), fz.imag(), MAX_PATH_STEPS, tolerance * tolerance, bufferPtr, cudaPathLengthPtr, fp.real(), fp.imag());
+        launch_kernel_generic(pathKernel, 1, 1, fz.real(), fz.imag(), MAX_PATH_STEPS, static_cast<float>(tolerance * tolerance), bufferPtr, cudaPathLengthPtr, fp.real(), fp.imag());
     }
 
     CUDA_SAFE(cudaDeviceSynchronize());
