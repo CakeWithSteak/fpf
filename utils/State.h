@@ -1,7 +1,6 @@
 #pragma once
 #include <string>
 #include <complex>
-#include "../Computation/kernel_types.h"
 #include "Viewport.h"
 #include "../Rendering/Window.h"
 #include "../Rendering/Renderer.h"
@@ -13,19 +12,20 @@
 struct State {
     std::string expr;
     int maxIters;
-    float metricArg;
-    std::complex<float> p{0};
+    double metricArg;
+    std::complex<double> p{0};
     Viewport viewport;
     bool colorCutoffEnabled;
-    float colorCutoff;
+    double colorCutoff;
     int width, height;
     ModeInfo mode; //Only the DistanceMetric is serialized
-    std::optional<std::complex<float>> pathStart = {};
-    std::optional<std::complex<float>> lineTransStart = {};
-    std::optional<std::complex<float>> lineTransEnd = {};
+    std::optional<std::complex<double>> pathStart = {};
+    std::optional<std::complex<double>> lineTransStart = {};
+    std::optional<std::complex<double>> lineTransEnd = {};
     int lineTransIteration = 0;
     bool lineTransEnabled = false; // Never serialised, inferred from lineTransEnd during deserialization
     bool forceDisableIncrementalLineTracing = false;
+    bool doublePrec = false;
 
     explicit State(const Options& opt) {
         expr = opt.expression;
@@ -37,6 +37,7 @@ struct State {
         colorCutoffEnabled = (mode.defaultColorCutoff != -1);
         colorCutoff = colorCutoffEnabled ? mode.defaultColorCutoff : 10.0f;
         maxIters = mode.initMaxIters;
+        doublePrec = opt.doublePrec;
     }
     State() = default;
 
@@ -59,8 +60,8 @@ struct State {
             ar & lineTransStart;
             ar & lineTransEnd;
         } else {
-            ar & std::optional<std::complex<float>>();
-            ar & std::optional<std::complex<float>>();
+            ar & std::optional<std::complex<double>>();
+            ar & std::optional<std::complex<double>>();
         }
         ar & forceDisableIncrementalLineTracing;
     }

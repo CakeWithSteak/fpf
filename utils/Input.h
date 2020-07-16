@@ -18,7 +18,7 @@ protected:
     Timer timer;
     std::chrono::milliseconds cooldown = 0ms;
 public:
-    virtual bool process(Window& window, float dt, float multiplier) = 0;
+    virtual bool process(Window& window, double dt, double multiplier) = 0;
     virtual ~InputBinding() = default;
     virtual void setCooldown(const std::chrono::milliseconds& val) {
         cooldown = val;
@@ -29,19 +29,19 @@ class InputHandler {
     Window& window;
     std::vector<InputBinding*> bindings;
     std::optional<int> multiplierKey;
-    float multiplier = 1.f;
+    double multiplier = 1;
 public:
-    bool process(float dt);
+    bool process(double dt);
 
     template <typename T>
     InputBinding& addScalar(T& val, int upKey, int downKey, T step, const std::string& displayName, T min = limits<T>::lowest(), T max = limits<T>::max());
 
     InputBinding& addToggle(bool& val, int key, const std::string& displayName);
-    InputBinding& addViewport(Viewport& v, int upKey, int downKey, int leftKey, int rightKey, int zoomInKey, int zoomOutKey, int resetKey, float moveStep, float zoomStep);
+    InputBinding& addViewport(Viewport& v, int upKey, int downKey, int leftKey, int rightKey, int zoomInKey, int zoomOutKey, int resetKey, double moveStep, double zoomStep);
     InputBinding& addTrigger(const std::function<void()>& handler, int triggerKey);
     InputBinding& addTrigger(const std::function<void(double, double)>& handler, int triggerButton);
 
-    InputHandler(Window& window, const std::optional<int>& multiplierKey = {}, float multiplier = 1.f) : window(window),
+    InputHandler(Window& window, const std::optional<int>& multiplierKey = {}, double multiplier = 1) : window(window),
                                                                                                          multiplierKey(multiplierKey),
                                                                                                          multiplier(multiplier) {}
     ~InputHandler();
@@ -54,7 +54,7 @@ class ScalarBinding : public InputBinding {
     int upKey, downKey;
     std::string displayName;
 public:
-    virtual bool process(Window& window, float dt, float multiplier) override;
+    virtual bool process(Window& window, double dt, double multiplier) override;
     ScalarBinding(T& val, int upKey, int downKey, T step, std::string displayName, T min = limits<T>::lowest(), T max = limits<T>::max()) :
         val(val), min(min), max(max), upKey(upKey), downKey(downKey), step(step), displayName(displayName) {}
 };
@@ -64,7 +64,7 @@ class ToggleBinding : public InputBinding {
     int key;
     std::string displayName;
 public:
-    virtual bool process(Window& window, float dt, float multiplier) override;
+    virtual bool process(Window& window, double dt, double multiplier) override;
     ToggleBinding(bool& val, int key, std::string displayName) :
         val(val), key(key), displayName(displayName) { cooldown = 400ms; }
 };
@@ -72,13 +72,13 @@ public:
 class ViewportBinding : public InputBinding {
     Viewport& v;
     int upKey, downKey, leftKey, rightKey, zoomInKey, zoomOutKey, resetKey;
-    float moveStep, zoomStep;
-    std::complex<float> resetPoint;
-    float resetZoom;
+    double moveStep, zoomStep;
+    std::complex<double> resetPoint;
+    double resetZoom;
 public:
-    virtual bool process(Window& window, float dt, float multiplier) override;
+    virtual bool process(Window& window, double dt, double multiplier) override;
     ViewportBinding(Viewport& v, int upKey, int downKey, int leftKey, int rightKey, int zoomInKey, int zoomOutKey,
-        int resetKey, float moveStep, float zoomStep) : v(v), upKey(upKey),
+        int resetKey, double moveStep, double zoomStep) : v(v), upKey(upKey),
         downKey(downKey), leftKey(leftKey), rightKey(rightKey), zoomInKey(zoomInKey), zoomOutKey(zoomOutKey),
         resetKey(resetKey), resetPoint(v.getCenter()), resetZoom(v.getBreadth()), moveStep(moveStep), zoomStep(zoomStep) {}
 };
@@ -87,7 +87,7 @@ class TriggerBinding : public InputBinding {
     std::function<void()> handler;
     int triggerKey;
 public:
-    virtual bool process(Window& window, float dt, float multiplier) override;
+    virtual bool process(Window& window, double dt, double multiplier) override;
     TriggerBinding(const std::function<void()>& handler, int triggerKey) : handler(handler), triggerKey(triggerKey) {}
 };
 
@@ -95,7 +95,7 @@ class MouseTriggerBinding : public InputBinding {
     std::function<void(double, double)> handler;
     int triggerButton;
 public:
-    virtual bool process(Window& window, float dt, float multiplier) override;
+    virtual bool process(Window& window, double dt, double multiplier) override;
     MouseTriggerBinding(const std::function<void(double, double)>& handler, int triggerButton) : handler(handler), triggerButton(triggerButton) {}
 };
 
@@ -107,7 +107,7 @@ InputBinding& InputHandler::addScalar(T& val, int upKey, int downKey, T step, co
 }
 
 template<typename T>
-bool ScalarBinding<T>::process(Window& window, float dt, float multiplier) {
+bool ScalarBinding<T>::process(Window& window, double dt, double multiplier) {
     if constexpr(std::is_integral_v<T>)
         dt = 1;
 

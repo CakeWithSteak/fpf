@@ -32,14 +32,15 @@ void Renderer::init(std::string_view cudaCode) {
     unsigned int mainVBO = VBOs[0];
     overlayLineVBO = VBOs[1];
 
+
     //Init overlay structures
     glBindVertexArray(overlayVAO);
     glBindBuffer(GL_ARRAY_BUFFER, overlayLineVBO);
 
-    glBufferData(GL_ARRAY_BUFFER, 2 * std::max(MAX_PATH_STEPS, LINE_TRANS_NUM_POINTS) * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 2 * std::max(MAX_PATH_STEPS, LINE_TRANS_NUM_POINTS) * sizeof(double), nullptr, GL_DYNAMIC_DRAW);
 
     //Line vertices
-    glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof(float) * 2, nullptr);
+    glVertexAttribLPointer(0, 2, GL_DOUBLE, sizeof(double) * 2, nullptr);
     glEnableVertexAttribArray(0);
 
     //Init main structures
@@ -97,7 +98,7 @@ void Renderer::initShaders() {
 void Renderer::initCuda(bool registerPathRes) {
     CUDA_SAFE(cudaSetDevice(0));
     numBlocks = ceilDivide(width * height, 1024);
-    CUDA_SAFE(cudaMallocManaged(&cudaBuffer, 2 * numBlocks * sizeof(int))); //Buffer for min/max fpdist values
+    CUDA_SAFE(cudaMallocManaged(&cudaBuffer, 2 * numBlocks * sizeof(float))); //Buffer for min/max fpdist values
     CUDA_SAFE(cudaGraphicsGLRegisterImage(&cudaSurfaceRes, texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
     cudaSurfaceDesc.resType = cudaResourceTypeArray;
 
@@ -122,7 +123,7 @@ Renderer::~Renderer() {
     CUDA_SAFE(cudaFree(attractorsDeviceBuffer));
 }
 
-void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float>& p, float colorCutoff) {
+void Renderer::render(int maxIters, double metricArg, const std::complex<double>& p, float colorCutoff) {
     pm.enter(PERF_RENDER);
     auto [start, end] = viewport.getCorners();
 
@@ -132,7 +133,10 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
     auto surface = createSurface();
 
     pm.enter(PERF_KERNEL);
-    launch_kernel(kernel, start.real(), end.real(), start.imag(), end.imag(), maxIters, cudaBuffer, surface, width, height, p.real(), p.imag(), prepMetricArg(mode.metric, metricArg), attractorsDeviceBuffer, numAttractors);
+    if(doublePrec)
+        launch_kernel_double(kernel, start.real(), end.real(), start.imag(), end.imag(), maxIters, cudaBuffer, surface, width, height, p.real(), p.imag(), prepMetricArg(mode.metric, metricArg), attractorsDeviceBuffer, numAttractors);
+    else
+        launch_kernel_float(kernel, start.real(), end.real(), start.imag(), end.imag(), maxIters, cudaBuffer, surface, width, height, p.real(), p.imag(), prepMetricArg(mode.metric, metricArg), attractorsDeviceBuffer, numAttractors);
     CUDA_SAFE(cudaDeviceSynchronize());
     pm.exit(PERF_KERNEL);
 
@@ -141,7 +145,7 @@ void Renderer::render(dist_t maxIters, float metricArg, const std::complex<float
 
     mainShader.use();
     if(!mode.staticMinMax.has_value()) {
-        auto [min, max] = (mode.isAttractor) ? std::make_pair(0.0f, static_cast<dist_t>(numAttractors)) : interleavedMinmax(cudaBuffer, 2 * numBlocks);
+        auto [min, max] = (mode.isAttractor) ? std::make_pair(0.0f, static_cast<float>(numAttractors)) : interleavedMinmax(cudaBuffer, 2 * numBlocks);
         mainShader.setUniform(minimumUniform, min);
         mainShader.setUniform(maximumUniform, std::min(max, colorCutoff));
         std::cout << "Min: " << min << " max: " << max << "\n";
@@ -172,7 +176,7 @@ cudaSurfaceObject_t Renderer::createSurface() {
 }
 
 void Renderer::initKernels(std::string_view cudaCode) {
-    auto funcs = compiler.Compile(cudaCode, "runtime.cu", {"kernel", "genFixedPointPath", "transformLine", "findAttractors"}, mode);
+    auto funcs = compiler.Compile(cudaCode, "runtime.cu", {"kernel", "genFixedPointPath", "transformLine", "findAttractors"}, mode, doublePrec);
     kernel = funcs[0];
     pathKernel = funcs[1];
     lineTransformKernel = funcs[2];
@@ -197,17 +201,24 @@ void Renderer::resize(int newWidth, int newHeight) {
     initCuda(false);
 }
 
-int Renderer::generatePath(const std::complex<float>& z, float metricArg, const std::complex<float>& p) {
+int Renderer::generatePath(const std::complex<double>& z, double metricArg, const std::complex<double>& p) {
     pm.enter(PERF_OVERLAY_GEN);
     lastP = p;
-    float tolerance = (mode.argIsTolerance) ? metricArg : DEFAULT_PATH_TOLERANCE;
+    double tolerance = (mode.argIsTolerance) ? metricArg : DEFAULT_PATH_TOLERANCE;
     lastTolerance = tolerance;
     pathStart = z;
 
     void* bufferPtr;
     CUDA_SAFE(cudaGraphicsMapResources(1, &overlayBufferRes));
     CUDA_SAFE(cudaGraphicsResourceGetMappedPointer(&bufferPtr, nullptr, overlayBufferRes));
-    launch_kernel_generic(pathKernel, 1, 1, z.real(), z.imag(), MAX_PATH_STEPS, tolerance * tolerance, bufferPtr, cudaPathLengthPtr, p.real(), p.imag());
+
+    if(doublePrec) {
+        launch_kernel_generic(pathKernel, 1, 1, z.real(), z.imag(), MAX_PATH_STEPS, tolerance * tolerance, bufferPtr, cudaPathLengthPtr, p.real(), p.imag());
+    } else {
+        std::complex<float> fz(z), fp(p);
+        launch_kernel_generic(pathKernel, 1, 1, fz.real(), fz.imag(), MAX_PATH_STEPS, static_cast<float>(tolerance * tolerance), bufferPtr, cudaPathLengthPtr, fp.real(), fp.imag());
+    }
+
     CUDA_SAFE(cudaDeviceSynchronize());
     CUDA_SAFE(cudaGraphicsUnmapResources(1, &overlayBufferRes));
     pathEnabled = true;
@@ -215,8 +226,8 @@ int Renderer::generatePath(const std::complex<float>& z, float metricArg, const 
     return *cudaPathLengthPtr;
 }
 
-void Renderer::refreshOverlayIfNeeded(const std::complex<float>& p, float metricArg) {
-    float tolerance = (mode.argIsTolerance) ? metricArg : DEFAULT_PATH_TOLERANCE;
+void Renderer::refreshOverlayIfNeeded(const std::complex<double>& p, double metricArg) {
+    double tolerance = (mode.argIsTolerance) ? metricArg : DEFAULT_PATH_TOLERANCE;
     if(std::abs(lastP - p) > PATH_PARAM_UPDATE_THRESHOLD ||
       (std::abs(lastTolerance - tolerance) > PATH_TOL_UPDATE_THRESHOLD && pathEnabled)) {
         lastP = p;
@@ -241,8 +252,8 @@ std::vector<unsigned char> Renderer::exportImageData() {
     return data;
 }
 
-void Renderer::generateLineTransform(const std::complex<float>& start, const std::complex<float>& end, int iteration,
-                                     const std::complex<float>& p) {
+void Renderer::generateLineTransform(const std::complex<double>& start, const std::complex<double>& end, int iteration,
+                                     const std::complex<double>& p) {
     lineTransStart = start;
     lineTransEnd = end;
     lineTransIteration = iteration;
@@ -250,7 +261,7 @@ void Renderer::generateLineTransform(const std::complex<float>& start, const std
     generateLineTransformImpl(p);
 }
 
-void Renderer::setLineTransformIteration(int iteration, const std::complex<float>& p, bool disableIncremental) {
+void Renderer::setLineTransformIteration(int iteration, const std::complex<double>& p, bool disableIncremental) {
     auto lastIterations = lineTransIteration;
     lineTransIteration = iteration;
 
@@ -261,7 +272,7 @@ void Renderer::setLineTransformIteration(int iteration, const std::complex<float
 }
 
 
-void Renderer::generateLineTransformImpl(const std::complex<float>& p, int lastIterations) {
+void Renderer::generateLineTransformImpl(const std::complex<double>& p, int lastIterations) {
     pm.enter(PERF_LINE_TRANS_GEN);
     constexpr int BLOCK_SIZE = 1024;
     lastP = p;
@@ -279,8 +290,15 @@ void Renderer::generateLineTransformImpl(const std::complex<float>& p, int lastI
     CUDA_SAFE(cudaGraphicsMapResources(1, &overlayBufferRes));
     CUDA_SAFE(cudaGraphicsResourceGetMappedPointer(&bufferPtr, nullptr, overlayBufferRes));
 
-    launch_kernel_generic(lineTransformKernel, LINE_TRANS_NUM_POINTS, BLOCK_SIZE, lineTransStart.real(), lineTransEnd.real(),
-            lineTransStart.imag(), lineTransEnd.imag(), p.real(), p.imag(), LINE_TRANS_NUM_POINTS, itersToDo, incremental, bufferPtr);
+    if(doublePrec) {
+        launch_kernel_generic(lineTransformKernel, LINE_TRANS_NUM_POINTS, BLOCK_SIZE, lineTransStart.real(),
+                              lineTransEnd.real(), lineTransStart.imag(), lineTransEnd.imag(), p.real(), p.imag(), LINE_TRANS_NUM_POINTS, itersToDo, incremental, bufferPtr);
+
+    } else {
+        std::complex<float> flineTransStart(lineTransStart), flineTransEnd(lineTransEnd), fp(p);
+        launch_kernel_generic(lineTransformKernel, LINE_TRANS_NUM_POINTS, BLOCK_SIZE, flineTransStart.real(),
+            flineTransEnd.real(), flineTransStart.imag(), flineTransEnd.imag(), fp.real(), fp.imag(), LINE_TRANS_NUM_POINTS, itersToDo, incremental, bufferPtr);
+    }
 
     CUDA_SAFE(cudaDeviceSynchronize());
     CUDA_SAFE(cudaGraphicsUnmapResources(1, &overlayBufferRes));
@@ -300,7 +318,7 @@ void Renderer::togglePointConnections() {
     connectOverlayPoints = !connectOverlayPoints;
 }
 
-size_t Renderer::findAttractors(dist_t maxIters, float metricArg, const std::complex<float>& p) {
+size_t Renderer::findAttractors(int maxIters, double metricArg, const std::complex<double>& p) {
     constexpr int BLOCK_SIZE = 256;
     pm.enter(PERF_ATTRACTOR);
     int aWidth = width * ATTRACTOR_RESOLUTION_MULT;
@@ -308,7 +326,15 @@ size_t Renderer::findAttractors(dist_t maxIters, float metricArg, const std::com
     size_t bufSize = aWidth * aHeight;
     auto [start, end] = viewport.getCorners();
     auto tolerance = (mode.argIsTolerance) ? metricArg : 0.05f;
-    launch_kernel_generic(findAttractorsKernel, bufSize, BLOCK_SIZE, start.real(), end.real(), start.imag(), end.imag(), maxIters, p.real(), p.imag(), tolerance * tolerance, aWidth, aHeight, attractorsDeviceBuffer, ATTRACTOR_MATCH_TOL);
+
+    if(doublePrec) {
+        launch_kernel_generic(findAttractorsKernel, bufSize, BLOCK_SIZE, start.real(), end.real(), start.imag(), end.imag(), maxIters, p.real(), p.imag(), tolerance * tolerance, aWidth, aHeight, attractorsDeviceBuffer, ATTRACTOR_MATCH_TOL);
+    } else {
+        std::complex<float> fstart(start), fend(end), fp(p);
+        float ftol = tolerance, F_ATTRACTOR_MATCH_TOL = ATTRACTOR_MATCH_TOL;
+        launch_kernel_generic(findAttractorsKernel, bufSize, BLOCK_SIZE, fstart.real(), fend.real(), fstart.imag(), fend.imag(), maxIters, fp.real(), fp.imag(), ftol * ftol, aWidth, aHeight, attractorsDeviceBuffer, F_ATTRACTOR_MATCH_TOL);
+    }
+
     CUDA_SAFE(cudaDeviceSynchronize());
 
     CUDA_SAFE(cudaMemcpy(attractorsHostBuffer.get(), attractorsDeviceBuffer, bufSize * sizeof(HostComplex), cudaMemcpyDeviceToHost));

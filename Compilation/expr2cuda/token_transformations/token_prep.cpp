@@ -42,6 +42,7 @@ void juxtaposeToExplicit(TokenList& tl) {
         else if (prev(it)->type == TokenType::NUMBER_LITERAL || prev(it)->type == TokenType::VARIABLE) {
             if(t.type == TokenType::LEFT_PAREN ||
                t.type == TokenType::VARIABLE ||
+               t.type == TokenType::NUMBER_LITERAL ||
                (t.type == TokenType::OPERATOR && getTraits(t).isFunction))
             {
                 tl.insert(it, multiply);

@@ -16,17 +16,18 @@ class Renderer {
     int height;
     const Viewport& viewport;
     ModeInfo mode;
+    bool doublePrec;
 
     bool connectOverlayPoints = true;
 
     bool pathEnabled = false;
-    std::complex<float> pathStart;
-    std::complex<float> lastP;
-    float lastTolerance;
+    std::complex<double> pathStart;
+    std::complex<double> lastP;
+    double lastTolerance;
 
     bool lineTransEnabled = false;
-    std::complex<float> lineTransStart;
-    std::complex<float> lineTransEnd;
+    std::complex<double> lineTransStart;
+    std::complex<double> lineTransEnd;
     int lineTransIteration;
 
     unsigned int numBlocks;
@@ -45,7 +46,7 @@ class Renderer {
     cudaGraphicsResource_t cudaSurfaceRes = nullptr;
     cudaGraphicsResource_t overlayBufferRes = nullptr;
     cudaResourceDesc cudaSurfaceDesc;
-    dist_t* cudaBuffer = nullptr;
+    float* cudaBuffer = nullptr;
     int* cudaPathLengthPtr = nullptr;
     HostComplex* attractorsDeviceBuffer = nullptr;
     std::unique_ptr<HostComplex[]> attractorsHostBuffer = nullptr;
@@ -64,19 +65,19 @@ class Renderer {
     static constexpr size_t PERF_LINE_TRANS_GEN = 4;
     static constexpr size_t PERF_ATTRACTOR = 5;
 
-    static constexpr int MAX_PATH_STEPS = 1024;
-    static constexpr float PATH_PARAM_UPDATE_THRESHOLD = 0.01f;
-    static constexpr float PATH_TOL_UPDATE_THRESHOLD = 0.001f;
-    static constexpr float DEFAULT_PATH_TOLERANCE = 0.001f;
+    static constexpr int MAX_PATH_STEPS = 512;
+    static constexpr double PATH_PARAM_UPDATE_THRESHOLD = 0.01f;
+    static constexpr double PATH_TOL_UPDATE_THRESHOLD = 0.001f;
+    static constexpr double DEFAULT_PATH_TOLERANCE = 0.001f;
 
     static constexpr int LINE_TRANS_NUM_POINTS = 500'000;
 
     // Not really worth it to set this below 1 -- 0.5 is surprisingly only a 3% performance increase.
     // Predictably the attractor compute time falls dramatically, but at the same time the main kernel time also grows for some reason
     // despite the detected attractors being the same.
-    static constexpr float ATTRACTOR_RESOLUTION_MULT = 1.0f;
+    static constexpr double ATTRACTOR_RESOLUTION_MULT = 1.0f;
     static constexpr size_t MAX_ATTRACTORS = 32;
-    static constexpr float ATTRACTOR_MATCH_TOL = KERNEL_ATTRACTOR_MAX_TOL;
+    static constexpr double ATTRACTOR_MATCH_TOL = KERNEL_ATTRACTOR_MAX_TOL;
 
     void init(std::string_view cudaCode);
     void initTexture();
@@ -84,25 +85,25 @@ class Renderer {
     void initCuda(bool registerPathRes = true);
     void initKernels(std::string_view cudaCode);
     cudaSurfaceObject_t createSurface();
-    void refreshOverlayIfNeeded(const std::complex<float>& p, float metricArg);
-    void generateLineTransformImpl(const std::complex<float>& p, int lastIterations = -1);
+    void refreshOverlayIfNeeded(const std::complex<double>& p, double metricArg);
+    void generateLineTransformImpl(const std::complex<double>& p, int lastIterations = -1);
     inline bool isOverlayEnabled() { return pathEnabled || lineTransEnabled; }
     int getOverlayLength();
-    size_t findAttractors(dist_t maxIters, float metricArg, const std::complex<float>& p);
+    size_t findAttractors(int maxIters, double metricArg, const std::complex<double>& p);
 public:
-    Renderer(int width, int height, const Viewport& viewport, const ModeInfo& mode, std::string_view cudaCode)
-            : width(width), height(height), viewport(viewport), mode(mode) {init(cudaCode);}
+    Renderer(int width, int height, const Viewport& viewport, const ModeInfo& mode, std::string_view cudaCode, bool doublePrec)
+            : width(width), height(height), viewport(viewport), mode(mode), doublePrec(doublePrec) {init(cudaCode);}
     ~Renderer();
 
-    void render(dist_t maxIters, float metricArg, const std::complex<float>& p, float colorCutoff);
+    void render(int maxIters, double metricArg, const std::complex<double>& p, float colorCutoff);
     std::string getPerformanceReport();
     void resize(int newWidth, int newHeight);
-    int generatePath(const std::complex<float>& z, float tolerance, const std::complex<float>& p);
+    int generatePath(const std::complex<double>& z, double tolerance, const std::complex<double>& p);
     void hideOverlay();
     std::vector<unsigned char> exportImageData();
-    void generateLineTransform(const std::complex<float>& start, const std::complex<float>& end, int iteration,
-                               const std::complex<float>& p);
-    void setLineTransformIteration(int iteration, const std::complex<float>& p, bool disableIncremental = false);
+    void generateLineTransform(const std::complex<double>& start, const std::complex<double>& end, int iteration,
+                               const std::complex<double>& p);
+    void setLineTransformIteration(int iteration, const std::complex<double>& p, bool disableIncremental = false);
     void togglePointConnections();
 };
 

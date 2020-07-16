@@ -14,16 +14,16 @@ struct ModeInfo {
     std::string cliName;
     std::string metricInternalName;
     std::string argDisplayName;
-    float argInitValue;
-    float argStep;
-    float argMin;
-    float argMax;
+    double argInitValue;
+    double argStep;
+    double argMin;
+    double argMax;
     bool argIsTolerance = false; // Used for path tracing
     float defaultColorCutoff = -1;
     bool disableArg = false;
     bool disableIterations = false;
     float maxHue = 0.8f;
-    std::optional<std::pair<dist_t, dist_t>> staticMinMax = {};
+    std::optional<std::pair<float, float>> staticMinMax = {};
     bool capturing = false;
     bool disableOverlays = false;
     int initMaxIters = 128;

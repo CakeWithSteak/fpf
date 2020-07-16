@@ -1,15 +1,15 @@
 R"(
 #version 460 core
 
-layout (location = 0) in vec2 position;
+layout (location = 0) in dvec2 position;
 
-uniform vec2 viewportCenter;
-uniform float viewportBreadth;
+uniform dvec2 viewportCenter;
+uniform double viewportBreadth;
 
 out float index;
 
-vec2 viewportToGL(vec2 p) {
-    return (p - viewportCenter) / viewportBreadth;
+vec2 viewportToGL(dvec2 p) {
+    return vec2((p - viewportCenter) / viewportBreadth); //Cast to float vec
 }
 
 void main() {
