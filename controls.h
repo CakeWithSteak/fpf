@@ -5,12 +5,14 @@
 #include "utils/imageExport.h"
 
 InputHandler initControls(State& s, RuntimeState& rs) {
-    constexpr float MOVE_STEP = 0.8f;
-    constexpr float ZOOM_STEP = 0.4f;
+    constexpr double MOVE_STEP = 0.8f;
+    constexpr double ZOOM_STEP = 0.4f;
     constexpr int ITER_STEP = 2;
-    constexpr float PARAM_STEP = 0.05f;
-    constexpr float COLOR_CUTOFF_STEP = 1.0f;
-    constexpr float FAST_MODE_MULTIPLIER = 6.f;
+    constexpr double PARAM_STEP = 0.05f;
+    constexpr double COLOR_CUTOFF_STEP = 1.0f;
+    constexpr double FAST_MODE_MULTIPLIER = 6.f;
+
+    std::cout << std::setprecision(12);
 
     InputHandler in(rs.window, GLFW_KEY_LEFT_SHIFT, FAST_MODE_MULTIPLIER);
     in.addViewport(s.viewport, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_KP_ADD, GLFW_KEY_KP_SUBTRACT, GLFW_KEY_HOME, MOVE_STEP, ZOOM_STEP);
@@ -24,7 +26,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
 
     in.addScalar(s.p, GLFW_KEY_D, GLFW_KEY_A, {PARAM_STEP}, "Parameter");
     in.addScalar(s.p, GLFW_KEY_W, GLFW_KEY_S, {0, PARAM_STEP}, "Parameter");
-    in.addScalar(s.colorCutoff, GLFW_KEY_C, GLFW_KEY_X, COLOR_CUTOFF_STEP, "Color cutoff", 0.0f);
+    in.addScalar(s.colorCutoff, GLFW_KEY_C, GLFW_KEY_X, COLOR_CUTOFF_STEP, "Color cutoff", 0.0);
     in.addToggle(s.colorCutoffEnabled, GLFW_KEY_Z, "Color cutoff");
     in.addTrigger([&rs](){rs.window.setShouldClose(true);}, GLFW_KEY_ESCAPE);
     in.addTrigger([&s, &rs](){rs.window.minimize(); save(s); rs.window.restore();}, GLFW_KEY_TAB);
@@ -38,7 +40,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
                 auto length = rs.renderer.generatePath(z, s.metricArg, s.p);
                 std::cout << "Path length: " << length << std::endl;
             } else { // Line transform mode
-                if(!s.lineTransStart.has_value()) { //First click to select start point todo maybe mark this point somehow
+                if(!s.lineTransStart.has_value()) { //First click to select start point
                     s.lineTransStart = z;
                     std::cout << "Set line transform start point to" << *s.lineTransStart << "." << std::endl;
                 } else if(!s.lineTransEnd.has_value()) { //Second click to select endpoint

@@ -1,19 +1,19 @@
 #pragma once
-#include "kernel_types.h"
+#include "kernel_types.cuh"
 
-__device__ __inline__ float distSquare(complex a, complex b) {
-    float xdist = a.x - b.x;
-    float ydist = a.y - b.y;
+__device__ __inline__ real distSquare(complex a, complex b) {
+    real xdist = a.x - b.x;
+    real ydist = a.y - b.y;
     return (xdist * xdist + ydist * ydist);
 }
 
-__device__ __inline__ bool withinTolerance(complex a, complex b, float tsquare) {
+__device__ __inline__ bool withinTolerance(complex a, complex b, real tsquare) {
     return distSquare(a, b) <= tsquare;
 }
 
-__device__ __inline__ float2 getZ(float re0, float re1, float im0, float im1, int width, int height, int x, int y) {
-    float reStep = (re1 - re0) / width;
-    float imStep = (im1 - im0) / height;
+__device__ __inline__ complex getZ(real re0, real re1, real im0, real im1, int width, int height, int x, int y) {
+    real reStep = (re1 - re0) / width;
+    real imStep = (im1 - im0) / height;
     return make_complex(
             re0 + reStep * x,
             im0 + imStep * (width - y)

@@ -17,7 +17,7 @@
 #endif
 
 #include "kernel_macros.cuh"
-#include "kernel_types.h"
+#include "kernel_types.cuh"
 #include "math.cuh"
 #include "metrics.h"
 #include "utils.cuh"
@@ -34,7 +34,7 @@ RUNTIME #else
 RUNTIME #endif
 }
 
-__device__ __inline__ dist_t callDistanceFunction(complex z, dist_t arg1, complex p, float arg2, const complex* attractors, size_t numAttractors) {
+__device__ __inline__ dist_t callDistanceFunction(complex z, int arg1, complex p, real arg2, const float2* attractors, size_t numAttractors) {
 RUNTIME #ifdef ATTRACTOR
     return whichAttractor(pickStartingZ(z), arg1, p, arg2, z, attractors, numAttractors);
 RUNTIME #else
@@ -42,7 +42,7 @@ RUNTIME #else
 RUNTIME #endif
 }
 
-__global__ void kernel(float re0, float re1, float im0, float im1, dist_t maxIters, dist_t* minmaxOut, cudaSurfaceObject_t surface, int surfW, int surfH, float pre, float pim, float metricArg, const complex* attractors, size_t numAttractors) {
+__global__ void kernel(real re0, real re1, real im0, real im1, int maxIters, dist_t* minmaxOut, cudaSurfaceObject_t surface, int surfW, int surfH, real pre, real pim, real metricArg, const float2* attractors, size_t numAttractors) {
     __shared__ dist2 minmaxBlock[32];
     cg::thread_block block = cg::this_thread_block();
     cg::thread_block_tile<32> warp = cg::tiled_partition<32>(block);
@@ -57,12 +57,12 @@ __global__ void kernel(float re0, float re1, float im0, float im1, dist_t maxIte
     bool threadIsExcessive = i >= area;
     if (!threadIsExcessive) {
         //Find a z for this thread
-        float2 z = getZ(re0, re1, im0, im1, surfW, surfH, x, y);
+        complex z = getZ(re0, re1, im0, im1, surfW, surfH, x, y);
         fpDist = callDistanceFunction(z, maxIters, make_complex(pre, pim), metricArg, attractors, numAttractors);
     }
     warp.sync();
 
-    if (!threadIsExcessive) surf2Dwrite(fpDist, surface, x * sizeof(int), y);
+    if (!threadIsExcessive) surf2Dwrite(fpDist, surface, x * sizeof(dist_t), y);
 
 RUNTIME #ifndef NO_MINMAX
 
@@ -78,9 +78,12 @@ RUNTIME #ifndef NO_MINMAX
 
     //The first warp calculates the min/max of the whole block and writes it to the output buffer
     if (tid < 32) {
-        dist2 value = minmaxBlock[tid];
-        min_ = value.x;
-        max_ = value.y;
+        //Some warps at the end of the last block may have been excessive, in which case they didn't run, and therefore
+        // left (0,0) as their minmax, which would be incorrect, so we handle that here.
+        bool assignedThreadExcessive = (blockDim.x * blockIdx.x + tid * 32 >= area);
+        dist2 value =  minmaxBlock[tid];
+        min_ = assignedThreadExcessive ? maxIters + 2 : value.x;
+        max_ = assignedThreadExcessive ? -1 : value.y;
         for (int delta = 16; delta > 0; delta >>= 1) {
             min_ = min(min_, warp.shfl_down(min_, delta));
             max_ = max(max_, warp.shfl_down(max_, delta));
@@ -91,16 +94,16 @@ RUNTIME #ifndef NO_MINMAX
 RUNTIME #endif
 }
 
-__global__ void genFixedPointPath(float re, float im, int maxSteps, float tsquare, complex* output, int* outputLength, float pre, float pim) {
+__global__ void genFixedPointPath(real re, real im, int maxSteps, real tsquare, double2* output, int* outputLength, real pre, real pim) {
     complex c = make_complex(re, im);
 RUNTIME #ifdef CAPTURING
     complex z = make_complex(0,0);
-    output[0] = c;
-    output[1] = z;
+    output[0] = complex_to_double2(c);
+    output[1] = complex_to_double2(z);
     int i = 2;
 RUNTIME #else
     complex z = c;
-    output[0] = z;
+    output[0] = complex_to_double2(z);
     int i = 1;
 RUNTIME #endif
 
@@ -108,7 +111,7 @@ RUNTIME #endif
     complex last = z;
     for(; i < maxSteps; ++i) {
         z = F(z, p, c);
-        output[i] = z;
+        output[i] = complex_to_double2(z);
         if(withinTolerance(z, last, tsquare))
             break;
         last = z;

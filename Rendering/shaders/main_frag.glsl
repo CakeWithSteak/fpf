@@ -32,7 +32,7 @@ void main() {
     if(distance == -1) {
         fragColor = vec4(0, 0, 0, 1);
     } else {
-        float hue = mapHue(distance);
+        double hue = mapHue(distance);
         vec3 rgb = hsv2rgb(vec3(hue, 1, 1));
         fragColor = vec4(rgb, 1);
     }
