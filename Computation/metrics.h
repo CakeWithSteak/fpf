@@ -24,7 +24,7 @@ RUNTIME #define DIST_F vfAngle
 RUNTIME #elif defined(ATTRACTOR)
 //ATTRACTOR is a special case handled in kernel.cu
 RUNTIME #elif defined(PERIODIC)
-RUNTIME #define DIST_F periodicType
+RUNTIME #define DIST_F periodic
 RUNTIME #else
 RUNTIME #error "Invalid distance metric."
 RUNTIME #endif
