@@ -2,7 +2,7 @@
 #include "../utils.cuh"
 #include "../constants.h"
 
-__device__ dist_t periodicType(complex z, dist_t maxIters, complex p, real tsquare, complex c) {
+__device__ dist_t periodic(complex z, dist_t maxIters, complex p, real tsquare, complex c) {
     __shared__ complex previouslySeen[MAX_PERIOD * MAIN_KERNEL_BLOCK_SIZE];
     const int psOffset = threadIdx.x * MAX_PERIOD;
 
