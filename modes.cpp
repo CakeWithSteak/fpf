@@ -1,4 +1,5 @@
 #include "modes.h"
+#include "Computation/constants.h"
 #include <cmath>
 
 constexpr float TAU = 3.14159265358979323846 * 2;
@@ -126,6 +127,6 @@ const std::map<DistanceMetric, ModeInfo> modes {
            .argMax = 2.0f,
            .argIsTolerance = true,
            .maxHue = 0.5f,
-           .staticMinMax = {{1, 2}}
+           .initMaxIters = 256,
         }},
 };
