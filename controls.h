@@ -19,7 +19,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
     auto& mode = s.mode;
 
     if(!mode.disableIterations)
-        in.addScalar(s.maxIters, GLFW_KEY_KP_MULTIPLY, GLFW_KEY_KP_DIVIDE, ITER_STEP, "Max iterations", 1, 1024);
+        in.addScalar(s.maxIters, GLFW_KEY_KP_MULTIPLY, GLFW_KEY_KP_DIVIDE, ITER_STEP, "Max iterations", 1, 2048);
 
     if(!mode.disableArg)
         in.addScalar(s.metricArg, GLFW_KEY_0, GLFW_KEY_9, mode.argStep, mode.argDisplayName, mode.argMin, mode.argMax);
