@@ -10,6 +10,7 @@
 #include "distance_metrics/vectorfield_mag.cuh"
 #include "distance_metrics/vectorfield_angle.cuh"
 #include "distance_metrics/periodic.cuh"
+#include "distance_metrics/julia-complete.cuh"
 
 RUNTIME #ifdef FIXEDPOINT_ITERATIONS
 RUNTIME #define DIST_F fixedPointDist
@@ -25,6 +26,8 @@ RUNTIME #elif defined(ATTRACTOR)
 //ATTRACTOR is a special case handled in kernel.cu
 RUNTIME #elif defined(PERIODIC)
 RUNTIME #define DIST_F periodic
+RUNTIME #elif defined(JULIA_COMPLETE)
+RUNTIME #define DIST_F juliaCompleteDist
 RUNTIME #else
 RUNTIME #error "Invalid distance metric."
 RUNTIME #endif
@@ -41,11 +44,13 @@ enum DistanceMetric {
     CAPTURING_JULIA,
     CAPTURING_FIXEDPOINT,
     ATTRACTOR,
-    PERIODIC
+    PERIODIC,
+    JULIA_COMPLETE
 };
 
 inline double prepMetricArg(DistanceMetric metric, double arg) {
-    if(metric == FIXEDPOINT_ITERATIONS || metric == JULIA || metric == FIXEDPOINT_EUCLIDEAN || metric == ATTRACTOR || metric == PERIODIC)
+    if(metric == FIXEDPOINT_ITERATIONS || metric == JULIA || metric == FIXEDPOINT_EUCLIDEAN || metric == ATTRACTOR ||
+        metric == PERIODIC || metric == JULIA_COMPLETE)
         return arg * arg;
     return arg;
 }

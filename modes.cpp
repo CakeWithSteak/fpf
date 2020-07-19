@@ -129,4 +129,15 @@ const std::map<DistanceMetric, ModeInfo> modes {
            .maxHue = 0.5f,
            .initMaxIters = 256,
         }},
+        {JULIA_COMPLETE, {
+           .metric = JULIA_COMPLETE,
+           .displayName = "Julia set (complete)",
+           .cliName = "julia-complete",
+           .metricInternalName = "JULIA_COMPLETE",
+           .argDisplayName = "Escape radius",
+           .argInitValue = 10.0,
+           .argStep = 0.5,
+           .argMin = 0.0,
+           .argMax = std::numeric_limits<double>::max(),
+        }},
 };
