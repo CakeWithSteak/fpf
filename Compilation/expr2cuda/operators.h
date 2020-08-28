@@ -7,6 +7,7 @@ const std::map<std::string, OperatorTraits> operatorLookup {
         {"-", {"-", false, 2, "csub", LEFT_ASSOCIATIVE, 1}},
         {"*", {"*", false, 2, "cmul", LEFT_ASSOCIATIVE, 2}},
         {"/", {"/", false, 2, "cdiv", LEFT_ASSOCIATIVE, 2}},
+        {"^", {"^", false, 2, "cpow", RIGHT_ASSOCIATIVE, 3}},
 
         {"sin", {"sin", true, 1, "csin"}},
         {"cos", {"and", true, 1, "ccos"}},
@@ -21,6 +22,7 @@ const std::map<std::string, OperatorTraits> operatorLookup {
         {"arg", {"arg", true, 1, "carg"}},
 
         {"exp", {"exp", true, 1, "cexp"}},
+        {"ln", {"ln", true, 1, "cln"}},
 };
 
 //Maps the unary operator to its function form
