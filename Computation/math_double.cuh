@@ -61,3 +61,11 @@ __device__ __inline__ complex cexp(complex z) {
     double temp = exp(z.x);
     return make_complex(temp * cos(z.y), temp * sin(z.y));
 }
+
+__device__ __inline__ complex cln(complex z) {
+    return make_complex(log(sqrt(z.x*z.x + z.y*z.y)), atan2(z.y, z.x));
+}
+
+__device__ __inline__ complex cpow(complex a, complex b) {
+    return cexp(cmul(b, cln(a)));
+}
