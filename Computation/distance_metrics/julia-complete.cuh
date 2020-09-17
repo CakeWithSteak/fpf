@@ -6,7 +6,7 @@
 __device__ __inline__ dist_t juliaCompleteDist(complex z, int maxIters, complex p, real rsquare, complex c) {
     int leftAfter = -1;
     for(int i = 0; i < maxIters; ++i) {
-        if(z.x * z.x + z.y * z.y > rsquare)
+        if(z.x * z.x + z.y * z.y > rsquare && leftAfter == -1)
             leftAfter = i;
         z = F(z, p, c);
     }
