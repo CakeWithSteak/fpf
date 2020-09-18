@@ -1,12 +1,13 @@
 #pragma once
-#include <../Rendering/Window.h>
+#include "../Rendering/Window.h"
 #include <vector>
 #include <chrono>
 #include <algorithm>
 #include <iostream>
-#include "Viewport.h"
-#include "Timer.h"
-#include "isordered.h"
+#include "../utils/Viewport.h"
+#include "../utils/Timer.h"
+#include "../utils/isordered.h"
+#include "Controller.h"
 
 using namespace std::chrono_literals;
 
@@ -25,13 +26,13 @@ public:
     }
 };
 
-class InputHandler {
+class InputHandler : public Controller {
     Window& window;
     std::vector<InputBinding*> bindings;
     std::optional<int> multiplierKey;
     double multiplier = 1;
 public:
-    bool process(double dt);
+    bool process(double dt) override;
 
     template <typename T>
     InputBinding& addScalar(T& val, int upKey, int downKey, T step, const std::string& displayName, T min = limits<T>::lowest(), T max = limits<T>::max());

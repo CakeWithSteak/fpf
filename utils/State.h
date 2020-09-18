@@ -4,7 +4,7 @@
 #include "Viewport.h"
 #include "../Rendering/Window.h"
 #include "../Rendering/Renderer.h"
-#include "Input.h"
+#include "../Input/Input.h"
 #include "../cli.h"
 #include "../modes.h"
 
@@ -13,15 +13,15 @@ struct State {
     std::string expr;
     int maxIters;
     double metricArg;
-    std::complex<double> p{0};
+    std::complex<double> p;
     Viewport viewport;
     bool colorCutoffEnabled;
     double colorCutoff;
     int width, height;
     ModeInfo mode; //Only the DistanceMetric is serialized
-    std::optional<std::complex<double>> pathStart = {};
-    std::optional<std::complex<double>> lineTransStart = {};
-    std::optional<std::complex<double>> lineTransEnd = {};
+    std::optional<std::complex<double>> pathStart;
+    std::optional<std::complex<double>> lineTransStart;
+    std::optional<std::complex<double>> lineTransEnd;
     int lineTransIteration = 0;
     bool lineTransEnabled = false; // Never serialised, inferred from lineTransEnd during deserialization
     bool forceDisableIncrementalLineTracing = false;
@@ -32,12 +32,14 @@ struct State {
         mode = opt.mode;
         width = opt.width;
         height = opt.height;
-        metricArg = (opt.metricArg.has_value()) ? opt.metricArg.value() : mode.argInitValue;
+        metricArg = opt.metricArg;
         forceDisableIncrementalLineTracing = opt.forceDisableIncrementalLineTracing;
-        colorCutoffEnabled = (mode.defaultColorCutoff != -1);
-        colorCutoff = colorCutoffEnabled ? mode.defaultColorCutoff : 10.0f;
-        maxIters = mode.initMaxIters;
+        colorCutoffEnabled = opt.colorCutoff.has_value();
+        colorCutoff = colorCutoffEnabled ? *opt.colorCutoff : 10.0f;
+        maxIters = opt.maxIters;
         doublePrec = opt.doublePrec;
+        p = opt.p;
+        viewport = Viewport(opt.viewportCenter, opt.viewportBreadth);
     }
     State() = default;
 

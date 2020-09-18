@@ -1,10 +1,10 @@
 #pragma once
-#include "utils/Input.h"
+#include "Input/Input.h"
 #include "utils/State.h"
 #include "utils/serialization.h"
 #include "utils/imageExport.h"
 
-InputHandler initControls(State& s, RuntimeState& rs) {
+std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
     constexpr double MOVE_STEP = 0.8f;
     constexpr double ZOOM_STEP = 0.4f;
     constexpr int ITER_STEP = 2;
@@ -13,26 +13,26 @@ InputHandler initControls(State& s, RuntimeState& rs) {
     constexpr double FAST_MODE_MULTIPLIER = 6.f;
 
     std::cout << std::setprecision(12);
-
-    InputHandler in(rs.window, GLFW_KEY_LEFT_SHIFT, FAST_MODE_MULTIPLIER);
-    in.addViewport(s.viewport, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_KP_ADD, GLFW_KEY_KP_SUBTRACT, GLFW_KEY_HOME, MOVE_STEP, ZOOM_STEP);
+    
+    auto in = std::make_unique<InputHandler>(rs.window, GLFW_KEY_LEFT_SHIFT, FAST_MODE_MULTIPLIER);
+    in->addViewport(s.viewport, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_KP_ADD, GLFW_KEY_KP_SUBTRACT, GLFW_KEY_HOME, MOVE_STEP, ZOOM_STEP);
     auto& mode = s.mode;
 
     if(!mode.disableIterations)
-        in.addScalar(s.maxIters, GLFW_KEY_KP_MULTIPLY, GLFW_KEY_KP_DIVIDE, ITER_STEP, "Max iterations", 1, 2048);
+        in->addScalar(s.maxIters, GLFW_KEY_KP_MULTIPLY, GLFW_KEY_KP_DIVIDE, ITER_STEP, "Max iterations", 1, 2048);
 
     if(!mode.disableArg)
-        in.addScalar(s.metricArg, GLFW_KEY_0, GLFW_KEY_9, mode.argStep, mode.argDisplayName, mode.argMin, mode.argMax);
+        in->addScalar(s.metricArg, GLFW_KEY_0, GLFW_KEY_9, mode.argStep, mode.argDisplayName, mode.argMin, mode.argMax);
 
-    in.addScalar(s.p, GLFW_KEY_D, GLFW_KEY_A, {PARAM_STEP}, "Parameter");
-    in.addScalar(s.p, GLFW_KEY_W, GLFW_KEY_S, {0, PARAM_STEP}, "Parameter");
-    in.addScalar(s.colorCutoff, GLFW_KEY_C, GLFW_KEY_X, COLOR_CUTOFF_STEP, "Color cutoff", 0.0);
-    in.addToggle(s.colorCutoffEnabled, GLFW_KEY_Z, "Color cutoff");
-    in.addTrigger([&rs](){rs.window.setShouldClose(true);}, GLFW_KEY_ESCAPE);
-    in.addTrigger([&s, &rs](){rs.window.minimize(); save(s); rs.window.restore();}, GLFW_KEY_TAB);
+    in->addScalar(s.p, GLFW_KEY_D, GLFW_KEY_A, {PARAM_STEP}, "Parameter");
+    in->addScalar(s.p, GLFW_KEY_W, GLFW_KEY_S, {0, PARAM_STEP}, "Parameter");
+    in->addScalar(s.colorCutoff, GLFW_KEY_C, GLFW_KEY_X, COLOR_CUTOFF_STEP, "Color cutoff", 0.0);
+    in->addToggle(s.colorCutoffEnabled, GLFW_KEY_Z, "Color cutoff");
+    in->addTrigger([&rs](){rs.window.setShouldClose(true);}, GLFW_KEY_ESCAPE);
+    in->addTrigger([&s, &rs](){rs.window.minimize(); save(s); rs.window.restore();}, GLFW_KEY_TAB);
 
     if(!mode.disableOverlays) {
-        rs.mouseBinding = &in.addTrigger([&s, &rs](double x, double y) {
+        rs.mouseBinding = &in->addTrigger([&s, &rs](double x, double y) {
             auto z = s.viewport.resolveScreenCoords(x, y, rs.window.getWidth(), rs.window.getHeight());
             if(!s.lineTransEnabled) { //Path mode
                 s.pathStart = z;
@@ -52,14 +52,14 @@ InputHandler initControls(State& s, RuntimeState& rs) {
             }
         }, GLFW_MOUSE_BUTTON_1);
 
-        in.addTrigger([&s, &rs]() {
+        in->addTrigger([&s, &rs]() {
             rs.renderer.hideOverlay();
             s.pathStart = {}; s.lineTransStart = {}; s.lineTransEnd = {};
             s.lineTransEnabled = false;
             rs.mouseBinding->setCooldown(0ms); // If we were in line trans mode we need to unset the cooldown
         }, GLFW_KEY_H);
 
-        in.addTrigger([&s, &rs]() {
+        in->addTrigger([&s, &rs]() {
             if(s.lineTransEnabled)
                  return;
             rs.renderer.hideOverlay();
@@ -69,7 +69,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
             rs.mouseBinding->setCooldown(200ms);
         }, GLFW_KEY_T);
 
-        in.addTrigger([&s, &rs]() {
+        in->addTrigger([&s, &rs]() {
             if(s.lineTransEnabled && s.lineTransEnd.has_value()) {
                 ++s.lineTransIteration;
                 rs.renderer.setLineTransformIteration(s.lineTransIteration, s.p, s.forceDisableIncrementalLineTracing);
@@ -77,7 +77,7 @@ InputHandler initControls(State& s, RuntimeState& rs) {
             }
         }, GLFW_KEY_RIGHT_SHIFT).setCooldown(150ms);
 
-        in.addTrigger([&s, &rs]() {
+        in->addTrigger([&s, &rs]() {
             if(s.lineTransEnabled && s.lineTransEnd.has_value() && s.lineTransIteration != 0) {
                 --s.lineTransIteration;
                 rs.renderer.setLineTransformIteration(s.lineTransIteration, s.p, s.forceDisableIncrementalLineTracing);
@@ -85,10 +85,10 @@ InputHandler initControls(State& s, RuntimeState& rs) {
             }
         }, GLFW_KEY_RIGHT_CONTROL).setCooldown(150ms);
 
-        in.addTrigger([&rs]() { rs.renderer.togglePointConnections();}, GLFW_KEY_O).setCooldown(200ms);
+        in->addTrigger([&rs]() { rs.renderer.togglePointConnections();}, GLFW_KEY_O).setCooldown(200ms);
     }
 
-    in.addTrigger([&s, &rs](){
+    in->addTrigger([&s, &rs](){
         rs.window.minimize();
         std::cout << "Save image as> ";
         std::filesystem::path filename;

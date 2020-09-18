@@ -9,6 +9,7 @@
 #include "cli.h"
 #include "controls.h"
 #include "utils/serialization.h"
+#include "Input/Animator.h"
 
 
 using namespace std::chrono_literals;
@@ -68,8 +69,6 @@ std::string getCudaCode(const std::string& expr) {
     return finalCode;
 }
 
-//Precision very low at (1.0067,-1.219) -> (1.00677,-1.21893)
-
 int main(int argc, char** argv) {
     std::ios::sync_with_stdio(false);
 
@@ -80,12 +79,12 @@ int main(int argc, char** argv) {
         state = deserialize(*opt.deserializationPath);
     } else {
         state = State(opt);
-        state.viewport = Viewport(0, 2);
     }
+    bool animating = opt.animParams.has_value();
 
     auto cudaCode = getCudaCode(state.expr);
 
-    Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, true);
+    Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, !animating);
     window.setSwapInterval(1);
     window.enableGLDebugMessages(glDebugCallback);
 
@@ -100,7 +99,11 @@ int main(int argc, char** argv) {
         runtimeState.forceRerender = true;
     });
 
-    InputHandler input = initControls(state, runtimeState);
+    std::unique_ptr<Controller> control;
+    if(animating)
+        control = std::make_unique<Animator>(*opt.animParams, state, runtimeState);
+    else
+        control = initControls(state, runtimeState);
 
     if(state.pathStart.has_value())
         renderer.generatePath(state.pathStart.value(), state.metricArg, state.p);
@@ -114,7 +117,7 @@ int main(int argc, char** argv) {
     Timer timer;
     while(!window.shouldClose()) {
         window.poll();
-        bool repaintNeeded = input.process(timer.getSeconds()) || runtimeState.forceRerender;
+        bool repaintNeeded = control->process(timer.getSeconds()) || runtimeState.forceRerender;
         timer.reset();
 
         if(repaintNeeded) {
@@ -124,7 +127,7 @@ int main(int argc, char** argv) {
             window.swapBuffers();
             runtimeState.forceRerender = false;
         }
-        if(!repaintNeeded)
+        else
             std::this_thread::sleep_for(40ms);
     }
     std::cout << "\n" << renderer.getPerformanceReport();
