@@ -71,6 +71,7 @@ Options getOptions(int argc, char** argv) {
        ("max-iters,i", po::value<int>(), "Maximum iterations")
        ("color-cutoff", po::value<double>(), "The maximum value to color")
        ("anim-length", po::value<double>(), "The length of the animation in seconds")
+       ("anim-path",  po::value<std::filesystem::path>(), "The directory to export animation frames into")
        ("anim-fps", po::value<int>()->default_value(60), "Animation FPS")
        ("anim-max-iters-end", po::value<int>())
        ("anim-metric-arg-end", po::value<double>())
@@ -141,10 +142,11 @@ Options getOptions(int argc, char** argv) {
     else if(opt.mode.defaultColorCutoff != -1)
         opt.colorCutoff = opt.mode.defaultColorCutoff;
 
-    if(vm.count("anim-length")) {
+    if(vm.count("anim-length") && vm.count("anim-path")) {
         AnimationParams anim;
         anim.duration = vm["anim-length"].as<double>();
         anim.fps = vm["anim-fps"].as<int>();
+        opt.animPath = vm["anim-path"].as<std::filesystem::path>();
 
         addAnimParam(anim.maxIters, vm, opt.maxIters, "anim-max-iters-end");
         addAnimParam(anim.metricArg, vm, opt.metricArg, "anim-metric-arg-end");

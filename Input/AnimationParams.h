@@ -21,4 +21,8 @@ struct AnimationParams {
     std::optional<Interpolate<std::complex<double>>> lineTransStart;
     std::optional<Interpolate<std::complex<double>>> lineTransEnd;
     Interpolate<int> lineTransIteration;
+
+    [[nodiscard]] int totalFrames() const {
+        return std::ceil(fps * duration);
+    }
 };

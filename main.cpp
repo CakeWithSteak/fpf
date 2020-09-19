@@ -10,6 +10,7 @@
 #include "controls.h"
 #include "utils/serialization.h"
 #include "Input/Animator.h"
+#include "utils/thirdparty/stb_image_write.h"
 
 
 using namespace std::chrono_literals;
@@ -85,7 +86,7 @@ int main(int argc, char** argv) {
     auto cudaCode = getCudaCode(state.expr);
 
     Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, !animating);
-    window.setSwapInterval(1);
+    window.setSwapInterval(animating ? 0 : 1);
     window.enableGLDebugMessages(glDebugCallback);
 
     Renderer renderer(state.width, state.height, state.viewport, state.mode, cudaCode, opt.doublePrec);
@@ -100,10 +101,13 @@ int main(int argc, char** argv) {
     });
 
     std::unique_ptr<Controller> control;
-    if(animating)
+    if(animating) {
         control = std::make_unique<Animator>(*opt.animParams, state, runtimeState);
-    else
+        runtimeState.animExport.emplace(*opt.animPath, state.width, state.height, opt.animParams->totalFrames());
+        stbi_write_png_compression_level = 2;
+    } else {
         control = initControls(state, runtimeState);
+    }
 
     if(state.pathStart.has_value())
         renderer.generatePath(state.pathStart.value(), state.metricArg, state.p);
@@ -115,7 +119,7 @@ int main(int argc, char** argv) {
     runtimeState.forceRerender = true;
 
     Timer timer;
-    while(!window.shouldClose()) {
+    while(!window.shouldClose() || animating) {
         window.poll();
         bool repaintNeeded = control->process(timer.getSeconds()) || runtimeState.forceRerender;
         timer.reset();
@@ -124,6 +128,13 @@ int main(int argc, char** argv) {
             glClear(GL_COLOR_BUFFER_BIT);
             float actualColorCutoff = state.colorCutoffEnabled ? state.colorCutoff : std::numeric_limits<float>::max();
             renderer.render(state.maxIters, state.metricArg, state.p, actualColorCutoff);
+            if(animating) {
+                runtimeState.animExport->saveFrame(renderer.exportImageData());
+                if(runtimeState.animExport->filled()) {
+                    animating = false;
+                }
+            }
+
             window.swapBuffers();
             runtimeState.forceRerender = false;
         }
