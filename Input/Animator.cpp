@@ -1,11 +1,10 @@
 #include "Animator.h"
 
 bool Animator::process(double unused) {
-    int totalFrames = std::ceil(params.fps * params.duration);
-    if(frame >= totalFrames)
+    if(frame >= params.totalFrames())
         return false;
 
-    double t = frame / (double)totalFrames;
+    double t = frame / (double)params.totalFrames();
 
     state.maxIters = interpolate(t, params.maxIters);
     state.metricArg = interpolate(t, params.metricArg);

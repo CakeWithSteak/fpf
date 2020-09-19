@@ -22,6 +22,7 @@ struct Options {
     double viewportBreadth = 2;
     std::optional<double> colorCutoff;
     std::optional<AnimationParams> animParams;
+    std::optional<std::filesystem::path> animPath;
 };
 
 Options getOptions(int argc, char** argv);

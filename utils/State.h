@@ -7,6 +7,7 @@
 #include "../Input/Input.h"
 #include "../cli.h"
 #include "../modes.h"
+#include "AnimationExporter.h"
 
 //A struct encompassing program state useful for event handlers and serialization
 struct State {
@@ -97,4 +98,6 @@ struct RuntimeState {
     bool forceRerender = false;
     std::filesystem::path refsPath;
     InputBinding* mouseBinding;
+    std::string animExportBasename;
+    std::optional<AnimationExporter> animExport;
 };
