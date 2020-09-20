@@ -96,7 +96,8 @@ std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
         filename.replace_extension("png");
         auto pixels = rs.renderer.exportImageData();
         exportImage(filename, rs.window.getWidth(), rs.window.getHeight(), pixels);
-        writeImageInfoToReferences(rs.refsPath, filename, s);
+        if(rs.refsPath.has_value())
+            writeImageInfoToReferences(*rs.refsPath, filename, s);
         rs.window.restore();
     }, GLFW_KEY_INSERT);
 

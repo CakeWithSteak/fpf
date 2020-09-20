@@ -12,7 +12,7 @@ struct Options {
     int width;
     int height;
     int maxIters;
-    std::filesystem::path refsPath;
+    std::optional<std::filesystem::path> refsPath;
     double metricArg;
     std::optional<std::filesystem::path> deserializationPath = {};
     bool forceDisableIncrementalLineTracing;

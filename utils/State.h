@@ -96,7 +96,7 @@ struct RuntimeState {
     Window& window;
     Renderer& renderer;
     bool forceRerender = false;
-    std::filesystem::path refsPath;
+    std::optional<std::filesystem::path> refsPath;
     InputBinding* mouseBinding;
     std::string animExportBasename;
     std::optional<AnimationExporter> animExport;
