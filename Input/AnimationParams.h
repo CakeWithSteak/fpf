@@ -9,7 +9,6 @@ using Interpolate = std::pair<T, T>;
 struct AnimationParams {
     double duration;
     int fps;
-    //todo different interpolation modes
 
     Interpolate<int> maxIters;
     Interpolate<double> metricArg;
