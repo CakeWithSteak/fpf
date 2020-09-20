@@ -65,7 +65,7 @@ Options getOptions(int argc, char** argv) {
        ("metric-arg,m", po::value<double>(), "Metric argument")
        ("no-incremental-t", po::bool_switch(), "Disable incremental calculation of the line transform")
        ("double", po::bool_switch(), "Enable double precision mode")
-       ("param", po::value<std::complex<double>>()->default_value(0), "Parameter")
+       ("param,p", po::value<std::complex<double>>()->default_value(0), "Parameter")
        ("center", po::value<std::complex<double>>()->default_value(0), "View center")
        ("zoom", po::value<double>()->default_value(4), "The side length of the viewport")
        ("max-iters,i", po::value<int>(), "Maximum iterations")
