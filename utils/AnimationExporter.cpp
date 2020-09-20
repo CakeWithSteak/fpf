@@ -1,3 +1,4 @@
+#include <fstream>
 #include "AnimationExporter.h"
 #include "imageExport.h"
 
@@ -68,4 +69,11 @@ AnimationExporter::~AnimationExporter() {
 
 bool AnimationExporter::filled() {
     return saveQueue.filled();
+}
+
+void AnimationExporter::writeAnimReferenceString(std::string_view str) {
+    const std::string filename = "animrefs.txt";
+    std::ofstream file(basename.parent_path() / filename, std::ios::app);
+    file << str;
+    file.close();
 }
