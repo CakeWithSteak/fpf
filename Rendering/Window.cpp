@@ -2,7 +2,7 @@
 #include "glad/glad.h"
 #include "Window.h"
 
-void Window::init(const std::string& title, bool resizable) {
+void Window::init(const std::string& title, bool resizable, bool visible) {
     glfwSetErrorCallback([]([[maybe_unused]] int unused, const char* err) {
         std::cerr << "GLFW error: " << err << std::endl;
     });
@@ -14,6 +14,7 @@ void Window::init(const std::string& title, bool resizable) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, resizable);
+    glfwWindowHint(GLFW_VISIBLE, visible);
 
 
     handle = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);

@@ -14,9 +14,9 @@ class Window {
     int height;
     GLFWwindow* handle = nullptr;
     std::optional<std::function<void(Window&, int, int)>> resizeCallback;
-    void init(const std::string& title, bool resizable);
+    void init(const std::string& title, bool resizable, bool visible);
 public:
-    Window(int width, int height, const std::string& title, bool resizable) : width{width}, height{height} {init(title, resizable);}
+    Window(int width, int height, const std::string& title, bool resizable, bool visible) : width{width}, height{height} {init(title, resizable, visible);}
     void setSwapInterval(int interval);
     void swapBuffers();
     void poll();

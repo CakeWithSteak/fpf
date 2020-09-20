@@ -87,6 +87,7 @@ Options getOptions(int argc, char** argv) {
        ("anim-line-trans-b-end", po::value<std::complex<double>>())
        ("anim-line-trans-iters-start", po::value<int>()->default_value(0))
        ("anim-line-trans-iters-end", po::value<int>())
+       ("anim-background,H", po::bool_switch()->default_value(false), "Creates animation without opening a window")
        ;
 
     po::positional_options_description pos;
@@ -106,6 +107,7 @@ Options getOptions(int argc, char** argv) {
     opt.p = vm["param"].as<std::complex<double>>();
     opt.viewportCenter = vm["center"].as<std::complex<double>>();
     opt.viewportBreadth = vm["zoom"].as<double>() / 2;
+    opt.animBackground = vm["anim-background"].as<bool>();
 
     if(vm.count("mode")) {
         auto modeStr = vm["mode"].as<std::string>();

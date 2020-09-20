@@ -311,7 +311,7 @@ int Renderer::getOverlayLength() {
     else if(lineTransEnabled)
         return LINE_TRANS_NUM_POINTS;
     else
-        assert(false && "getOverlayLength called without overlay active");
+        throw std::runtime_error("getOverlayLength called without overlay active");
 }
 
 void Renderer::togglePointConnections() {
