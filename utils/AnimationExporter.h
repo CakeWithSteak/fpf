@@ -26,4 +26,5 @@ public:
     ~AnimationExporter();
     void saveFrame(Frame&& frame);
     bool filled();
+    void writeAnimReferenceString(std::string_view str);
 };
