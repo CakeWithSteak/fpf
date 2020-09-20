@@ -4,9 +4,9 @@
 #include <chrono>
 #include <algorithm>
 #include <iostream>
+#include <concepts>
 #include "../utils/Viewport.h"
 #include "../utils/Timer.h"
-#include "../utils/isordered.h"
 #include "Controller.h"
 
 using namespace std::chrono_literals;
@@ -109,7 +109,7 @@ InputBinding& InputHandler::addScalar(T& val, int upKey, int downKey, T step, co
 
 template<typename T>
 bool ScalarBinding<T>::process(Window& window, double dt, double multiplier) {
-    if constexpr(std::is_integral_v<T>)
+    if constexpr(std::integral<T>)
         dt = 1;
 
     bool inputReceived = false;
@@ -123,7 +123,7 @@ bool ScalarBinding<T>::process(Window& window, double dt, double multiplier) {
     }
 
     if(inputReceived) {
-        if constexpr(is_ordered_v<T>)
+        if constexpr(std::totally_ordered<T>)
             val = std::clamp(val, min, max);
         std::cout << displayName << ": " << val << std::endl;
         timer.reset();
