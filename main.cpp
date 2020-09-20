@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
 
     auto cudaCode = getCudaCode(state.expr);
 
-    Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, !animating);
+    Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, !animating, !opt.animBackground);
     window.setSwapInterval(animating ? 0 : 1);
     window.enableGLDebugMessages(glDebugCallback);
 
@@ -132,6 +132,13 @@ int main(int argc, char** argv) {
                 runtimeState.animExport->saveFrame(renderer.exportImageData());
                 if(runtimeState.animExport->filled()) {
                     animating = false;
+                    if(opt.animBackground) {
+                        window.setShouldClose(true);
+                        break;
+                    } else {
+                        window.setSwapInterval(1);
+                        control = initControls(state, runtimeState); // Enable user controls
+                    }
                 }
             }
 
