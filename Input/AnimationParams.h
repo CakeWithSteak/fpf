@@ -25,9 +25,10 @@ struct AnimationParams {
         return std::ceil(fps * duration);
     }
 
-    std::string getRerenceString() {
+    std::string getReferenceString(std::string_view func) {
         std::stringstream ss;
-        ss << duration << "\t"
+        ss << func << "\t"
+           << duration << "\t"
            << fps << "\t"
            << maxIters.first << " -> " << maxIters.second << "\t"
            << metricArg.first << " -> " << metricArg.second << "\t"
