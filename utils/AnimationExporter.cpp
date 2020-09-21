@@ -60,6 +60,7 @@ void AnimationExporter::threadFunc() {
         if(std::filesystem::exists(filename))
             throw std::runtime_error("Animation export would overwrite existing file. Aborting.");
         exportImage(filename, width, height, *frameData);
+        *frameData = std::vector<unsigned char>();
     }
 }
 
