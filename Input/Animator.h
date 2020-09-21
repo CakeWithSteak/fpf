@@ -13,6 +13,12 @@ class Animator : public Controller {
     T interpolate(double t, Interpolate<T> i) {
         return i.first + t * (i.second - i.first);
     }
+
+    template <typename T>
+    T zoomInterpolate(double t, Interpolate<T> i) {
+        static const double param = std::log(i.second / i.first);
+        return i.first * std::exp(param * t);
+    }
 public:
     bool process([[maybe_unused]] double unused) override;
 
