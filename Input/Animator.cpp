@@ -11,7 +11,7 @@ bool Animator::process(double unused) {
     state.p = interpolate(t, params.p);
     state.lineTransIteration = interpolate(t, params.lineTransIteration);
     state.viewport.moveTo(interpolate(t, params.viewportCenter));
-    state.viewport.zoomTo(interpolate(t, params.viewportBreadth));
+    state.viewport.zoomTo( zoomInterpolate(t, params.viewportBreadth));
     if(params.colorCutoff.has_value())
         state.colorCutoff = interpolate(t, *params.colorCutoff);
     if(params.pathStart.has_value())
