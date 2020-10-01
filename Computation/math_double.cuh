@@ -67,5 +67,7 @@ __device__ __inline__ complex cln(complex z) {
 }
 
 __device__ __inline__ complex cpow(complex a, complex b) {
+    if(abs(a.x) <= EPSILON && abs(a.y) <= EPSILON)
+        return make_complex(0, 0);
     return cexp(cmul(b, cln(a)));
 }
