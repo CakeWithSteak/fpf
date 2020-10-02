@@ -1,1 +1,0 @@
-//For whatever reason, cmake refuses to link nvrtc unless there is at least one actual .cu target

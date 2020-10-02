@@ -1,5 +1,4 @@
 #include <iostream>
-#include "glad/glad.h"
 #include "Window.h"
 
 void Window::init(const std::string& title, bool resizable, bool visible) {
