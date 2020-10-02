@@ -3,6 +3,7 @@
 #include <map>
 #include <list>
 #include <functional>
+#include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
 #if (!(GLFW_VERSION_MAJOR > 3) && (GLFW_VERSION_MINOR < 3))
