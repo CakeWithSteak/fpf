@@ -3,7 +3,6 @@
 #include <cuda_runtime.h>
 #include <cuda.h>
 #include <vector>
-#include "../Computation/metrics.h"
 #include "../modes.h"
 
 class NvrtcCompiler {

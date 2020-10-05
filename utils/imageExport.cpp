@@ -42,13 +42,13 @@ std::string getReferenceString(const path& imagePath, const State& state) {
     else
         ss << "None";
 
-    if(state.lineTransEnd.has_value()) {
+/*    if(state.lineTransEnd.has_value()) {
         ss << "\t" << state.lineTransStart.value()
            << "\t" << state.lineTransEnd.value()
-           << "\t" << state.lineTransIteration;
+           << "\t" << state.shapeTransIteration;
     } else {
         ss << "\tNone\tNone\tNone";
-    }
+    }*/ //todo
     ss << "\t" << (state.doublePrec ? "On" : "Off");
     ss << "\n";
 

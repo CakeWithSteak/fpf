@@ -53,6 +53,8 @@ bool ToggleBinding::process(Window& window, double dt, double multiplier) {
 }
 
 bool ViewportBinding::process(Window& window, double dt, double multiplier) {
+    if(!isEnabled)
+        return false;
     bool inputReceived = false;
     if(window.isKeyPressed(upKey)) {
         v.move(Viewport::Direction::UP, moveStep * dt * multiplier);
@@ -87,6 +89,8 @@ bool ViewportBinding::process(Window& window, double dt, double multiplier) {
 }
 
 bool TriggerBinding::process(Window& window, double dt, [[maybe_unused]] double multiplier) {
+    if(!isEnabled)
+        return false;
     if(window.isKeyPressed(triggerKey) && timer.get() > cooldown) {
         handler();
         timer.reset();
@@ -96,6 +100,8 @@ bool TriggerBinding::process(Window& window, double dt, [[maybe_unused]] double 
 }
 
 bool MouseTriggerBinding::process(Window& window, double dt, [[maybe_unused]] double multiplier) {
+    if(!isEnabled)
+        return false;
     auto pos = window.tryGetClickPosition(triggerButton);
     if(pos.has_value() && timer.get() > cooldown) {
         handler(pos->first, pos->second);

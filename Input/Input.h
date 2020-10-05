@@ -18,11 +18,15 @@ class InputBinding {
 protected:
     Timer timer;
     std::chrono::milliseconds cooldown = 0ms;
+    bool isEnabled = true;
 public:
     virtual bool process(Window& window, double dt, double multiplier) = 0;
     virtual ~InputBinding() = default;
     virtual void setCooldown(const std::chrono::milliseconds& val) {
         cooldown = val;
+    }
+    virtual void setEnabled(bool enabled) {
+        isEnabled = enabled;
     }
 };
 
@@ -109,6 +113,9 @@ InputBinding& InputHandler::addScalar(T& val, int upKey, int downKey, T step, co
 
 template<typename T>
 bool ScalarBinding<T>::process(Window& window, double dt, double multiplier) {
+    if(!isEnabled)
+        return false;
+
     if constexpr(std::integral<T>)
         dt = 1;
 

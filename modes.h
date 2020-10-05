@@ -1,8 +1,25 @@
 #pragma once
 #include <boost/serialization/split_member.hpp>
-#include "../Computation/metrics.h"
+#include "../Computation/metrics.cuh"
+#include "Computation/shared_types.h"
+#include <map>
 #include <string>
 #include <optional>
+#include <complex>
+
+enum DistanceMetric {
+    FIXEDPOINT_ITERATIONS,
+    FIXEDPOINT_EUCLIDEAN,
+    JULIA,
+    VECTORFIELD_MAGNITUDE,
+    VECTORFIELD_ANGLE,
+
+    CAPTURING_JULIA,
+    CAPTURING_FIXEDPOINT,
+    ATTRACTOR,
+    PERIODIC,
+    JULIA_COMPLETE
+};
 
 struct ModeInfo;
 
@@ -44,4 +61,8 @@ struct ModeInfo {
         *this = modes.at(m);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
+
+    inline double prepMetricArg(double arg) {
+        return (argIsTolerance) ? arg * arg : arg;
+    }
 };

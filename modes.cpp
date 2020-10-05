@@ -1,5 +1,6 @@
 #include "modes.h"
 #include "Computation/constants.h"
+#include "Computation/shared_types.h"
 #include <cmath>
 
 constexpr float TAU = 3.14159265358979323846 * 2;

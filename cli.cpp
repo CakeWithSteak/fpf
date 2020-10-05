@@ -101,7 +101,7 @@ Options getOptions(int argc, char** argv) {
     Options opt;
     opt.width = vm["width"].as<int>();
     opt.height = vm["height"].as<int>();
-    opt.forceDisableIncrementalLineTracing = vm["no-incremental-t"].as<bool>();
+    opt.forceDisableIncrementalShapeTrans = vm["no-incremental-t"].as<bool>();
     opt.doublePrec = vm["double"].as<bool>();
     opt.p = vm["param"].as<std::complex<double>>();
     opt.viewportCenter = vm["center"].as<std::complex<double>>();

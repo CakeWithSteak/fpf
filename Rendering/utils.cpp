@@ -15,7 +15,7 @@ std::pair<float, float> interleavedMinmax(const float* buffer, size_t size) {
     return {min, max};
 }
 
-size_t deduplicateWithTol(HostComplex *buffer, size_t size, float tsquare, size_t maxAttractors) {
+size_t deduplicateWithTol(HostFloatComplex *buffer, size_t size, float tsquare, size_t maxAttractors) {
     int j = 0;
     for(int i = 0; i < size && j < maxAttractors; ++i) {
         auto curr = buffer[i];
@@ -33,14 +33,14 @@ size_t deduplicateWithTol(HostComplex *buffer, size_t size, float tsquare, size_
         }
     }
     //Ensures that the attractors will always show up in the same order
-    std::sort(buffer, buffer + j, [](const HostComplex& a, const HostComplex& b){
+    std::sort(buffer, buffer + j, [](const HostFloatComplex& a, const HostFloatComplex& b){
         constexpr float ORDERING_TOL = 0.03f; //Account for small deviations of the attractor's position
         return (std::abs(a.re - b.re) >= ORDERING_TOL) ? (a.re < b.re) : (a.im < b.im);
     });
     return j;
 }
 
-bool withinTolerance(const HostComplex& a, const HostComplex& b, float tsquare) {
+bool withinTolerance(const HostFloatComplex& a, const HostFloatComplex& b, float tsquare) {
     auto xdist = a.re - b.re;
     auto ydist = a.im - b.im;
     return (xdist * xdist + ydist * ydist) <= tsquare;

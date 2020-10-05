@@ -115,9 +115,9 @@ int main(int argc, char** argv) {
         if (state.pathStart.has_value())
             renderer.generatePath(state.pathStart.value(), state.metricArg, state.p);
 
-        if (state.lineTransEnabled)
-            renderer.generateLineTransform(*state.lineTransStart, *state.lineTransEnd, state.lineTransIteration,
-                                           state.p);
+        /*if (state.shapeTransEnabled)
+            renderer.generateShapeTransform(ShapeProps(), state.shapeTransIteration,
+                                            state.p);*/ //todo deserialization for shape transforms
 
         //First render
         runtimeState.forceRerender = true;

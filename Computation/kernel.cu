@@ -19,7 +19,7 @@
 #include "kernel_macros.cuh"
 #include "kernel_types.cuh"
 #include "math.cuh"
-#include "metrics.h"
+#include "metrics.cuh"
 #include "utils.cuh"
 #include "attractor.cuh"
 RUNTIME #include <cooperative_groups.h>
@@ -119,7 +119,7 @@ RUNTIME #endif
     *outputLength = min(i + 1, maxSteps);
 }
 
-#include "transform_line.cuh"
+#include "shape_transform.cuh"
 
 __device__ __inline__ complex F(complex z, complex p, complex c) {
     /*Generated code goes here*/
