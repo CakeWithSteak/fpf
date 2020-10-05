@@ -36,15 +36,15 @@ std::string PerformanceMonitor::generateReports() {
             continue;
 
         std::sort(s.begin(), s.end());
-        auto wholeSum = std::accumulate(s.cbegin(), s.cend(), 0ul);
+        auto wholeSum = std::accumulate(s.cbegin(), s.cend(), 0ull);
         double wholeAvg = wholeSum / static_cast<double>(s.size());
 
         auto it10 = s.cbegin() + (9 * s.size() / 10);
-        auto sum10 = std::accumulate(it10, s.cend(), 0ul);
+        auto sum10 = std::accumulate(it10, s.cend(), 0ull);
         double avg10 = sum10 / static_cast<double>(std::distance(it10, s.cend()));
 
         auto it1 = s.cbegin() + (99 * s.size() / 100);
-        auto sum1 = std::accumulate(it1, s.cend(), 0ul);
+        auto sum1 = std::accumulate(it1, s.cend(), 0ull);
         double avg1 = sum1 / static_cast<double>(std::distance(it1, s.cend()));
 
         auto worst = s.back();
