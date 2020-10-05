@@ -20,7 +20,7 @@ void flipImage(std::vector<unsigned char>& data, int width, int height) {
 
 void exportImage(const std::filesystem::path& filename, int width, int height, std::vector<unsigned char>& data) {
     flipImage(data, width, height);
-    stbi_write_png(filename.c_str(), width, height, 3, data.data(), 0);
+    stbi_write_png(filename.string().c_str(), width, height, 3, data.data(), 0);
 }
 
 std::string getReferenceString(const path& imagePath, const State& state) {

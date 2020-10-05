@@ -71,83 +71,89 @@ std::string getCudaCode(const std::string& expr) {
 }
 
 int main(int argc, char** argv) {
-    std::ios::sync_with_stdio(false);
+    try {
+        std::ios::sync_with_stdio(false);
 
-    Options opt = getOptions(argc, argv);
-    State state;
+        Options opt = getOptions(argc, argv);
+        State state;
 
-    if(opt.deserializationPath.has_value()) {
-        state = deserialize(*opt.deserializationPath);
-    } else {
-        state = State(opt);
-    }
-    bool animating = opt.animParams.has_value();
+        if (opt.deserializationPath.has_value()) {
+            state = deserialize(*opt.deserializationPath);
+        } else {
+            state = State(opt);
+        }
+        bool animating = opt.animParams.has_value();
 
-    auto cudaCode = getCudaCode(state.expr);
+        auto cudaCode = getCudaCode(state.expr);
 
-    Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, !animating, !opt.animBackground);
-    window.setSwapInterval(animating ? 0 : 1);
-    window.enableGLDebugMessages(glDebugCallback);
+        Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, !animating,
+                      !opt.animBackground);
+        window.setSwapInterval(animating ? 0 : 1);
+        window.enableGLDebugMessages(glDebugCallback);
 
-    Renderer renderer(state.width, state.height, state.viewport, state.mode, cudaCode, opt.doublePrec);
+        Renderer renderer(state.width, state.height, state.viewport, state.mode, cudaCode, opt.doublePrec);
 
-    RuntimeState runtimeState{.window = window, .renderer = renderer, .refsPath = opt.refsPath};
+        RuntimeState runtimeState{.window = window, .renderer = renderer, .refsPath = opt.refsPath};
 
-    window.setResizeCallback([&state, &runtimeState](Window& win, int width, int height){
-        state.width = width;
-        state.height = height;
-        runtimeState.renderer.resize(width, height);
+        window.setResizeCallback([&state, &runtimeState](Window &win, int width, int height) {
+            state.width = width;
+            state.height = height;
+            runtimeState.renderer.resize(width, height);
+            runtimeState.forceRerender = true;
+        });
+
+        std::unique_ptr<Controller> control;
+        if (animating) {
+            control = std::make_unique<Animator>(*opt.animParams, state, runtimeState);
+            runtimeState.animExport.emplace(*opt.animPath, state.width, state.height, opt.animParams->totalFrames());
+            runtimeState.animExport->writeAnimReferenceString(opt.animParams->getReferenceString(state.expr));
+            stbi_write_png_compression_level = 2;
+        } else {
+            control = initControls(state, runtimeState);
+        }
+
+        if (state.pathStart.has_value())
+            renderer.generatePath(state.pathStart.value(), state.metricArg, state.p);
+
+        if (state.lineTransEnabled)
+            renderer.generateLineTransform(*state.lineTransStart, *state.lineTransEnd, state.lineTransIteration,
+                                           state.p);
+
+        //First render
         runtimeState.forceRerender = true;
-    });
 
-    std::unique_ptr<Controller> control;
-    if(animating) {
-        control = std::make_unique<Animator>(*opt.animParams, state, runtimeState);
-        runtimeState.animExport.emplace(*opt.animPath, state.width, state.height, opt.animParams->totalFrames());
-        runtimeState.animExport->writeAnimReferenceString(opt.animParams->getReferenceString(state.expr));
-        stbi_write_png_compression_level = 2;
-    } else {
-        control = initControls(state, runtimeState);
-    }
+        Timer timer;
+        while (!window.shouldClose() || animating) {
+            window.poll();
+            bool repaintNeeded = control->process(timer.getSeconds()) || runtimeState.forceRerender;
+            timer.reset();
 
-    if(state.pathStart.has_value())
-        renderer.generatePath(state.pathStart.value(), state.metricArg, state.p);
-
-    if(state.lineTransEnabled)
-        renderer.generateLineTransform(*state.lineTransStart, *state.lineTransEnd, state.lineTransIteration, state.p);
-
-    //First render
-    runtimeState.forceRerender = true;
-
-    Timer timer;
-    while(!window.shouldClose() || animating) {
-        window.poll();
-        bool repaintNeeded = control->process(timer.getSeconds()) || runtimeState.forceRerender;
-        timer.reset();
-
-        if(repaintNeeded) {
-            glClear(GL_COLOR_BUFFER_BIT);
-            float actualColorCutoff = state.colorCutoffEnabled ? state.colorCutoff : std::numeric_limits<float>::max();
-            renderer.render(state.maxIters, state.metricArg, state.p, actualColorCutoff);
-            if(animating) {
-                runtimeState.animExport->saveFrame(renderer.exportImageData());
-                if(runtimeState.animExport->filled()) {
-                    animating = false;
-                    if(opt.animBackground) {
-                        window.setShouldClose(true);
-                        break;
-                    } else {
-                        window.setSwapInterval(1);
-                        control = initControls(state, runtimeState); // Enable user controls
+            if (repaintNeeded) {
+                glClear(GL_COLOR_BUFFER_BIT);
+                float actualColorCutoff = state.colorCutoffEnabled ? state.colorCutoff
+                                                                   : std::numeric_limits<float>::max();
+                renderer.render(state.maxIters, state.metricArg, state.p, actualColorCutoff);
+                if (animating) {
+                    runtimeState.animExport->saveFrame(renderer.exportImageData());
+                    if (runtimeState.animExport->filled()) {
+                        animating = false;
+                        if (opt.animBackground) {
+                            window.setShouldClose(true);
+                            break;
+                        } else {
+                            window.setSwapInterval(1);
+                            control = initControls(state, runtimeState); // Enable user controls
+                        }
                     }
                 }
-            }
 
-            window.swapBuffers();
-            runtimeState.forceRerender = false;
+                window.swapBuffers();
+                runtimeState.forceRerender = false;
+            } else
+                std::this_thread::sleep_for(40ms);
         }
-        else
-            std::this_thread::sleep_for(40ms);
+        std::cout << "\n" << renderer.getPerformanceReport();
+    } catch(std::exception& err) {
+        std::cerr << err.what() << "\nAbort.\n";
     }
-    std::cout << "\n" << renderer.getPerformanceReport();
 }

@@ -5,7 +5,7 @@
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 #include <driver_types.h>
-#include <cassert>
+#include <algorithm>
 #include "../Computation/safeCall.h"
 #include "utils.h"
 
