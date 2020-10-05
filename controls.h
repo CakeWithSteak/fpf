@@ -34,54 +34,75 @@ std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
     if(!mode.disableOverlays) {
         rs.mouseBinding = &in->addTrigger([&s, &rs](double x, double y) {
             auto z = s.viewport.resolveScreenCoords(x, y, rs.window.getWidth(), rs.window.getHeight());
-            if(!s.lineTransEnabled) { //Path mode
+            if(!rs.shapeTransUIStarted && !rs.shapeTransUIFinished) { //Path mode
                 s.pathStart = z;
                 std::cout << "Rendering path overlay from " << z << ".\n";
                 auto length = rs.renderer.generatePath(z, s.metricArg, s.p);
                 std::cout << "Path length: " << length << std::endl;
-            } else { // Line transform mode
-                if(!s.lineTransStart.has_value()) { //First click to select start point
-                    s.lineTransStart = z;
-                    std::cout << "Set line transform start point to" << *s.lineTransStart << "." << std::endl;
-                } else if(!s.lineTransEnd.has_value()) { //Second click to select endpoint
-                    s.lineTransEnd = z;
-                    rs.renderer.generateLineTransform(*s.lineTransStart, *s.lineTransEnd, s.lineTransIteration, s.p);
-                    std::cout << "Rendering line transform overlay from " << *s.lineTransStart << " to " << *s.lineTransEnd
-                        << "." << std::endl;
+            } else if(rs.selectedShape.has_value() && rs.shapeTransUIStarted){ // Shape transform mode
+                if(rs.selectedShape == LINE) {
+                    if (!rs.lineTransStart.has_value()) { //First click to select start point
+                        rs.lineTransStart = z;
+                        std::cout << "Set line transform start point to" << *rs.lineTransStart << "." << std::endl;
+                    } else { //Second click to select endpoint
+                        s.shapeTransProps = ShapeProps{LINE, {.line = {.p1 = *rs.lineTransStart, .p2 = z}}};
+                        rs.renderer.generateShapeTransform(*s.shapeTransProps, s.shapeTransIteration, s.p);
+                        std::cout << "Rendering line transform from " << *rs.lineTransStart << " to " << z
+                                  << "." << std::endl;
+                        rs.lineTransStart = {}; // Unset no longer needed state here to avoid having to do it somewhere else later
+                        rs.shapeTransUIStarted = false;
+                        rs.shapeTransUIFinished = true;
+                    }
+                } else if(rs.selectedShape == CIRCLE) {
+                    if(!rs.circleCenter.has_value()) {
+                        rs.circleCenter = z;
+                        std::cout << "Set circle center to " << z << std::endl;
+                    } else {
+                        double r = std::abs(z - *rs.circleCenter);
+                        s.shapeTransProps = ShapeProps{CIRCLE, {.circle = {*rs.circleCenter, r}}};
+                        rs.renderer.generateShapeTransform(*s.shapeTransProps, s.shapeTransIteration, s.p);
+                        std::cout << "Rendering circle transform from " << *rs.circleCenter << ", r = " << r
+                                  << "." << std::endl;
+                        rs.circleCenter = {}; // Unset no longer needed state here to avoid having to do it somewhere else later
+                        rs.shapeTransUIStarted = false;
+                        rs.shapeTransUIFinished = true;
+                    }
                 }
             }
         }, GLFW_MOUSE_BUTTON_1);
 
         in->addTrigger([&s, &rs]() {
             rs.renderer.hideOverlay();
-            s.pathStart = {}; s.lineTransStart = {}; s.lineTransEnd = {};
-            s.lineTransEnabled = false;
+            s.pathStart = {};
+            rs.shapeTransUIStarted = false; rs.shapeTransUIFinished = false; rs.selectedShape = {};
             rs.mouseBinding->setCooldown(0ms); // If we were in line trans mode we need to unset the cooldown
         }, GLFW_KEY_H);
 
         in->addTrigger([&s, &rs]() {
-            if(s.lineTransEnabled)
+            if(rs.shapeTransUIStarted || rs.shapeTransUIFinished)
                  return;
             rs.renderer.hideOverlay();
-            s.lineTransEnabled = true;
-            std::cout << "Line transform mode enabled. Click two points to start." << std::endl;
-            s.lineTransIteration = 0;
-            rs.mouseBinding->setCooldown(200ms);
+            rs.shapeTransUIStarted = true;
+            s.shapeTransIteration = 0;
+            std::cout << "Shape transform mode enabled. Select a shape:\n"
+                << "1: Line\n"
+                << "2: Circle" << std::endl; //todo maybe there's a better way to print this
+            rs.mouseBinding->setEnabled(false);
         }, GLFW_KEY_T);
 
         in->addTrigger([&s, &rs]() {
-            if(s.lineTransEnabled && s.lineTransEnd.has_value()) {
-                ++s.lineTransIteration;
-                rs.renderer.setLineTransformIteration(s.lineTransIteration, s.p, s.forceDisableIncrementalLineTracing);
-                std::cout << "Line transform iteration: " << s.lineTransIteration << "." << std::endl;
+            if(rs.shapeTransUIFinished) {
+                ++s.shapeTransIteration;
+                rs.renderer.setShapeTransformIteration(s.shapeTransIteration, s.p, s.forceDisableIncrementalShapeTrans);
+                std::cout << "Shape transform iteration: " << s.shapeTransIteration << "." << std::endl;
             }
         }, GLFW_KEY_RIGHT_SHIFT).setCooldown(150ms);
 
         in->addTrigger([&s, &rs]() {
-            if(s.lineTransEnabled && s.lineTransEnd.has_value() && s.lineTransIteration != 0) {
-                --s.lineTransIteration;
-                rs.renderer.setLineTransformIteration(s.lineTransIteration, s.p, s.forceDisableIncrementalLineTracing);
-                std::cout << "Line transform iteration: " << s.lineTransIteration << "." << std::endl;
+            if(rs.shapeTransUIFinished && s.shapeTransIteration != 0) {
+                --s.shapeTransIteration;
+                rs.renderer.setShapeTransformIteration(s.shapeTransIteration, s.p, s.forceDisableIncrementalShapeTrans);
+                std::cout << "Shape transform iteration: " << s.shapeTransIteration << "." << std::endl;
             }
         }, GLFW_KEY_RIGHT_CONTROL).setCooldown(150ms);
 
@@ -100,6 +121,26 @@ std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
             writeImageInfoToReferences(*rs.refsPath, filename, s);
         rs.window.restore();
     }, GLFW_KEY_INSERT);
+
+    //fixme create these bindings automatically
+    //Shape trans 1 (line)
+    in->addTrigger([&s, &rs](){
+        if(!rs.shapeTransUIStarted || rs.selectedShape.has_value())
+            return;
+        rs.selectedShape = LINE;
+        std::cout << "Selected line. Click two points to draw a line." << std::endl;
+        rs.mouseBinding->setEnabled(true);
+        rs.mouseBinding->setCooldown(200ms);
+    }, GLFW_KEY_1);
+    //Shape trans 2 (circle)
+    in->addTrigger([&s, &rs](){
+        if(!rs.shapeTransUIStarted || rs.selectedShape.has_value())
+            return;
+        rs.selectedShape = CIRCLE;
+        std::cout << "Selected circle. Click a point to select a center and another point to select the radius." << std::endl;
+        rs.mouseBinding->setEnabled(true);
+        rs.mouseBinding->setCooldown(200ms);
+    }, GLFW_KEY_2);
 
     return in;
 }

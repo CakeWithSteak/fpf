@@ -8,6 +8,7 @@
 #include <algorithm>
 #include "../Computation/safeCall.h"
 #include "utils.h"
+#include "../Computation/shared_types.h"
 
 float data[] = {
     //XY position and UV coordinates
@@ -104,8 +105,8 @@ void Renderer::initCuda(bool registerPathRes) {
 
     if(mode.isAttractor) {
         size_t numAttractors = static_cast<int>(width * ATTRACTOR_RESOLUTION_MULT) * static_cast<int>(height * ATTRACTOR_RESOLUTION_MULT);
-        CUDA_SAFE(cudaMalloc(&attractorsDeviceBuffer, numAttractors * sizeof(HostComplex)));
-        attractorsHostBuffer = std::make_unique<HostComplex[]>(numAttractors);
+        CUDA_SAFE(cudaMalloc(&attractorsDeviceBuffer, numAttractors * sizeof(HostFloatComplex)));
+        attractorsHostBuffer = std::make_unique<HostFloatComplex[]>(numAttractors);
     }
 
     if(registerPathRes) {
@@ -134,9 +135,9 @@ void Renderer::render(int maxIters, double metricArg, const std::complex<double>
 
     pm.enter(PERF_KERNEL);
     if(doublePrec)
-        launch_kernel_double(kernel, start.real(), end.real(), start.imag(), end.imag(), maxIters, cudaBuffer, surface, width, height, p.real(), p.imag(), prepMetricArg(mode.metric, metricArg), attractorsDeviceBuffer, numAttractors);
+        launch_kernel_double(kernel, start.real(), end.real(), start.imag(), end.imag(), maxIters, cudaBuffer, surface, width, height, p.real(), p.imag(), mode.prepMetricArg(metricArg), attractorsDeviceBuffer, numAttractors);
     else
-        launch_kernel_float(kernel, start.real(), end.real(), start.imag(), end.imag(), maxIters, cudaBuffer, surface, width, height, p.real(), p.imag(), prepMetricArg(mode.metric, metricArg), attractorsDeviceBuffer, numAttractors);
+        launch_kernel_float(kernel, start.real(), end.real(), start.imag(), end.imag(), maxIters, cudaBuffer, surface, width, height, p.real(), p.imag(), mode.prepMetricArg(metricArg), attractorsDeviceBuffer, numAttractors);
     CUDA_SAFE(cudaDeviceSynchronize());
     pm.exit(PERF_KERNEL);
 
@@ -176,10 +177,10 @@ cudaSurfaceObject_t Renderer::createSurface() {
 }
 
 void Renderer::initKernels(std::string_view cudaCode) {
-    auto funcs = compiler.Compile(cudaCode, "runtime.cu", {"kernel", "genFixedPointPath", "transformLine", "findAttractors"}, mode, doublePrec);
+    auto funcs = compiler.Compile(cudaCode, "runtime.cu", {"kernel", "genFixedPointPath", "transformShape", "findAttractors"}, mode, doublePrec);
     kernel = funcs[0];
     pathKernel = funcs[1];
-    lineTransformKernel = funcs[2];
+    shapeTransformKernel = funcs[2];
     findAttractorsKernel = funcs[3];
 }
 
@@ -234,14 +235,14 @@ void Renderer::refreshOverlayIfNeeded(const std::complex<double>& p, double metr
         lastTolerance = tolerance;
         if(pathEnabled)
             generatePath(pathStart, tolerance, p);
-        else if(lineTransEnabled)
-            generateLineTransformImpl(p);
+        else if(shapeTransEnabled)
+            generateShapeTransformImpl(p);
     }
 }
 
 void Renderer::hideOverlay() {
     pathEnabled = false;
-    lineTransEnabled = false;
+    shapeTransEnabled = false;
 }
 
 std::vector<unsigned char> Renderer::exportImageData() {
@@ -252,37 +253,35 @@ std::vector<unsigned char> Renderer::exportImageData() {
     return data;
 }
 
-void Renderer::generateLineTransform(const std::complex<double>& start, const std::complex<double>& end, int iteration,
-                                     const std::complex<double>& p) {
-    lineTransStart = start;
-    lineTransEnd = end;
-    lineTransIteration = iteration;
-    lineTransEnabled = true;
-    generateLineTransformImpl(p);
+void Renderer::generateShapeTransform(ShapeProps shape, int iteration, const std::complex<double>& p) {
+    shapeTransProps = shape;
+    shapeTransIteration = iteration;
+    shapeTransEnabled = true;
+    generateShapeTransformImpl(p);
 }
 
-void Renderer::setLineTransformIteration(int iteration, const std::complex<double>& p, bool disableIncremental) {
-    auto lastIterations = lineTransIteration;
-    lineTransIteration = iteration;
+void Renderer::setShapeTransformIteration(int iteration, const std::complex<double>& p, bool disableIncremental) {
+    auto lastIterations = shapeTransIteration;
+    shapeTransIteration = iteration;
 
     if(!disableIncremental)
-        generateLineTransformImpl(p, lastIterations);
+        generateShapeTransformImpl(p, lastIterations);
     else
-        generateLineTransformImpl(p);
+        generateShapeTransformImpl(p);
 }
 
 
-void Renderer::generateLineTransformImpl(const std::complex<double>& p, int lastIterations) {
+void Renderer::generateShapeTransformImpl(const std::complex<double>& p, int lastIterations) {
     pm.enter(PERF_LINE_TRANS_GEN);
     constexpr int BLOCK_SIZE = 1024;
     lastP = p;
 
     int itersToDo;
     bool incremental = false;
-    if(lastIterations == -1 || lineTransIteration < lastIterations || mode.capturing) {
-        itersToDo = lineTransIteration;
+    if(lastIterations == -1 || shapeTransIteration < lastIterations || mode.capturing) {
+        itersToDo = shapeTransIteration;
     } else {
-        itersToDo = lineTransIteration - lastIterations;
+        itersToDo = shapeTransIteration - lastIterations;
         incremental = true;
     }
 
@@ -291,13 +290,11 @@ void Renderer::generateLineTransformImpl(const std::complex<double>& p, int last
     CUDA_SAFE(cudaGraphicsResourceGetMappedPointer(&bufferPtr, nullptr, overlayBufferRes));
 
     if(doublePrec) {
-        launch_kernel_generic(lineTransformKernel, LINE_TRANS_NUM_POINTS, BLOCK_SIZE, lineTransStart.real(),
-                              lineTransEnd.real(), lineTransStart.imag(), lineTransEnd.imag(), p.real(), p.imag(), LINE_TRANS_NUM_POINTS, itersToDo, incremental, bufferPtr);
+        launch_kernel_generic(shapeTransformKernel, LINE_TRANS_NUM_POINTS, BLOCK_SIZE, *shapeTransProps, p.real(), p.imag(), LINE_TRANS_NUM_POINTS, itersToDo, incremental, bufferPtr);
 
     } else {
-        std::complex<float> flineTransStart(lineTransStart), flineTransEnd(lineTransEnd), fp(p);
-        launch_kernel_generic(lineTransformKernel, LINE_TRANS_NUM_POINTS, BLOCK_SIZE, flineTransStart.real(),
-            flineTransEnd.real(), flineTransStart.imag(), flineTransEnd.imag(), fp.real(), fp.imag(), LINE_TRANS_NUM_POINTS, itersToDo, incremental, bufferPtr);
+        std::complex<float> fp(p);
+        launch_kernel_generic(shapeTransformKernel, LINE_TRANS_NUM_POINTS, BLOCK_SIZE, *shapeTransProps, fp.real(), fp.imag(), LINE_TRANS_NUM_POINTS, itersToDo, incremental, bufferPtr);
     }
 
     CUDA_SAFE(cudaDeviceSynchronize());
@@ -308,7 +305,7 @@ void Renderer::generateLineTransformImpl(const std::complex<double>& p, int last
 int Renderer::getOverlayLength() {
     if(pathEnabled)
         return *cudaPathLengthPtr;
-    else if(lineTransEnabled)
+    else if(shapeTransEnabled)
         return LINE_TRANS_NUM_POINTS;
     else
         throw std::runtime_error("getOverlayLength called without overlay active");
@@ -337,9 +334,9 @@ size_t Renderer::findAttractors(int maxIters, double metricArg, const std::compl
 
     CUDA_SAFE(cudaDeviceSynchronize());
 
-    CUDA_SAFE(cudaMemcpy(attractorsHostBuffer.get(), attractorsDeviceBuffer, bufSize * sizeof(HostComplex), cudaMemcpyDeviceToHost));
+    CUDA_SAFE(cudaMemcpy(attractorsHostBuffer.get(), attractorsDeviceBuffer, bufSize * sizeof(HostFloatComplex), cudaMemcpyDeviceToHost));
     auto res = deduplicateWithTol(attractorsHostBuffer.get(), aWidth * aHeight, ATTRACTOR_MATCH_TOL, MAX_ATTRACTORS);
-    CUDA_SAFE(cudaMemcpy(attractorsDeviceBuffer, attractorsHostBuffer.get(), res * sizeof(HostComplex), cudaMemcpyHostToDevice));
+    CUDA_SAFE(cudaMemcpy(attractorsDeviceBuffer, attractorsHostBuffer.get(), res * sizeof(HostFloatComplex), cudaMemcpyHostToDevice));
 
     std::cout << "Attractors: " << res;
     if(res == MAX_ATTRACTORS)

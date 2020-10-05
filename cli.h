@@ -15,7 +15,7 @@ struct Options {
     std::optional<std::filesystem::path> refsPath;
     double metricArg;
     std::optional<std::filesystem::path> deserializationPath = {};
-    bool forceDisableIncrementalLineTracing;
+    bool forceDisableIncrementalShapeTrans;
     bool doublePrec;
     std::complex<double> p = 0;
     std::complex<double> viewportCenter = 0;

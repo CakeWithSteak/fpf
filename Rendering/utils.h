@@ -1,13 +1,7 @@
 #pragma once
 #include <utility>
-
-#pragma pack(push, 1)
-struct HostComplex {
-    float re;
-    float im;
-};
-#pragma pack(pop)
+#include "../Computation/shared_types.h"
 
 std::pair<float, float> interleavedMinmax(const float* buffer, size_t size);
-size_t deduplicateWithTol(HostComplex *buffer, size_t size, float tsquare, size_t maxAttractors);
-bool withinTolerance(const HostComplex& a, const HostComplex& b, float tsquare);
+size_t deduplicateWithTol(HostFloatComplex *buffer, size_t size, float tsquare, size_t maxAttractors);
+bool withinTolerance(const HostFloatComplex& a, const HostFloatComplex& b, float tsquare);

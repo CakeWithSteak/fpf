@@ -21,11 +21,11 @@ struct State {
     int width, height;
     ModeInfo mode; //Only the DistanceMetric is serialized
     std::optional<std::complex<double>> pathStart;
-    std::optional<std::complex<double>> lineTransStart;
-    std::optional<std::complex<double>> lineTransEnd;
-    int lineTransIteration = 0;
-    bool lineTransEnabled = false; // Never serialised, inferred from lineTransEnd during deserialization
-    bool forceDisableIncrementalLineTracing = false;
+    /*std::optional<std::complex<double>> lineTransStart;
+    std::optional<std::complex<double>> lineTransEnd;*/
+    std::optional<ShapeProps> shapeTransProps;
+    int shapeTransIteration = 0;
+    bool forceDisableIncrementalShapeTrans = false;
     bool doublePrec = false;
 
     explicit State(const Options& opt) {
@@ -34,7 +34,7 @@ struct State {
         width = opt.width;
         height = opt.height;
         metricArg = opt.metricArg;
-        forceDisableIncrementalLineTracing = opt.forceDisableIncrementalLineTracing;
+        forceDisableIncrementalShapeTrans = opt.forceDisableIncrementalShapeTrans;
         colorCutoffEnabled = opt.colorCutoff.has_value();
         colorCutoff = colorCutoffEnabled ? *opt.colorCutoff : 10.0f;
         maxIters = opt.maxIters;
@@ -58,15 +58,15 @@ struct State {
         ar & height;
         ar & mode;
         ar & pathStart;
-        ar & lineTransIteration;
-        if(lineTransEnd.has_value()) { // Only serialize line trans mode if both the start and the end of the line are given, otherwise things will probably break
+        ar & shapeTransIteration;
+        /*if(lineTransEnd.has_value()) { //fixme serialize shape trans
             ar & lineTransStart;
             ar & lineTransEnd;
         } else {
             ar & std::optional<std::complex<double>>();
             ar & std::optional<std::complex<double>>();
-        }
-        ar & forceDisableIncrementalLineTracing;
+        }*/
+        ar & forceDisableIncrementalShapeTrans;
     }
 
     template<class Archive>
@@ -83,11 +83,11 @@ struct State {
         ar & height;
         ar & mode;
         ar & pathStart;
-        ar & lineTransIteration;
-        ar & lineTransStart;
+        ar & shapeTransIteration;
+        /*ar & lineTransStart;
         ar & lineTransEnd;
-        lineTransEnabled = lineTransEnd.has_value();
-        ar & forceDisableIncrementalLineTracing;
+        shapeTransEnabled = lineTransEnd.has_value();*/
+        ar & forceDisableIncrementalShapeTrans;
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
@@ -100,4 +100,11 @@ struct RuntimeState {
     InputBinding* mouseBinding;
     std::string animExportBasename;
     std::optional<AnimationExporter> animExport;
+
+    //State for the UI
+    bool shapeTransUIStarted = false;
+    bool shapeTransUIFinished = false;
+    std::optional<TransformShape> selectedShape;
+    std::optional<std::complex<double>> lineTransStart;
+    std::optional<std::complex<double>> circleCenter;
 };

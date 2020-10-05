@@ -31,28 +31,4 @@ RUNTIME #define DIST_F juliaCompleteDist
 RUNTIME #else
 RUNTIME #error "Invalid distance metric."
 RUNTIME #endif
-#else
-#include <map>
-
-enum DistanceMetric {
-    FIXEDPOINT_ITERATIONS,
-    FIXEDPOINT_EUCLIDEAN,
-    JULIA,
-    VECTORFIELD_MAGNITUDE,
-    VECTORFIELD_ANGLE,
-
-    CAPTURING_JULIA,
-    CAPTURING_FIXEDPOINT,
-    ATTRACTOR,
-    PERIODIC,
-    JULIA_COMPLETE
-};
-
-inline double prepMetricArg(DistanceMetric metric, double arg) {
-    if(metric == FIXEDPOINT_ITERATIONS || metric == JULIA || metric == FIXEDPOINT_EUCLIDEAN || metric == ATTRACTOR ||
-        metric == PERIODIC || metric == JULIA_COMPLETE)
-        return arg * arg;
-    return arg;
-}
-
 #endif

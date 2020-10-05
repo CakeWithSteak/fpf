@@ -10,6 +10,7 @@
 #include "shaders.h"
 #include "utils.h"
 #include "../Computation/constants.h"
+#include "../Computation/shared_types.h"
 
 class Renderer {
     int width;
@@ -25,10 +26,9 @@ class Renderer {
     std::complex<double> lastP;
     double lastTolerance;
 
-    bool lineTransEnabled = false;
-    std::complex<double> lineTransStart;
-    std::complex<double> lineTransEnd;
-    int lineTransIteration;
+    bool shapeTransEnabled = false;
+    std::optional<ShapeProps> shapeTransProps;
+    int shapeTransIteration;
 
     unsigned int numBlocks;
     unsigned int texture;
@@ -48,13 +48,13 @@ class Renderer {
     cudaResourceDesc cudaSurfaceDesc;
     float* cudaBuffer = nullptr;
     int* cudaPathLengthPtr = nullptr;
-    HostComplex* attractorsDeviceBuffer = nullptr;
-    std::unique_ptr<HostComplex[]> attractorsHostBuffer = nullptr;
+    HostFloatComplex* attractorsDeviceBuffer = nullptr;
+    std::unique_ptr<HostFloatComplex[]> attractorsHostBuffer = nullptr;
 
     NvrtcCompiler compiler;
     CUfunction kernel;
     CUfunction pathKernel;
-    CUfunction lineTransformKernel;
+    CUfunction shapeTransformKernel;
     CUfunction findAttractorsKernel;
 
     PerformanceMonitor pm{"Main kernel time", "Total render time", "Orbit compute time", "Overlay render time", "Line transform compute time", "Attractor compute time"};
@@ -86,8 +86,8 @@ class Renderer {
     void initKernels(std::string_view cudaCode);
     cudaSurfaceObject_t createSurface();
     void refreshOverlayIfNeeded(const std::complex<double>& p, double metricArg);
-    void generateLineTransformImpl(const std::complex<double>& p, int lastIterations = -1);
-    inline bool isOverlayEnabled() { return pathEnabled || lineTransEnabled; }
+    void generateShapeTransformImpl(const std::complex<double>& p, int lastIterations = -1);
+    inline bool isOverlayEnabled() { return pathEnabled || shapeTransEnabled; }
     int getOverlayLength();
     size_t findAttractors(int maxIters, double metricArg, const std::complex<double>& p);
 public:
@@ -101,9 +101,8 @@ public:
     int generatePath(const std::complex<double>& z, double tolerance, const std::complex<double>& p);
     void hideOverlay();
     std::vector<unsigned char> exportImageData();
-    void generateLineTransform(const std::complex<double>& start, const std::complex<double>& end, int iteration,
-                               const std::complex<double>& p);
-    void setLineTransformIteration(int iteration, const std::complex<double>& p, bool disableIncremental = false);
+    void generateShapeTransform(ShapeProps shape, int iteration, const std::complex<double>& p);
+    void setShapeTransformIteration(int iteration, const std::complex<double>& p, bool disableIncremental = false);
     void togglePointConnections();
 };
 

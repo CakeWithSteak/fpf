@@ -9,7 +9,7 @@ bool Animator::process(double unused) {
     state.maxIters = interpolate(t, params.maxIters);
     state.metricArg = interpolate(t, params.metricArg);
     state.p = interpolate(t, params.p);
-    state.lineTransIteration = interpolate(t, params.lineTransIteration);
+    state.shapeTransIteration = interpolate(t, params.lineTransIteration);
     state.viewport.moveTo(interpolate(t, params.viewportCenter));
     state.viewport.zoomTo( zoomInterpolate(t, params.viewportBreadth));
     if(params.colorCutoff.has_value())
@@ -17,11 +17,13 @@ bool Animator::process(double unused) {
     if(params.pathStart.has_value())
         rs.renderer.generatePath(interpolate(t, *params.pathStart), state.metricArg, state.p);
 
-    if(params.lineTransStart.has_value() && params.lineTransEnd.has_value()) {
+    //fixme implement animation for all shape transforms
+    /*if(params.lineTransStart.has_value() && params.lineTransEnd.has_value()) {
         state.lineTransStart = interpolate(t, *params.lineTransStart);
         state.lineTransEnd = interpolate(t, *params.lineTransEnd);
-        rs.renderer.generateLineTransform(*state.lineTransStart, *state.lineTransEnd, state.lineTransIteration, state.p);
-    }
+        rs.renderer.generateShapeTransform(ShapeProps(), state.shapeTransIteration,
+                                           state.p);
+    }*/
 
     ++frame;
     return true;
