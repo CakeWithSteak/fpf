@@ -4,6 +4,14 @@
 #include "utils/serialization.h"
 #include "utils/imageExport.h"
 
+struct ShapeTransformInfo {
+    TransformShape shape;
+    std::string name;
+    std::string instruction;
+};
+
+extern const std::vector<ShapeTransformInfo> shapeTransformInfo;
+
 std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
     constexpr double MOVE_STEP = 0.8f;
     constexpr double ZOOM_STEP = 0.4f;
@@ -43,7 +51,7 @@ std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
                 if(rs.selectedShape == LINE) {
                     if (!rs.lineTransStart.has_value()) { //First click to select start point
                         rs.lineTransStart = z;
-                        std::cout << "Set line transform start point to" << *rs.lineTransStart << "." << std::endl;
+                        std::cout << "Set line transform start point to " << *rs.lineTransStart << "." << std::endl;
                     } else { //Second click to select endpoint
                         s.shapeTransProps = ShapeProps{LINE, {.line = {.p1 = *rs.lineTransStart, .p2 = z}}};
                         rs.renderer.generateShapeTransform(*s.shapeTransProps, s.shapeTransIteration, s.p);
@@ -84,9 +92,10 @@ std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
             rs.renderer.hideOverlay();
             rs.shapeTransUIStarted = true;
             s.shapeTransIteration = 0;
-            std::cout << "Shape transform mode enabled. Select a shape:\n"
-                << "1: Line\n"
-                << "2: Circle" << std::endl; //todo maybe there's a better way to print this
+            std::cout << "Shape transform mode enabled. Select a shape:\n";
+            for(int i = 0; i < shapeTransformInfo.size(); ++i) {
+                std::cout << "\t" << i + 1 << ": " << shapeTransformInfo[i].name << std::endl;
+            }
             rs.mouseBinding->setEnabled(false);
         }, GLFW_KEY_T);
 
@@ -122,25 +131,28 @@ std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
         rs.window.restore();
     }, GLFW_KEY_INSERT);
 
-    //fixme create these bindings automatically
-    //Shape trans 1 (line)
-    in->addTrigger([&s, &rs](){
-        if(!rs.shapeTransUIStarted || rs.selectedShape.has_value())
-            return;
-        rs.selectedShape = LINE;
-        std::cout << "Selected line. Click two points to draw a line." << std::endl;
-        rs.mouseBinding->setEnabled(true);
-        rs.mouseBinding->setCooldown(200ms);
-    }, GLFW_KEY_1);
-    //Shape trans 2 (circle)
-    in->addTrigger([&s, &rs](){
-        if(!rs.shapeTransUIStarted || rs.selectedShape.has_value())
-            return;
-        rs.selectedShape = CIRCLE;
-        std::cout << "Selected circle. Click a point to select a center and another point to select the radius." << std::endl;
-        rs.mouseBinding->setEnabled(true);
-        rs.mouseBinding->setCooldown(200ms);
-    }, GLFW_KEY_2);
-
+    for(int i = 0; i < shapeTransformInfo.size(); ++i) {
+        in->addTrigger([&rs, i](){
+            if(!rs.shapeTransUIStarted || rs.selectedShape.has_value())
+                return;
+            rs.selectedShape = shapeTransformInfo[i].shape;
+            std::cout << "Selected " << shapeTransformInfo[i].name << ". " << shapeTransformInfo[i].instruction << std::endl;
+            rs.mouseBinding->setEnabled(true);
+            rs.mouseBinding->setCooldown(200ms);
+        }, GLFW_KEY_1 + i);
+    }
     return in;
 }
+
+const std::vector<ShapeTransformInfo> shapeTransformInfo {
+        {
+            .shape = LINE,
+            .name = "line",
+            .instruction = "Click two points to draw a line."
+        },
+        {
+                .shape = CIRCLE,
+                .name = "circle",
+                .instruction = "Click a point to select a center and another point to select the radius."
+        }
+};
