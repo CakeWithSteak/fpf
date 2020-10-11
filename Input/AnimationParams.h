@@ -26,7 +26,7 @@ struct AnimationParams {
         return std::ceil(fps * duration);
     }
 
-    std::string getReferenceString(std::string_view func) {
+    std::string getReferenceString(std::string_view func, int argc, char** argv) {
         std::stringstream ss;
         ss << func << "\t"
            << duration << "\t"
@@ -58,10 +58,13 @@ struct AnimationParams {
                 default:
                     throw std::runtime_error("Invalid tag on ShapeProps");
             }
-            ss << shapeTransIteration.first << " -> " << shapeTransIteration.second;
+            ss << shapeTransIteration.first << " -> " << shapeTransIteration.second << "\t";
         }
         else {
-            ss << "NONE";
+            ss << "NONE\t";
+        }
+        for(int i = 1; i < argc; ++i) {
+            ss << argv[i] << " ";
         }
         ss << "\n";
         return ss.str();
