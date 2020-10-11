@@ -21,8 +21,6 @@ struct State {
     int width, height;
     ModeInfo mode; //Only the DistanceMetric is serialized
     std::optional<std::complex<double>> pathStart;
-    /*std::optional<std::complex<double>> lineTransStart;
-    std::optional<std::complex<double>> lineTransEnd;*/
     std::optional<ShapeProps> shapeTransProps;
     int shapeTransIteration = 0;
     bool forceDisableIncrementalShapeTrans = false;
@@ -45,7 +43,7 @@ struct State {
     State() = default;
 
     template<class Archive>
-    void save(Archive& ar, const unsigned int version) const
+    void serialize(Archive& ar, const unsigned int version)
     {
         ar & expr;
         ar & maxIters;
@@ -59,37 +57,9 @@ struct State {
         ar & mode;
         ar & pathStart;
         ar & shapeTransIteration;
-        /*if(lineTransEnd.has_value()) { //fixme serialize shape trans
-            ar & lineTransStart;
-            ar & lineTransEnd;
-        } else {
-            ar & std::optional<std::complex<double>>();
-            ar & std::optional<std::complex<double>>();
-        }*/
+        ar & shapeTransProps;
         ar & forceDisableIncrementalShapeTrans;
     }
-
-    template<class Archive>
-    void load(Archive & ar, const unsigned int version)
-    {
-        ar & expr;
-        ar & maxIters;
-        ar & metricArg;
-        ar & p;
-        ar & viewport;
-        ar & colorCutoffEnabled;
-        ar & colorCutoff;
-        ar & width;
-        ar & height;
-        ar & mode;
-        ar & pathStart;
-        ar & shapeTransIteration;
-        /*ar & lineTransStart;
-        ar & lineTransEnd;
-        shapeTransEnabled = lineTransEnd.has_value();*/
-        ar & forceDisableIncrementalShapeTrans;
-    }
-    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 struct RuntimeState {
