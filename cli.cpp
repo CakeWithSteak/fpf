@@ -81,12 +81,16 @@ Options getOptions(int argc, char** argv) {
        ("anim-color-cutoff-end", po::value<double>())
        ("anim-path-start", po::value<std::complex<double>>())
        ("anim-path-end", po::value<std::complex<double>>())
-       ("anim-line-trans-a-start", po::value<std::complex<double>>())
-       ("anim-line-trans-a-end", po::value<std::complex<double>>())
-       ("anim-line-trans-b-start", po::value<std::complex<double>>())
-       ("anim-line-trans-b-end", po::value<std::complex<double>>())
-       ("anim-line-trans-iters-start", po::value<int>()->default_value(0))
-       ("anim-line-trans-iters-end", po::value<int>())
+       ("anim-line-a-start", po::value<std::complex<double>>())
+       ("anim-line-a-end", po::value<std::complex<double>>())
+       ("anim-line-b-start", po::value<std::complex<double>>())
+       ("anim-line-b-end", po::value<std::complex<double>>())
+       ("anim-circle-center-start", po::value<std::complex<double>>())
+       ("anim-circle-center-end", po::value<std::complex<double>>())
+       ("anim-circle-r-start", po::value<double>())
+       ("anim-circle-r-end", po::value<double>())
+       ("anim-shape-iters-start", po::value<int>()->default_value(0))
+       ("anim-shape-iters-end", po::value<int>())
        ("anim-background,H", po::bool_switch()->default_value(false), "Creates animation without opening a window")
        ;
 
@@ -164,12 +168,36 @@ Options getOptions(int argc, char** argv) {
 
         addAnimParam(anim.colorCutoff, vm, *opt.colorCutoff, "anim-color-cutoff-end");
         addAnimParam(anim.pathStart, vm, "anim-path-start", "anim-path-end");
-        addAnimParam(anim.lineTransIteration, vm, "anim-line-trans-iters-start", "anim-line-trans-iters-end");
+        addAnimParam(anim.shapeTransIteration, vm, "anim-shape-iters-start", "anim-shape-iters-end");
 
-        if(vm.count("anim-line-trans-a-start") && vm.count("anim-line-trans-b-start") &&
-         vm.count("anim-line-trans-a-end") && vm.count("anim-line-trans-b-end") ) {
-            addAnimParam(anim.lineTransStart, vm, "anim-line-trans-a-start", "anim-line-trans-a-end");
-            addAnimParam(anim.lineTransEnd, vm, "anim-line-trans-b-start", "anim-line-trans-b-end");
+        if(vm.count("anim-line-a-start") && vm.count("anim-line-b-start") &&
+           vm.count("anim-line-a-end") && vm.count("anim-line-b-end") ) {
+            anim.shapeProps = {
+            {.shape = LINE,
+                .line = {
+                    .p1 = vm["anim-line-a-start"].as<std::complex<double>>(),
+                    .p2 = vm["anim-line-b-start"].as<std::complex<double>>()
+                }},
+            {.shape = LINE,
+                .line = {
+                    .p1 = vm["anim-line-a-end"].as<std::complex<double>>(),
+                    .p2 = vm["anim-line-b-end"].as<std::complex<double>>()
+                }}
+            };
+        } else if(vm.count("anim-circle-center-start") && vm.count("anim-circle-center-end") &&
+                  vm.count("anim-circle-r-start") && vm.count("anim-circle-r-end")) {
+            anim.shapeProps = {
+            {.shape = CIRCLE,
+                .circle = {
+                    .center = vm["anim-circle-center-start"].as<std::complex<double>>(),
+                    .r = vm["anim-circle-r-start"].as<double>()
+                }},
+            {.shape = CIRCLE,
+                .circle = {
+                     .center = vm["anim-circle-center-end"].as<std::complex<double>>(),
+                     .r = vm["anim-circle-r-end"].as<double>()
+                }}
+            };
         }
 
         opt.animParams = std::move(anim);
