@@ -115,9 +115,10 @@ int main(int argc, char** argv) {
         if (state.pathStart.has_value())
             renderer.generatePath(state.pathStart.value(), state.metricArg, state.p);
 
-        /*if (state.shapeTransEnabled)
-            renderer.generateShapeTransform(ShapeProps(), state.shapeTransIteration,
-                                            state.p);*/ //todo deserialization for shape transforms
+        if (state.shapeTransProps.has_value()) {
+            renderer.generateShapeTransform(*state.shapeTransProps, state.shapeTransIteration, state.p);
+            runtimeState.shapeTransUIFinished = true;
+        }
 
         //First render
         runtimeState.forceRerender = true;
