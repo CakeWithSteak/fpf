@@ -15,6 +15,9 @@ struct HostFloatComplex {
     operator std::complex<float>() const {
         return std::complex<float>(re, im);
     }
+    std::complex<float> std() const {
+        return static_cast<std::complex<float>>(*this);
+    }
     HostFloatComplex(const std::complex<float>& z) : re(z.real()), im(z.imag()) {}
     HostFloatComplex() = default;
 };
@@ -25,6 +28,9 @@ struct HostDoubleComplex {
 
     operator std::complex<double>() const {
         return std::complex<double>(re, im);
+    }
+    std::complex<double> std() const {
+        return static_cast<std::complex<double>>(*this);
     }
     HostDoubleComplex(const std::complex<double>& z) :re(z.real()), im(z.imag()) {}
     HostDoubleComplex() = default;
