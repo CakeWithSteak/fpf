@@ -38,7 +38,7 @@ void Renderer::init(std::string_view cudaCode) {
     glBindVertexArray(overlayVAO);
     glBindBuffer(GL_ARRAY_BUFFER, overlayLineVBO);
 
-    glBufferData(GL_ARRAY_BUFFER, 2 * std::max(MAX_PATH_STEPS, LINE_TRANS_NUM_POINTS) * sizeof(double), nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, 2 * std::max(MAX_PATH_STEPS, SHAPE_TRANS_DEFAULT_POINTS) * sizeof(double), nullptr, GL_DYNAMIC_DRAW);
 
     //Line vertices
     glVertexAttribLPointer(0, 2, GL_DOUBLE, sizeof(double) * 2, nullptr);
@@ -253,10 +253,16 @@ std::vector<unsigned char> Renderer::exportImageData() {
     return data;
 }
 
-void Renderer::generateShapeTransform(ShapeProps shape, int iteration, const std::complex<double>& p) {
+void Renderer::generateShapeTransform(ShapeProps shape, int iteration, const std::complex<double>& p, int numShapePoints) {
     shapeTransProps = shape;
     shapeTransIteration = iteration;
     shapeTransEnabled = true;
+    //Make sure we don't overflow the overlay VBO
+    if(numShapePoints > SHAPE_TRANS_DEFAULT_POINTS) {
+        std::cerr << "ERROR: Number of shape transform points can't exceed " << SHAPE_TRANS_DEFAULT_POINTS << "." << std::endl;
+        numShapePoints = SHAPE_TRANS_DEFAULT_POINTS;
+    }
+    shapeTransNumPoints = (numShapePoints == -1) ? SHAPE_TRANS_DEFAULT_POINTS : numShapePoints;
     generateShapeTransformImpl(p);
 }
 
@@ -290,11 +296,11 @@ void Renderer::generateShapeTransformImpl(const std::complex<double>& p, int las
     CUDA_SAFE(cudaGraphicsResourceGetMappedPointer(&bufferPtr, nullptr, overlayBufferRes));
 
     if(doublePrec) {
-        launch_kernel_generic(shapeTransformKernel, LINE_TRANS_NUM_POINTS, BLOCK_SIZE, *shapeTransProps, p.real(), p.imag(), LINE_TRANS_NUM_POINTS, itersToDo, incremental, bufferPtr);
+        launch_kernel_generic(shapeTransformKernel, shapeTransNumPoints, BLOCK_SIZE, *shapeTransProps, p.real(), p.imag(), shapeTransNumPoints, itersToDo, incremental, bufferPtr);
 
     } else {
         std::complex<float> fp(p);
-        launch_kernel_generic(shapeTransformKernel, LINE_TRANS_NUM_POINTS, BLOCK_SIZE, *shapeTransProps, fp.real(), fp.imag(), LINE_TRANS_NUM_POINTS, itersToDo, incremental, bufferPtr);
+        launch_kernel_generic(shapeTransformKernel, shapeTransNumPoints, BLOCK_SIZE, *shapeTransProps, fp.real(), fp.imag(), shapeTransNumPoints, itersToDo, incremental, bufferPtr);
     }
 
     CUDA_SAFE(cudaDeviceSynchronize());
@@ -306,7 +312,7 @@ int Renderer::getOverlayLength() {
     if(pathEnabled)
         return *cudaPathLengthPtr;
     else if(shapeTransEnabled)
-        return LINE_TRANS_NUM_POINTS;
+        return shapeTransNumPoints;
     else
         throw std::runtime_error("getOverlayLength called without overlay active");
 }

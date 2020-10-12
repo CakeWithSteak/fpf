@@ -3,14 +3,17 @@
 #include "utils/State.h"
 #include "utils/serialization.h"
 #include "utils/imageExport.h"
+#include <optional>
 
 struct ShapeTransformInfo {
     TransformShape shape;
     std::string name;
-    std::string instruction;
+    std::string instruction1;
+    bool setNumPoints = false;
+    std::optional<std::string> instruction2 = {};
 };
 
-extern const std::vector<ShapeTransformInfo> shapeTransformInfo;
+extern const std::vector<ShapeTransformInfo> shapeTransformUIInfo;
 
 std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
     constexpr double MOVE_STEP = 0.8f;
@@ -68,7 +71,7 @@ std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
                     } else {
                         double r = std::abs(z - *rs.circleCenter);
                         s.shapeTransProps = ShapeProps{CIRCLE, {.circle = {*rs.circleCenter, r}}};
-                        rs.renderer.generateShapeTransform(*s.shapeTransProps, s.shapeTransIteration, s.p);
+                        rs.renderer.generateShapeTransform(*s.shapeTransProps, s.shapeTransIteration, s.p, s.shapeTransNumPointsOverride);
                         std::cout << "Rendering circle transform from " << *rs.circleCenter << ", r = " << r
                                   << "." << std::endl;
                         rs.circleCenter = {}; // Unset no longer needed state here to avoid having to do it somewhere else later
@@ -82,7 +85,7 @@ std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
         in->addTrigger([&s, &rs]() {
             rs.renderer.hideOverlay();
             s.pathStart = {};
-            rs.shapeTransUIStarted = false; rs.shapeTransUIFinished = false; rs.selectedShape = {};
+            rs.shapeTransUIStarted = false; rs.shapeTransUIFinished = false; rs.selectedShape = {}; s.shapeTransNumPointsOverride = -1;
             rs.mouseBinding->setCooldown(0ms); // If we were in line trans mode we need to unset the cooldown
         }, GLFW_KEY_H);
 
@@ -93,8 +96,8 @@ std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
             rs.shapeTransUIStarted = true;
             s.shapeTransIteration = 0;
             std::cout << "Shape transform mode enabled. Select a shape:\n";
-            for(int i = 0; i < shapeTransformInfo.size(); ++i) {
-                std::cout << "\t" << i + 1 << ": " << shapeTransformInfo[i].name << std::endl;
+            for(int i = 0; i < shapeTransformUIInfo.size(); ++i) {
+                std::cout << "\t" << i + 1 << ": " << shapeTransformUIInfo[i].name << std::endl;
             }
             rs.mouseBinding->setEnabled(false);
         }, GLFW_KEY_T);
@@ -131,12 +134,29 @@ std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
         rs.window.restore();
     }, GLFW_KEY_INSERT);
 
-    for(int i = 0; i < shapeTransformInfo.size(); ++i) {
-        in->addTrigger([&rs, i](){
+    for(int i = 0; i < shapeTransformUIInfo.size(); ++i) {
+        in->addTrigger([&s, &rs, i](){
             if(!rs.shapeTransUIStarted || rs.selectedShape.has_value())
                 return;
-            rs.selectedShape = shapeTransformInfo[i].shape;
-            std::cout << "Selected " << shapeTransformInfo[i].name << ". " << shapeTransformInfo[i].instruction << std::endl;
+            const auto uiInfo = shapeTransformUIInfo[i];
+            rs.selectedShape = uiInfo.shape;
+            std::cout << "Selected " << uiInfo.name << ". " << uiInfo.instruction1 << std::endl;
+            if(uiInfo.setNumPoints) {
+                rs.window.minimize();
+                int num = -1;
+                while(num <= 2) {
+                    std::cout << "> ";
+                    if(std::cin.fail()) {
+                        std::cin.clear();
+                        std::cin.ignore(30000, '\n');
+                    }
+                    std::cin >> num;
+                }
+                s.shapeTransNumPointsOverride = num + 1; //We draw one more point so as to close the shape
+                if(uiInfo.instruction2.has_value())
+                    std::cout << *uiInfo.instruction2 << std::endl;
+                rs.window.restore();
+            }
             rs.mouseBinding->setEnabled(true);
             rs.mouseBinding->setCooldown(200ms);
         }, GLFW_KEY_1 + i);
@@ -144,15 +164,22 @@ std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
     return in;
 }
 
-const std::vector<ShapeTransformInfo> shapeTransformInfo {
+const std::vector<ShapeTransformInfo> shapeTransformUIInfo {
         {
             .shape = LINE,
             .name = "line",
-            .instruction = "Click two points to draw a line."
+            .instruction1 = "Click two points to draw a line."
         },
         {
-                .shape = CIRCLE,
-                .name = "circle",
-                .instruction = "Click a point to select a center and another point to select the radius."
+            .shape = CIRCLE,
+            .name = "circle",
+            .instruction1 = "Click a point to select a center and another point to select the radius."
+        },
+        {
+            .shape = CIRCLE,
+            .name = "sparse circle",
+            .instruction1 = "Enter the number of points.",
+            .setNumPoints = true,
+            .instruction2 = "Click a point to select a center and another point to select the radius."   
         }
 };
