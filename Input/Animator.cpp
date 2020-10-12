@@ -19,7 +19,7 @@ bool Animator::process(double unused) {
     if(params.shapeProps.has_value()) {
         state.shapeTransProps = interpolate(t, *params.shapeProps);
         state.shapeTransIteration = interpolate(t, params.shapeTransIteration);
-        rs.renderer.generateShapeTransform(*state.shapeTransProps, state.shapeTransIteration, state.p);
+        rs.renderer.generateShapeTransform(*state.shapeTransProps, state.shapeTransIteration, state.p, 0);
     }
 
     ++frame;

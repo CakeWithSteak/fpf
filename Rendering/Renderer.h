@@ -29,6 +29,7 @@ class Renderer {
     bool shapeTransEnabled = false;
     std::optional<ShapeProps> shapeTransProps;
     int shapeTransIteration;
+    int shapeTransNumPoints;
 
     unsigned int numBlocks;
     unsigned int texture;
@@ -70,7 +71,7 @@ class Renderer {
     static constexpr double PATH_TOL_UPDATE_THRESHOLD = 0.001f;
     static constexpr double DEFAULT_PATH_TOLERANCE = 0.001f;
 
-    static constexpr int LINE_TRANS_NUM_POINTS = 500'000;
+    static constexpr int SHAPE_TRANS_DEFAULT_POINTS = 500'000;
 
     // Not really worth it to set this below 1 -- 0.5 is surprisingly only a 3% performance increase.
     // Predictably the attractor compute time falls dramatically, but at the same time the main kernel time also grows for some reason
@@ -101,7 +102,7 @@ public:
     int generatePath(const std::complex<double>& z, double tolerance, const std::complex<double>& p);
     void hideOverlay();
     std::vector<unsigned char> exportImageData();
-    void generateShapeTransform(ShapeProps shape, int iteration, const std::complex<double>& p);
+    void generateShapeTransform(ShapeProps shape, int iteration, const std::complex<double>& p, int numShapePoints = -1);
     void setShapeTransformIteration(int iteration, const std::complex<double>& p, bool disableIncremental = false);
     void togglePointConnections();
 };

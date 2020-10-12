@@ -25,6 +25,7 @@ struct State {
     int shapeTransIteration = 0;
     bool forceDisableIncrementalShapeTrans = false;
     bool doublePrec = false;
+    int shapeTransNumPointsOverride = -1;
 
     explicit State(const Options& opt) {
         expr = opt.expression;
@@ -59,6 +60,7 @@ struct State {
         ar & shapeTransIteration;
         ar & shapeTransProps;
         ar & forceDisableIncrementalShapeTrans;
+        ar & shapeTransNumPointsOverride;
     }
 };
 
