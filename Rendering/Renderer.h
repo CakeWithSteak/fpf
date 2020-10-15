@@ -88,7 +88,6 @@ class Renderer {
     cudaSurfaceObject_t createSurface();
     void refreshOverlayIfNeeded(const std::complex<double>& p, double metricArg);
     void generateShapeTransformImpl(const std::complex<double>& p, int lastIterations = -1);
-    inline bool isOverlayEnabled() { return pathEnabled || shapeTransEnabled; }
     int getOverlayLength();
     size_t findAttractors(int maxIters, double metricArg, const std::complex<double>& p);
 public:
@@ -101,6 +100,7 @@ public:
     void resize(int newWidth, int newHeight);
     int generatePath(const std::complex<double>& z, double tolerance, const std::complex<double>& p);
     void hideOverlay();
+    inline bool isOverlayActive() { return pathEnabled || shapeTransEnabled; }
     std::vector<unsigned char> exportImageData();
     void generateShapeTransform(ShapeProps shape, int iteration, const std::complex<double>& p, int numShapePoints = -1);
     void setShapeTransformIteration(int iteration, const std::complex<double>& p, bool disableIncremental = false);

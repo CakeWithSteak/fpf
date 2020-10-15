@@ -13,26 +13,14 @@ bool InputHandler::process(double dt) {
 }
 
 
-InputBinding&  InputHandler::addToggle(bool& val, int key, const std::string& displayName) {
+InputBinding& InputHandler::addToggle(bool& val, int key, const std::string& displayName) {
     auto b = new ToggleBinding(val, key, displayName);
     bindings.push_back(b);
     return *b;
 }
 
-InputBinding&  InputHandler::addViewport(Viewport& v, int upKey, int downKey, int leftKey, int rightKey, int zoomInKey, int zoomOutKey, int resetKey, double moveStep, double zoomStep) {
+InputBinding& InputHandler::addViewport(Viewport& v, int upKey, int downKey, int leftKey, int rightKey, int zoomInKey, int zoomOutKey, int resetKey, double moveStep, double zoomStep) {
     auto b = new ViewportBinding(v, upKey, downKey, leftKey, rightKey, zoomInKey, zoomOutKey, resetKey, moveStep, zoomStep);
-    bindings.push_back(b);
-    return *b;
-}
-
-InputBinding&  InputHandler::addTrigger(const std::function<void()>& handler, int triggerKey) {
-    auto b = new TriggerBinding(handler, triggerKey);
-    bindings.push_back(b);
-    return *b;
-}
-
-InputBinding&  InputHandler::addTrigger(const std::function<void(double, double)>& handler, int triggerButton) {
-    auto b = new MouseTriggerBinding(handler, triggerButton);
     bindings.push_back(b);
     return *b;
 }
@@ -86,27 +74,4 @@ bool ViewportBinding::process(Window& window, double dt, double multiplier) {
         inputReceived = true;
     }
     return inputReceived;
-}
-
-bool TriggerBinding::process(Window& window, double dt, [[maybe_unused]] double multiplier) {
-    if(!isEnabled)
-        return false;
-    if(window.isKeyPressed(triggerKey) && timer.get() > cooldown) {
-        handler();
-        timer.reset();
-        return true;
-    }
-    return false;
-}
-
-bool MouseTriggerBinding::process(Window& window, double dt, [[maybe_unused]] double multiplier) {
-    if(!isEnabled)
-        return false;
-    auto pos = window.tryGetClickPosition(triggerButton);
-    if(pos.has_value() && timer.get() > cooldown) {
-        handler(pos->first, pos->second);
-        timer.reset();
-        return true;
-    }
-    return false;
 }
