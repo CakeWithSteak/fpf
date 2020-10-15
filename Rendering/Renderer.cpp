@@ -154,7 +154,7 @@ void Renderer::render(int maxIters, double metricArg, const std::complex<double>
 
     glBindVertexArray(mainVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    if(isOverlayEnabled()) {
+    if(isOverlayActive()) {
         refreshOverlayIfNeeded(p, metricArg);
         pm.enter(PERF_OVERLAY_RENDER);
         glBindVertexArray(overlayVAO);

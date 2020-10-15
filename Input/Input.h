@@ -14,6 +14,14 @@ using namespace std::chrono_literals;
 template <typename T>
 using limits = std::numeric_limits<T>;
 
+
+//Types for callbacks from TriggerBindings. The return value determines whether or not to redraw the screen.
+template <class T>
+concept TriggerAction = requires(T t) {{t()} -> std::same_as<void>;} || requires(T t) {{t()} -> std::same_as<bool>;};
+
+template <class T>
+concept MouseTriggerAction = requires(T t) {{t(1.0, 1.0)} -> std::same_as<void>;} || requires(T t) {{t(1.0, 1.0)} -> std::same_as<bool>;};
+
 class InputBinding {
 protected:
     Timer timer;
@@ -43,8 +51,10 @@ public:
 
     InputBinding& addToggle(bool& val, int key, const std::string& displayName);
     InputBinding& addViewport(Viewport& v, int upKey, int downKey, int leftKey, int rightKey, int zoomInKey, int zoomOutKey, int resetKey, double moveStep, double zoomStep);
-    InputBinding& addTrigger(const std::function<void()>& handler, int triggerKey);
-    InputBinding& addTrigger(const std::function<void(double, double)>& handler, int triggerButton);
+    template <TriggerAction T>
+    InputBinding& addTrigger(const T& handler, int triggerKey);
+    template <MouseTriggerAction T>
+    InputBinding& addTrigger(const T& handler, int triggerButton);
 
     InputHandler(Window& window, const std::optional<int>& multiplierKey = {}, double multiplier = 1) : window(window),
                                                                                                          multiplierKey(multiplierKey),
@@ -88,25 +98,46 @@ public:
         resetKey(resetKey), resetPoint(v.getCenter()), resetZoom(v.getBreadth()), moveStep(moveStep), zoomStep(zoomStep) {}
 };
 
+template <TriggerAction T>
 class TriggerBinding : public InputBinding {
-    std::function<void()> handler;
+    T handler;
     int triggerKey;
+
+    using HandlerReturnType = decltype(std::declval<T>()());
 public:
     virtual bool process(Window& window, double dt, double multiplier) override;
-    TriggerBinding(const std::function<void()>& handler, int triggerKey) : handler(handler), triggerKey(triggerKey) {}
+    TriggerBinding(const T& handler, int triggerKey) : handler(handler), triggerKey(triggerKey) {}
+
 };
 
+template <MouseTriggerAction T>
 class MouseTriggerBinding : public InputBinding {
-    std::function<void(double, double)> handler;
+    T handler;
     int triggerButton;
+
+    using HandlerReturnType = decltype(std::declval<T>()(1.0, 1.0));
 public:
     virtual bool process(Window& window, double dt, double multiplier) override;
-    MouseTriggerBinding(const std::function<void(double, double)>& handler, int triggerButton) : handler(handler), triggerButton(triggerButton) {}
+    MouseTriggerBinding(const T& handler, int triggerButton) : handler(handler), triggerButton(triggerButton) {}
 };
 
 template<typename T>
 InputBinding& InputHandler::addScalar(T& val, int upKey, int downKey, T step, const std::string& displayName, T min, T max) {
     auto b = new ScalarBinding(val, upKey, downKey, step, displayName, min, max);
+    bindings.push_back(b);
+    return *b;
+}
+
+template <TriggerAction T>
+InputBinding& InputHandler::addTrigger(const T& handler, int triggerKey) {
+    auto b = new TriggerBinding(handler, triggerKey);
+    bindings.push_back(b);
+    return *b;
+}
+
+template <MouseTriggerAction T>
+InputBinding& InputHandler::addTrigger(const T& handler, int triggerKey) {
+    auto b = new MouseTriggerBinding(handler, triggerKey);
     bindings.push_back(b);
     return *b;
 }
@@ -137,4 +168,41 @@ bool ScalarBinding<T>::process(Window& window, double dt, double multiplier) {
     }
 
     return inputReceived;
+}
+
+template <TriggerAction T>
+bool TriggerBinding<T>::process(Window& window, double dt, [[maybe_unused]] double multiplier) {
+    if(!isEnabled)
+        return false;
+    if(window.isKeyPressed(triggerKey) && timer.get() > cooldown) {
+        if constexpr (std::same_as<HandlerReturnType, void>) {
+            handler();
+            timer.reset();
+            return true;
+        } else {
+            auto handlerVal = handler();
+            timer.reset();
+            return handlerVal;
+        }
+    }
+    return false;
+}
+
+template <MouseTriggerAction T>
+bool MouseTriggerBinding<T>::process(Window& window, double dt, [[maybe_unused]] double multiplier) {
+    if(!isEnabled)
+        return false;
+    auto pos = window.tryGetClickPosition(triggerButton);
+    if(pos.has_value() && timer.get() > cooldown) {
+        if constexpr (std::same_as<HandlerReturnType, void>) {
+            handler(pos->first, pos->second);
+            timer.reset();
+            return true;
+        } else {
+            auto handlerVal = handler(pos->first, pos->second);
+            timer.reset();
+            return handlerVal;
+        }
+    }
+    return false;
 }
