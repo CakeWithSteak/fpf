@@ -37,9 +37,7 @@ void juxtaposeToExplicit(TokenList& tl) {
     const Token multiply = Token(TokenType::OPERATOR, '*');
     for(auto it = next(tl.begin()); it != tl.end(); ++it) {
         Token t = *it;
-        if(t.type == TokenType::LEFT_PAREN && prev(it)->type == TokenType::RIGHT_PAREN)
-            tl.insert(it, multiply);
-        else if (prev(it)->type == TokenType::NUMBER_LITERAL || prev(it)->type == TokenType::VARIABLE) {
+        if (prev(it)->type == TokenType::NUMBER_LITERAL || prev(it)->type == TokenType::VARIABLE || prev(it)->type == TokenType::RIGHT_PAREN) {
             if(t.type == TokenType::LEFT_PAREN ||
                t.type == TokenType::VARIABLE ||
                t.type == TokenType::NUMBER_LITERAL ||
