@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cassert>
 #include "Viewport.h"
 
 Viewport::Viewport(const dcomplex& center, double breadth)
@@ -37,10 +38,12 @@ void Viewport::moveTo(const dcomplex& target) {
 
 void Viewport::zoom(double step) {
     breadth -= step * breadth;
+    breadth = std::max(0.0, breadth);
     debugPrintState();
 }
 
 void Viewport::zoomTo(double target) {
+    assert(target >= 0.0);
     breadth = target;
     debugPrintState();
 }

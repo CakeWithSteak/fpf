@@ -44,6 +44,7 @@ bool ViewportBinding::process(Window& window, double dt, double multiplier) {
     if(!isEnabled)
         return false;
     bool inputReceived = false;
+    dt = std::clamp(dt, 0.0, 0.95/(zoomStep * multiplier)); //Prevent zooming in by more than 100%
     if(window.isKeyPressed(upKey)) {
         v.move(Viewport::Direction::UP, moveStep * dt * multiplier);
         inputReceived = true;
