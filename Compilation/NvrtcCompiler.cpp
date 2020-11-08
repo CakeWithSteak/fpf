@@ -11,12 +11,18 @@ std::string defineMacro(const std::string& name) {
     return prefix + name;
 }
 
+std::string getSM() {
+    cudaDeviceProp props;
+    CUDA_SAFE(cudaGetDeviceProperties(&props, 0));
+    return "compute_" + std::to_string(props.major) + std::to_string(props.minor);
+}
+
 std::vector<char*> getCompileArgs(const ModeInfo& mode, bool doublePrec) {
     std::vector<std::string> args;
-    args.push_back("--gpu-architecture=compute_61"); //todo autodetect sm
-    args.push_back("--include-path=/usr/local/cuda/include/");
-    args.push_back("-std=c++14");
-    args.push_back("-ewp");
+    args.emplace_back("--gpu-architecture=" + getSM());
+    args.emplace_back("--include-path=/usr/local/cuda/include/");
+    args.emplace_back("-std=c++14");
+    args.emplace_back("-ewp");
     args.push_back(defineMacro(mode.metricInternalName));
     if(mode.capturing)
         args.push_back(defineMacro("CAPTURING"));
