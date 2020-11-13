@@ -17,10 +17,21 @@ std::string getSM() {
     return "compute_" + std::to_string(props.major) + std::to_string(props.minor);
 }
 
+//todo read env var or add a cli switch to change cuda install dir
+std::string getIncludePath() {
+#if defined(unix) || defined(__unix) || defined(__unix__)
+    return "/usr/local/cuda/include/";
+#elif defined(_MSC_VER) || defined(__WIN32)
+    return "C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.1/include"; //todo avoid hardcoding a specific version
+#else
+#error "Unsupported operating system."
+#endif
+}
+
 std::vector<char*> getCompileArgs(const ModeInfo& mode, bool doublePrec) {
     std::vector<std::string> args;
     args.emplace_back("--gpu-architecture=" + getSM());
-    args.emplace_back("--include-path=/usr/local/cuda/include/");
+    args.emplace_back("--include-path=" + getIncludePath());
     args.emplace_back("-std=c++14");
     args.emplace_back("-ewp");
     args.push_back(defineMacro(mode.metricInternalName));

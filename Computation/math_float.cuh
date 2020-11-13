@@ -46,11 +46,11 @@ __device__ __inline__ complex cabs(complex z) {
 }
 
 __device__ __inline__ complex creal(complex z) {
-    return make_complex(cuCrealf(z), 0);
+    return make_complex(z.x, 0);
 }
 
 __device__ __inline__ complex cimag(complex z) {
-    return make_complex(cuCimagf(z), 0);
+    return make_complex(z.y, 0);
 }
 
 __device__ __inline__ complex carg(complex z) {
@@ -67,7 +67,7 @@ __device__ __inline__ complex cln(complex z) {
 }
 
 __device__ __inline__ complex cpow(complex a, complex b) {
-    if(abs(a.x) <= EPSILON && abs(a.y) <= EPSILON)
+    if(abs(a.x) == 0.0f && abs(a.y) == 0.0f)
         return make_complex(0, 0);
     return cexp(cmul(b, cln(a)));
 }

@@ -32,6 +32,8 @@ void Window::init(const std::string& title, bool resizable, bool visible) {
     if(resizable) {
         glfwSetWindowUserPointer(handle, this);
         glfwSetWindowSizeCallback(handle, [](GLFWwindow* handle, int newWidth, int newHeight){
+           if(newWidth == 0 || newHeight == 0)
+               return; //On Windows the window is resized to 0x0 when minimising, which would mess up Renderer state
            glViewport(0, 0, newWidth, newHeight);
            Window& window = *static_cast<Window*>(glfwGetWindowUserPointer(handle));
            window.width = newWidth;
@@ -42,7 +44,6 @@ void Window::init(const std::string& title, bool resizable, bool visible) {
 
         glfwSetWindowAspectRatio(handle, width, height);
         glfwSetWindowSizeLimits(handle, 100, 100, GLFW_DONT_CARE, GLFW_DONT_CARE);
-        enforceAspectRatio();
     }
 }
 
