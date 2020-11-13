@@ -173,7 +173,7 @@ Options getOptions(int argc, char** argv) {
         if(vm.count("anim-line-a-start") && vm.count("anim-line-b-start")) {
             auto aEnd = vm.count("anim-line-a-end") ? vm["anim-line-a-end"].as<std::complex<double>>() : vm["anim-line-a-start"].as<std::complex<double>>();
             auto bEnd = vm.count("anim-line-b-end") ? vm["anim-line-b-end"].as<std::complex<double>>() : vm["anim-line-b-start"].as<std::complex<double>>();
-            anim.shapeProps = {
+            anim.shapeProps = {{
             {.shape = LINE,
                 .line = {
                     .p1 = vm["anim-line-a-start"].as<std::complex<double>>(),
@@ -184,11 +184,11 @@ Options getOptions(int argc, char** argv) {
                     .p1 = aEnd,
                     .p2 = bEnd
                 }}
-            };
+            }};
         } else if(vm.count("anim-circle-center-start") && vm.count("anim-circle-r-start")) {
             auto centerEnd = vm.count("anim-circle-center-end") ? vm["anim-circle-center-end"].as<std::complex<double>>() : vm["anim-circle-center-start"].as<std::complex<double>>();
             auto rEnd = vm.count("anim-circle-r-end") ? vm["anim-circle-r-end"].as<double>() : vm["anim-circle-r-start"].as<double>();
-            anim.shapeProps = {
+            anim.shapeProps = {{
             {.shape = CIRCLE,
                 .circle = {
                     .center = vm["anim-circle-center-start"].as<std::complex<double>>(),
@@ -199,7 +199,7 @@ Options getOptions(int argc, char** argv) {
                      .center = centerEnd,
                      .r = rEnd
                 }}
-            };
+            }};
         }
 
         opt.animParams = std::move(anim);

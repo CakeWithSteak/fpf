@@ -96,11 +96,13 @@ int main(int argc, char** argv) {
         RuntimeState runtimeState{.window = window, .renderer = renderer, .refsPath = opt.refsPath};
 
         window.setResizeCallback([&state, &runtimeState](Window &win, int width, int height) {
+            if(width == state.width && height == state.height) return;
             state.width = width;
             state.height = height;
             runtimeState.renderer.resize(width, height);
             runtimeState.forceRerender = true;
         });
+        window.enforceAspectRatio(); //It's important to call this only once we've set up our resize callback, otherwise state and window could disagree about viewport size
 
         std::unique_ptr<Controller> control;
         if (animating) {

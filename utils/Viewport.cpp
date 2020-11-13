@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cassert>
 #include "Viewport.h"
+#include <algorithm>
 
 Viewport::Viewport(const dcomplex& center, double breadth)
         : center(center), breadth(breadth) {}

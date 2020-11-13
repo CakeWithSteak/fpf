@@ -1,6 +1,6 @@
 #pragma once
 #include <boost/serialization/split_member.hpp>
-#include "../Computation/metrics.cuh"
+#include "../Computation/metrics.cuh" //fixme broken relative paths?
 #include "Computation/shared_types.h"
 #include <map>
 #include <string>

@@ -46,17 +46,21 @@ enum TransformShape {
     CIRCLE
 };
 
+struct LineProps {
+    HostDoubleComplex p1;
+    HostDoubleComplex p2;
+};
+
+struct CircleProps {
+    HostDoubleComplex center;
+    double r;
+};
+
 struct ShapeProps {
     TransformShape shape;
     union {
-        struct {
-            HostDoubleComplex p1;
-            HostDoubleComplex p2;
-        } line;
-        struct {
-            HostDoubleComplex center;
-            double r;
-        } circle;
+        LineProps line;
+        CircleProps circle;
     };
 };
 #pragma pack(pop)
