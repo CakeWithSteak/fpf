@@ -16,12 +16,10 @@ void Window::init(const std::string& title, bool resizable, bool visible) {
     glfwWindowHint(GLFW_RESIZABLE, resizable);
     glfwWindowHint(GLFW_VISIBLE, visible);
 
-
     handle = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
     if(!handle) {
         throw std::runtime_error("Failed to open window");
     }
-
 
     glfwMakeContextCurrent(handle);
 
@@ -33,14 +31,19 @@ void Window::init(const std::string& title, bool resizable, bool visible) {
 
     if(resizable) {
         glfwSetWindowSizeCallback(handle, [](GLFWwindow* handle, int newWidth, int newHeight){
-           if(newWidth == 0 || newHeight == 0)
-               return; //On Windows the window is resized to 0x0 when minimising, which would mess up Renderer state
-           glViewport(0, 0, newWidth, newHeight);
-           Window& window = *static_cast<Window*>(glfwGetWindowUserPointer(handle));
-           window.width = newWidth;
-           window.height = newHeight;
-           if(window.resizeCallback.has_value())
-               window.resizeCallback.value()(window, newWidth, newHeight);
+            if(newWidth == 0 || newHeight == 0)
+                return; //On Windows the window is resized to 0x0 when minimising, which would mess up Renderer state
+            glViewport(0, 0, newWidth, newHeight);
+            Window& window = *static_cast<Window*>(glfwGetWindowUserPointer(handle));
+            if(window.width * newHeight != window.height * newWidth) {
+                newHeight = std::min(newWidth, newHeight);
+                glfwSetWindowSize(handle, std::round((window.width / (float)(window.height)) * newHeight), newHeight);
+                return;
+            }
+            window.width = newWidth;
+            window.height = newHeight;
+            if(window.resizeCallback.has_value())
+                window.resizeCallback.value()(window, newWidth, newHeight);
         });
 
         glfwSetWindowAspectRatio(handle, width, height);
@@ -130,8 +133,8 @@ std::optional<std::pair<double, double>> Window::tryGetClickPosition(int button)
     return {};
 }
 
-//Resizes the window to the closest dimension possible while maintaining the aspect ratio and staying on screen
-void Window::enforceAspectRatio() {
+//Resizes the window to the closest dimension possible while maintaining the aspect ratio and staying on screen.
+void Window::clipToScreen() {
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     int waWidth, waHeight;
     glfwGetMonitorWorkarea(monitor, nullptr, nullptr, &waWidth, &waHeight);
@@ -140,6 +143,9 @@ void Window::enforceAspectRatio() {
 
     int maxWidth = waWidth - (leftBorder + rightBorder);
     int maxHeight = waHeight - (topBorder + bottomBorder);
+
+    if(height <= maxHeight && width <= maxWidth)
+        return;
 
     int newHeight = std::min(std::min(maxWidth, maxHeight), width);
     glfwSetWindowSize(handle, (width / static_cast<float>(height)) * newHeight, newHeight);

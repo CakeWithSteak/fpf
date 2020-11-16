@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
             runtimeState.renderer.resize(width, height);
             runtimeState.forceRerender = true;
         });
-        window.enforceAspectRatio(); //It's important to call this only once we've set up our resize callback, otherwise state and window could disagree about viewport size
+        window.clipToScreen(); //It's important to call this only once we've set up our resize callback, otherwise state and window could disagree about viewport size
 
         //On some platforms we can't access parts of the framebuffer that are off-screen,
         // so we repaint whenever previously off-screen parts of the window could come back into view.
