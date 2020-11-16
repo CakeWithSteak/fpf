@@ -40,5 +40,5 @@ public:
     void setMoveCallback(std::function<void(Window &, int, int)> moveCallback);
     void setMaximizeCallback(std::function<void(Window &, bool)> maximizeCallback);
     [[nodiscard]] std::optional<std::pair<double, double>> tryGetClickPosition(int button);
-    void enforceAspectRatio();
+    void clipToScreen();
 };
