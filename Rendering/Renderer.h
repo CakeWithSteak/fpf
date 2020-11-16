@@ -32,10 +32,12 @@ class Renderer {
     int shapeTransNumPoints;
 
     unsigned int numBlocks;
-    unsigned int texture;
+    unsigned int distTexture;
+    unsigned int proxyTexture;
     unsigned int mainVAO;
     unsigned int overlayVAO;
     unsigned int overlayLineVBO;
+    unsigned int framebuffer;
 
     Shader mainShader{mainVertexShaderCode, mainFragmentShaderCode};
     int minimumUniform;
@@ -43,6 +45,7 @@ class Renderer {
     Shader overlayShader{overlayVertexShaderCode, overlayFragmentShaderCode};
     int viewCenterUniform;
     int viewBreadthUniform;
+    Shader proxyShader{mainVertexShaderCode, proxyFragmentShaderCode};
 
     cudaGraphicsResource_t cudaSurfaceRes = nullptr;
     cudaGraphicsResource_t overlayBufferRes = nullptr;
@@ -58,13 +61,16 @@ class Renderer {
     CUfunction shapeTransformKernel;
     CUfunction findAttractorsKernel;
 
-    PerformanceMonitor pm{"Main kernel time", "Total render time", "Orbit compute time", "Overlay render time", "Line transform compute time", "Attractor compute time"};
-    static constexpr size_t PERF_KERNEL = 0;
-    static constexpr size_t PERF_RENDER = 1;
-    static constexpr size_t PERF_OVERLAY_GEN = 2;
-    static constexpr size_t PERF_OVERLAY_RENDER = 3;
-    static constexpr size_t PERF_LINE_TRANS_GEN = 4;
-    static constexpr size_t PERF_ATTRACTOR = 5;
+    PerformanceMonitor pm{"Main kernel time", "Total render time", "Orbit compute time", "Overlay render time", "Line transform compute time", "Attractor compute time", "Frame export time"};
+    enum PerfMonitorCategories : size_t {
+        PERF_KERNEL,
+        PERF_RENDER,
+        PERF_OVERLAY_GEN,
+        PERF_OVERLAY_RENDER,
+        PERF_LINE_TRANS_GEN,
+        PERF_ATTRACTOR,
+        PERF_FRAME_EXPORT_TIME
+    };
 
     static constexpr int MAX_PATH_STEPS = 1024;
     static constexpr double PATH_PARAM_UPDATE_THRESHOLD = 0.01f;
@@ -81,7 +87,7 @@ class Renderer {
     static constexpr double ATTRACTOR_MATCH_TOL = KERNEL_ATTRACTOR_MAX_TOL;
 
     void init(std::string_view cudaCode);
-    void initTexture();
+    void initTextures(bool setupProxy = true);
     void initShaders();
     void initCuda(bool registerPathRes = true);
     void initKernels(std::string_view cudaCode);

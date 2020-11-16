@@ -16,3 +16,7 @@ const std::string overlayVertexShaderCode {
 const std::string overlayFragmentShaderCode {
     #include "shaders/overlay_frag.glsl"
 };
+
+const std::string proxyFragmentShaderCode {
+    #include "shaders/proxy_frag.glsl"
+};

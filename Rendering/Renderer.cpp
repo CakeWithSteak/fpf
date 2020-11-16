@@ -23,6 +23,9 @@ float data[] = {
 };
 
 void Renderer::init(std::string_view cudaCode) {
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
     unsigned int VAOs[2];
     glGenVertexArrays(2, VAOs);
     mainVAO = VAOs[0];
@@ -61,16 +64,35 @@ void Renderer::init(std::string_view cudaCode) {
     glLineWidth(2);
     glPointSize(4);
 
-    initTexture();
+    initTextures();
     initShaders();
     initCuda();
     initKernels(cudaCode);
 }
 
-void Renderer::initTexture() {
-    glGenTextures(1, &texture);
+void Renderer::initTextures(bool setupProxy) {
+    unsigned int textures[2];
+    glGenTextures(setupProxy ? 2 : 1, textures);
+    distTexture = textures[0];
+
+    if(setupProxy) {
+        proxyTexture = textures[1];
+
+        //Init proxy texture
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, proxyTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, proxyTexture, 0);
+    }
+
+    //Init dist texture
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glBindTexture(GL_TEXTURE_2D, distTexture);
 
     //Allocates one-channel float32 texture
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_R32F, width, height);
@@ -81,26 +103,28 @@ void Renderer::initTexture() {
 
 void Renderer::initShaders() {
     mainShader.use();
-
     mainShader.setUniform("distances", 0);
     mainShader.setUniform("maxHue", mode.maxHue);
-
     minimumUniform = mainShader.getUniformLocation("minDist");
     maximumUniform = mainShader.getUniformLocation("maxDist");
-    viewCenterUniform = overlayShader.getUniformLocation("viewportCenter");
-    viewBreadthUniform = overlayShader.getUniformLocation("viewportBreadth");
-
     if(mode.staticMinMax.has_value()) {
         mainShader.setUniform(minimumUniform, mode.staticMinMax->first);
         mainShader.setUniform(maximumUniform, mode.staticMinMax->second);
     }
+
+    overlayShader.use();
+    viewCenterUniform = overlayShader.getUniformLocation("viewportCenter");
+    viewBreadthUniform = overlayShader.getUniformLocation("viewportBreadth");
+
+    proxyShader.use();
+    proxyShader.setUniform("tex", 1);
 }
 
 void Renderer::initCuda(bool registerPathRes) {
     CUDA_SAFE(cudaSetDevice(0));
     numBlocks = ceilDivide(width * height, 1024);
     CUDA_SAFE(cudaMallocManaged(&cudaBuffer, 2 * numBlocks * sizeof(float))); //Buffer for min/max fpdist values
-    CUDA_SAFE(cudaGraphicsGLRegisterImage(&cudaSurfaceRes, texture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
+    CUDA_SAFE(cudaGraphicsGLRegisterImage(&cudaSurfaceRes, distTexture, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsSurfaceLoadStore));
     cudaSurfaceDesc.resType = cudaResourceTypeArray;
 
     if(mode.isAttractor) {
@@ -126,6 +150,7 @@ Renderer::~Renderer() {
 
 void Renderer::render(int maxIters, double metricArg, const std::complex<double>& p, float colorCutoff) {
     pm.enter(PERF_RENDER);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     auto [start, end] = viewport.getCorners();
 
     size_t numAttractors = (mode.isAttractor) ? findAttractors(maxIters, metricArg, p) : 0;
@@ -166,6 +191,12 @@ void Renderer::render(int maxIters, double metricArg, const std::complex<double>
             glDrawArrays(GL_LINE_STRIP, 0, getOverlayLength());
         pm.exit(PERF_OVERLAY_RENDER);
     }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindVertexArray(mainVAO);
+    proxyShader.use();
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
     pm.exit(PERF_RENDER);
 }
 
@@ -196,9 +227,11 @@ void Renderer::resize(int newWidth, int newHeight) {
     CUDA_SAFE(cudaFree(attractorsDeviceBuffer));
     CUDA_SAFE(cudaGraphicsUnregisterResource(cudaSurfaceRes));
     glBindTexture(GL_TEXTURE_2D, 0);
-    glDeleteTextures(1, &texture);
+    glDeleteTextures(1, &distTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, newWidth, newHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
 
-    initTexture();
+    initTextures(false);
     initCuda(false);
 }
 
@@ -246,10 +279,14 @@ void Renderer::hideOverlay() {
 }
 
 std::vector<unsigned char> Renderer::exportImageData() {
+    pm.enter(PERF_FRAME_EXPORT_TIME);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     long size = width * height * 3;
     std::vector<unsigned char> data(size);
     glReadnPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, size, data.data());
+    pm.exit(PERF_FRAME_EXPORT_TIME);
     return data;
 }
 
