@@ -16,6 +16,8 @@ class Window {
     int height;
     GLFWwindow* handle = nullptr;
     std::optional<std::function<void(Window&, int, int)>> resizeCallback;
+    std::optional<std::function<void(Window&, int, int)>> moveCallback;
+    std::optional<std::function<void(Window&, bool)>> maximizeCallback;
     void init(const std::string& title, bool resizable, bool visible);
 public:
     Window(int width, int height, const std::string& title, bool resizable, bool visible) : width{width}, height{height} {init(title, resizable, visible);}
@@ -35,6 +37,8 @@ public:
     void enableGLDebugMessages(GLDEBUGPROC messageFunc);
     [[nodiscard]] bool isKeyPressed(int key);
     void setResizeCallback(std::function<void(Window&, int, int)> callback);
+    void setMoveCallback(std::function<void(Window &, int, int)> moveCallback);
+    void setMaximizeCallback(std::function<void(Window &, bool)> maximizeCallback);
     [[nodiscard]] std::optional<std::pair<double, double>> tryGetClickPosition(int button);
     void enforceAspectRatio();
 };

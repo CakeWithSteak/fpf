@@ -104,6 +104,15 @@ int main(int argc, char** argv) {
         });
         window.enforceAspectRatio(); //It's important to call this only once we've set up our resize callback, otherwise state and window could disagree about viewport size
 
+        //On some platforms we can't access parts of the framebuffer that are off-screen,
+        // so we repaint whenever previously off-screen parts of the window could come back into view.
+        window.setMoveCallback([&runtimeState](Window& window, int unused1, int unused2) {
+            runtimeState.forceRepaint = true;
+        });
+        window.setMaximizeCallback([&runtimeState](Window& window, bool unused) {
+            runtimeState.forceRepaint = true;
+        });
+
         std::unique_ptr<Controller> control;
         if (animating) {
             control = std::make_unique<Animator>(*opt.animParams, state, runtimeState);
@@ -128,10 +137,10 @@ int main(int argc, char** argv) {
         Timer timer;
         while (!window.shouldClose() || animating) {
             window.poll();
-            bool repaintNeeded = control->process(timer.getSeconds()) || runtimeState.forceRerender;
+            bool rerenderNeeded = control->process(timer.getSeconds()) || runtimeState.forceRerender;
             timer.reset();
 
-            if (repaintNeeded) {
+            if (rerenderNeeded) {
                 glClear(GL_COLOR_BUFFER_BIT);
                 float actualColorCutoff = state.colorCutoffEnabled ? state.colorCutoff
                                                                    : std::numeric_limits<float>::max();
@@ -142,17 +151,20 @@ int main(int argc, char** argv) {
                         animating = false;
                         if (opt.animBackground) {
                             window.setShouldClose(true);
-                            break;
                         } else {
                             window.setSwapInterval(1);
                             control = initControls(state, runtimeState); // Enable user controls
                         }
                     }
                 }
-
+            }
+            if(rerenderNeeded || runtimeState.forceRepaint) {
+                renderer.paint();
                 window.swapBuffers();
                 runtimeState.forceRerender = false;
-            } else
+                runtimeState.forceRepaint = false;
+            }
+             else
                 std::this_thread::sleep_for(40ms);
         }
         std::cout << "\n" << renderer.getPerformanceReport();

@@ -29,8 +29,9 @@ void Window::init(const std::string& title, bool resizable, bool visible) {
     glViewport(0, 0, width, height);
     glClearColor(0, 0, 0, 0);
 
+    glfwSetWindowUserPointer(handle, this);
+
     if(resizable) {
-        glfwSetWindowUserPointer(handle, this);
         glfwSetWindowSizeCallback(handle, [](GLFWwindow* handle, int newWidth, int newHeight){
            if(newWidth == 0 || newHeight == 0)
                return; //On Windows the window is resized to 0x0 when minimising, which would mess up Renderer state
@@ -45,6 +46,18 @@ void Window::init(const std::string& title, bool resizable, bool visible) {
         glfwSetWindowAspectRatio(handle, width, height);
         glfwSetWindowSizeLimits(handle, 100, 100, GLFW_DONT_CARE, GLFW_DONT_CARE);
     }
+
+    glfwSetWindowPosCallback(handle, [](GLFWwindow* handle, int x, int y) {
+        Window& window = *static_cast<Window*>(glfwGetWindowUserPointer(handle));
+        if(window.moveCallback.has_value())
+            window.moveCallback.value()(window, x, y);
+    });
+
+    glfwSetWindowMaximizeCallback(handle, [](GLFWwindow* handle, int maximized) {
+        Window& window = *static_cast<Window*>(glfwGetWindowUserPointer(handle));
+        if(window.maximizeCallback.has_value())
+            window.maximizeCallback.value()(window, maximized);
+    });
 }
 
 void Window::setSwapInterval(int interval) {
@@ -130,4 +143,12 @@ void Window::enforceAspectRatio() {
 
     int newHeight = std::min(std::min(maxWidth, maxHeight), width);
     glfwSetWindowSize(handle, (width / static_cast<float>(height)) * newHeight, newHeight);
+}
+
+void Window::setMoveCallback(std::function<void(Window &, int, int)> callback) {
+    moveCallback = callback;
+}
+
+void Window::setMaximizeCallback(std::function<void(Window &, bool)> callback) {
+    maximizeCallback = callback;
 }
