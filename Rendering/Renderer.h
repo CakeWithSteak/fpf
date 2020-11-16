@@ -101,7 +101,12 @@ public:
             : width(width), height(height), viewport(viewport), mode(mode), doublePrec(doublePrec) {init(cudaCode);}
     ~Renderer();
 
+    //Calculates the fractal and renders the result to proxyTexture
     void render(int maxIters, double metricArg, const std::complex<double>& p, float colorCutoff);
+
+    //Copies proxyTexture's data to the default framebuffer
+    void paint();
+
     std::string getPerformanceReport();
     void resize(int newWidth, int newHeight);
     int generatePath(const std::complex<double>& z, double tolerance, const std::complex<double>& p);

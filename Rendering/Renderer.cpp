@@ -192,13 +192,16 @@ void Renderer::render(int maxIters, double metricArg, const std::complex<double>
         pm.exit(PERF_OVERLAY_RENDER);
     }
 
+    pm.exit(PERF_RENDER);
+}
+
+void Renderer::paint() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindVertexArray(mainVAO);
     proxyShader.use();
     glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    pm.exit(PERF_RENDER);
 }
+
 
 cudaSurfaceObject_t Renderer::createSurface() {
     CUDA_SAFE(cudaGraphicsSubResourceGetMappedArray(&cudaSurfaceDesc.res.array.array, cudaSurfaceRes, 0, 0));
