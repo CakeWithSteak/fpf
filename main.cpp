@@ -83,15 +83,15 @@ int main(int argc, char** argv) {
             state = State(opt);
         }
         bool animating = opt.animParams.has_value();
+        std::cout << "Using CUDA include path: " << opt.cudaIncludePath << "\n";
 
         auto cudaCode = getCudaCode(state.expr);
 
-        Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, !animating,
-                      !opt.animBackground);
+        Window window(state.width, state.height, "Fixed point fractals - " + state.mode.displayName, !animating, !opt.animBackground);
         window.setSwapInterval(animating ? 0 : 1);
         window.enableGLDebugMessages(glDebugCallback);
 
-        Renderer renderer(state.width, state.height, state.viewport, state.mode, cudaCode, opt.doublePrec);
+        Renderer renderer(state.width, state.height, state.viewport, state.mode, cudaCode, opt.cudaIncludePath, opt.doublePrec);
 
         RuntimeState runtimeState{.window = window, .renderer = renderer, .refsPath = opt.refsPath};
 

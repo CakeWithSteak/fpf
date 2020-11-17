@@ -1,6 +1,7 @@
 #pragma once
 #include <complex>
 #include <memory>
+#include <utility>
 #include "../Computation/kernel.h"
 #include "../utils/Viewport.h"
 #include "../Compilation/NvrtcCompiler.h"
@@ -97,8 +98,8 @@ class Renderer {
     int getOverlayLength();
     size_t findAttractors(int maxIters, double metricArg, const std::complex<double>& p);
 public:
-    Renderer(int width, int height, const Viewport& viewport, const ModeInfo& mode, std::string_view cudaCode, bool doublePrec)
-            : width(width), height(height), viewport(viewport), mode(mode), doublePrec(doublePrec) {init(cudaCode);}
+    Renderer(int width, int height, const Viewport& viewport, const ModeInfo& mode, std::string_view cudaCode, std::filesystem::path cudaIncludePath, bool doublePrec)
+            : width(width), height(height), viewport(viewport), mode(mode), doublePrec(doublePrec), compiler(std::move(cudaIncludePath)) {init(cudaCode);}
     ~Renderer();
 
     //Calculates the fractal and renders the result to proxyTexture
