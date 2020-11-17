@@ -46,6 +46,14 @@ public:
     bool filled() {
         return produced >= maxSize;
     }
+
+    //Indicates the no more items will be produced
+    void close() {
+        if(!filled()) {
+            maxSize = produced;
+            cv.notify_all();
+        }
+    }
 };
 
 

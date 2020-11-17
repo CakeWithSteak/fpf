@@ -26,5 +26,6 @@ public:
     ~AnimationExporter();
     void saveFrame(Frame&& frame);
     bool filled();
+    void stop(); //Saves frames that have already been submitted, then shuts down.
     void writeAnimReferenceString(std::string_view str);
 };
