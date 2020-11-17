@@ -1,5 +1,6 @@
 #include "cli.h"
 #include "modes.h"
+#include "utils/findCuda.h"
 #include <boost/program_options.hpp>
 #include <iostream>
 #include <complex>
@@ -92,6 +93,7 @@ Options getOptions(int argc, char** argv) {
        ("anim-shape-iters-start", po::value<int>()->default_value(0))
        ("anim-shape-iters-end", po::value<int>())
        ("anim-background,H", po::bool_switch()->default_value(false), "Creates animation without opening a window")
+       ("cuda-path", po::value<std::string>())
        ;
 
     po::positional_options_description pos;
@@ -111,6 +113,16 @@ Options getOptions(int argc, char** argv) {
     opt.viewportCenter = vm["center"].as<std::complex<double>>();
     opt.viewportBreadth = vm["zoom"].as<double>() / 2;
     opt.animBackground = vm["anim-background"].as<bool>();
+
+    if(!vm["cuda-path"].empty()) {
+        std::filesystem::path usrCudaPath = vm["cuda-path"].as<std::string>();
+        if(std::filesystem::exists(usrCudaPath / "include"))
+            opt.cudaIncludePath = usrCudaPath / "include";
+        else
+            throw std::runtime_error(std::string("The specified CUDA path ") + usrCudaPath.string() + " doesn't exist, or doesn't have an \"include\" subdirectory");
+    } else {
+        opt.cudaIncludePath = findCudaIncludePath();
+    }
 
     if(vm.count("refs-path"))
         opt.refsPath = vm["refs-path"].as<std::string>();
