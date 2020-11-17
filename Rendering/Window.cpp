@@ -1,5 +1,6 @@
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 #include "Window.h"
 
 void Window::init(const std::string& title, bool resizable, bool visible) {
@@ -149,6 +150,7 @@ void Window::clipToScreen() {
 
     int newHeight = std::min(std::min(maxWidth, maxHeight), width);
     glfwSetWindowSize(handle, (width / static_cast<float>(height)) * newHeight, newHeight);
+    poll();
 }
 
 void Window::setMoveCallback(std::function<void(Window &, int, int)> callback) {
