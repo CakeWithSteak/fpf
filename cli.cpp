@@ -71,9 +71,8 @@ Options getOptions(int argc, char** argv) {
        ("zoom", po::value<double>()->default_value(4), "The side length of the viewport")
        ("max-iters,i", po::value<int>(), "Maximum iterations")
        ("color-cutoff", po::value<double>(), "The maximum value to color")
-       ("anim-length,A", po::value<double>(), "The length of the animation in seconds")
+       ("anim-length,A", po::value<int>(), "The number of frames to animate")
        ("anim-path,o",  po::value<std::filesystem::path>(), "The directory to export animation frames into")
-       ("anim-fps", po::value<int>()->default_value(60), "Animation FPS")
        ("anim-max-iters-end", po::value<int>())
        ("anim-metric-arg-end", po::value<double>())
        ("anim-p-end", po::value<std::complex<double>>())
@@ -164,8 +163,7 @@ Options getOptions(int argc, char** argv) {
 
     if(vm.count("anim-length") && vm.count("anim-path")) {
         AnimationParams anim;
-        anim.duration = vm["anim-length"].as<double>();
-        anim.fps = vm["anim-fps"].as<int>();
+        anim.totalFrames = vm["anim-length"].as<int>();
         opt.animPath = vm["anim-path"].as<std::filesystem::path>();
 
         addAnimParam(anim.maxIters, vm, opt.maxIters, "anim-max-iters-end");

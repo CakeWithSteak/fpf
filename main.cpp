@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
         std::unique_ptr<Controller> control;
         if (animating) {
             control = std::make_unique<Animator>(*opt.animParams, state, runtimeState);
-            runtimeState.animExport.emplace(*opt.animPath, state.width, state.height, opt.animParams->totalFrames());
+            runtimeState.animExport.emplace(*opt.animPath, state.width, state.height, opt.animParams->totalFrames);
             runtimeState.animExport->writeAnimReferenceString(opt.animParams->getReferenceString(state.expr, argc, argv));
             stbi_write_png_compression_level = 2;
         } else {

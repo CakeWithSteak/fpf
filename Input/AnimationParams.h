@@ -9,8 +9,7 @@ template <typename T>
 using Interpolate = std::pair<T, T>;
 
 struct AnimationParams {
-    double duration;
-    int fps;
+    int totalFrames;
 
     Interpolate<int> maxIters;
     Interpolate<double> metricArg;
@@ -22,15 +21,10 @@ struct AnimationParams {
     std::optional<Interpolate<ShapeProps>> shapeProps;
     Interpolate<int> shapeTransIteration;
 
-    [[nodiscard]] int totalFrames() const {
-        return std::ceil(fps * duration);
-    }
-
     std::string getReferenceString(std::string_view func, int argc, char** argv) {
         std::stringstream ss;
         ss << func << "\t"
-           << duration << "\t"
-           << fps << "\t"
+           << totalFrames << "\t"
            << maxIters.first << " -> " << maxIters.second << "\t"
            << metricArg.first << " -> " << metricArg.second << "\t"
            << p.first << " -> " << p.second << "\t"
