@@ -43,20 +43,20 @@ TokenList tokenize(std::string_view sv) {
 Token createNumberLiteral(std::string_view sv, int& i) {
     std::string val;
     bool hadDecimalPoint = false;
-    char c = sv[i];
-    do {
+    char c;
+    for(; i < sv.length(); ++i) {
+        c = sv[i];
         if(c == '.') {
             if(hadDecimalPoint)
                 throw std::runtime_error("Failed to parse exception: Multiple decimal points in one number");
             hadDecimalPoint = true;
-        }
-
-        val.push_back(c);
-        ++i;
-        if(c == 'i')
+        } else if(c == 'i') {
+            val.push_back(c);
             break;
-        c = sv[i];
-    } while(std::isdigit(c) || c == '.' || c == 'i');
+        } else if(std::isdigit(c)) {
+            val.push_back(c);
+        } else break;
+    }
     --i;
     return {TokenType::NUMBER_LITERAL, val};
 }
