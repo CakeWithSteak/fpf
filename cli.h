@@ -25,6 +25,7 @@ struct Options {
     std::optional<std::filesystem::path> animPath;
     bool animBackground;
     std::filesystem::path cudaIncludePath;
+    bool enableVsync;
 };
 
 Options getOptions(int argc, char** argv);
