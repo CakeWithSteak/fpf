@@ -93,6 +93,7 @@ Options getOptions(int argc, char** argv) {
        ("anim-shape-iters-end", po::value<int>())
        ("anim-background,H", po::bool_switch()->default_value(false), "Creates animation without opening a window")
        ("cuda-path", po::value<std::string>())
+       ("no-vsync", po::bool_switch()->default_value(false))
        ;
 
     po::positional_options_description pos;
@@ -112,6 +113,7 @@ Options getOptions(int argc, char** argv) {
     opt.viewportCenter = vm["center"].as<std::complex<double>>();
     opt.viewportBreadth = vm["zoom"].as<double>() / 2;
     opt.animBackground = vm["anim-background"].as<bool>();
+    opt.enableVsync = !vm["no-vsync"].as<bool>();
 
     if(!vm["cuda-path"].empty()) {
         std::filesystem::path usrCudaPath = vm["cuda-path"].as<std::string>();
