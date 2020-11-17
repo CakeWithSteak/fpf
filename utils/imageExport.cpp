@@ -37,13 +37,29 @@ std::string getReferenceString(const path& imagePath, const State& state) {
         << "\t" << (state.colorCutoffEnabled ? "Enabled" : "Disabled")
         << "\t" << state.colorCutoff << "\t";
 
+    ss << (state.doublePrec ? "On\t" : "Off\t");
+
     if(state.pathStart.has_value())
         ss << state.pathStart.value();
     else
         ss << "None";
 
-    ss << "\tNone\tNone\tNone"; // Backwards compatibility with the old refs format
-    ss << "\t" << (state.doublePrec ? "On" : "Off");
+    if(state.shapeTransProps.has_value()) {
+        if(state.shapeTransProps->shape == LINE) {
+            ss << "\tLine" << "\t" << state.shapeTransIteration << "\t"
+               << state.shapeTransProps->line.p1.std() << "\t" << state.shapeTransProps->line.p2.std();
+        } else { //CIRCLE
+            if(state.shapeTransNumPointsOverride == -1)
+                ss << "\tCircle";
+            else
+                ss << "\tPolygon(" << state.shapeTransNumPointsOverride - 1 << ")";
+            ss << "\t" << state.shapeTransIteration << "\t"
+               << state.shapeTransProps->circle.center.std() << "\t" << state.shapeTransProps->circle.r;
+        }
+    } else {
+        ss << "\tNone\t0\tNone\tNone";
+    }
+
     ss << "\n";
 
     return ss.str();
