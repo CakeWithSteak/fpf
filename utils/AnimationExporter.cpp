@@ -65,6 +65,7 @@ void AnimationExporter::threadFunc() {
 }
 
 AnimationExporter::~AnimationExporter() {
+    stop();
     joinThreads();
 }
 
@@ -77,4 +78,8 @@ void AnimationExporter::writeAnimReferenceString(std::string_view str) {
     std::ofstream file(basename.parent_path() / filename, std::ios::app);
     file << str;
     file.close();
+}
+
+void AnimationExporter::stop() {
+    saveQueue.close();
 }

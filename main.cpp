@@ -136,7 +136,7 @@ int main(int argc, char** argv) {
         runtimeState.forceRerender = true;
 
         Timer timer;
-        while (!window.shouldClose() || animating) {
+        while (!window.shouldClose()) {
             window.poll();
             bool rerenderNeeded = control->process(timer.getSeconds()) || runtimeState.forceRerender;
             timer.reset();
