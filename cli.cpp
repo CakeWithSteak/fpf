@@ -61,7 +61,6 @@ Options getOptions(int argc, char** argv) {
        ("mode", po::value<std::string>(), "Fractal construction mode")
        ("expression", po::value<std::string>(), "The function to generate the fractal")
        ("width,w", po::value<int>()->default_value(1024), "Window width")
-       ("height,h", po::value<int>()->default_value(1024), "Window height")
        ("refs-path", po::value<std::string>(), "References file path")
        ("metric-arg,m", po::value<double>(), "Metric argument")
        ("no-incremental-t", po::bool_switch(), "Disable incremental calculation of the line transform")
@@ -106,7 +105,7 @@ Options getOptions(int argc, char** argv) {
 
     Options opt;
     opt.width = vm["width"].as<int>();
-    opt.height = vm["height"].as<int>();
+    opt.height = opt.width;
     opt.forceDisableIncrementalShapeTrans = vm["no-incremental-t"].as<bool>();
     opt.doublePrec = vm["double"].as<bool>();
     opt.p = vm["param"].as<std::complex<double>>();

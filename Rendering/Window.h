@@ -15,12 +15,13 @@ class Window {
     int width;
     int height;
     GLFWwindow* handle = nullptr;
+    bool resizeable;
     std::optional<std::function<void(Window&, int, int)>> resizeCallback;
     std::optional<std::function<void(Window&, int, int)>> moveCallback;
     std::optional<std::function<void(Window&, bool)>> maximizeCallback;
     void init(const std::string& title, bool resizable, bool visible);
 public:
-    Window(int width, int height, const std::string& title, bool resizable, bool visible) : width{width}, height{height} {init(title, resizable, visible);}
+    Window(int width, int height, const std::string& title, bool resizable, bool visible) : width{width}, height{height}, resizeable{resizable} {init(title, resizable, visible);}
     void setSwapInterval(int interval);
     void swapBuffers();
     void poll();
