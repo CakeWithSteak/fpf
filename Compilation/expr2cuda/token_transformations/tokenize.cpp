@@ -55,9 +55,11 @@ Token createNumberLiteral(std::string_view sv, int& i) {
             break;
         } else if(std::isdigit(c)) {
             val.push_back(c);
-        } else break;
+        } else {
+            --i;
+            break;
+        };
     }
-    --i;
     return {TokenType::NUMBER_LITERAL, val};
 }
 
