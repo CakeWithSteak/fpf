@@ -136,6 +136,9 @@ std::optional<std::pair<double, double>> Window::tryGetClickPosition(int button)
 
 //Resizes the window to the closest dimension possible while maintaining the aspect ratio and staying on screen.
 void Window::clipToScreen() {
+    if(!resizeable)
+        return;
+
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     int waWidth, waHeight;
     glfwGetMonitorWorkarea(monitor, nullptr, nullptr, &waWidth, &waHeight);
