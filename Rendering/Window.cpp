@@ -101,7 +101,12 @@ void Window::enableGLDebugMessages(GLDEBUGPROC messageFunc) {
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(messageFunc, nullptr);
+#ifdef NDEBUG
+    glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_ERROR, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
+    glDebugMessageControl(GL_DONT_CARE, GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR, GL_DEBUG_SEVERITY_HIGH, 0, nullptr, GL_TRUE);
+#else
     glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+#endif
 }
 
 bool Window::isKeyPressed(int key) {
