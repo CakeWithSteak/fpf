@@ -47,7 +47,7 @@ public:
         return produced >= maxSize;
     }
 
-    //Indicates the no more items will be produced
+    //Indicates that no more items will be produced
     void close() {
         if(!filled()) {
             maxSize = produced;
