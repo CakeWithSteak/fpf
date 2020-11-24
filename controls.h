@@ -3,6 +3,7 @@
 #include "utils/State.h"
 #include "utils/serialization.h"
 #include "utils/imageExport.h"
+#include "utils/confirmOverwrite.h"
 #include <optional>
 
 struct ShapeTransformInfo {
@@ -148,10 +149,12 @@ std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
         std::filesystem::path filename;
         std::cin >> filename;
         filename.replace_extension("png");
-        auto pixels = rs.renderer.exportImageData();
-        exportImage(filename, rs.window.getWidth(), rs.window.getHeight(), pixels);
-        if(rs.refsPath.has_value())
-            writeImageInfoToReferences(*rs.refsPath, filename, s);
+        if(confirmOverwrite(filename)) {
+            auto pixels = rs.renderer.exportImageData();
+            exportImage(filename, rs.window.getWidth(), rs.window.getHeight(), pixels);
+            if (rs.refsPath.has_value())
+                writeImageInfoToReferences(*rs.refsPath, filename, s);
+        }
         rs.window.restore();
         return false;
     }, GLFW_KEY_INSERT);
