@@ -27,13 +27,18 @@ std::unique_ptr<InputHandler> initControls(State& s, RuntimeState& rs) {
     
     auto in = std::make_unique<InputHandler>(rs.window, GLFW_KEY_LEFT_SHIFT, FAST_MODE_MULTIPLIER);
     in->addViewport(s.viewport, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_KP_ADD, GLFW_KEY_KP_SUBTRACT, GLFW_KEY_HOME, MOVE_STEP, ZOOM_STEP);
+    in->addViewport(s.viewport, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_PAGE_UP, GLFW_KEY_PAGE_DOWN, GLFW_KEY_HOME, MOVE_STEP, ZOOM_STEP); //Alternative viewport controls
     auto& mode = s.mode;
 
-    if(!mode.disableIterations)
+    if(!mode.disableIterations) {
         in->addScalar(s.maxIters, GLFW_KEY_KP_MULTIPLY, GLFW_KEY_KP_DIVIDE, ITER_STEP, "Max iterations", 1, 2048);
+        in->addScalar(s.maxIters, GLFW_KEY_M, GLFW_KEY_N, ITER_STEP, "Max iterations", 1, 2048);
+    }
 
-    if(!mode.disableArg)
+    if(!mode.disableArg) {
         in->addScalar(s.metricArg, GLFW_KEY_0, GLFW_KEY_9, mode.argStep, mode.argDisplayName, mode.argMin, mode.argMax);
+        in->addScalar(s.metricArg, GLFW_KEY_K, GLFW_KEY_J, mode.argStep, mode.argDisplayName, mode.argMin, mode.argMax);
+    }
 
     in->addScalar(s.p, GLFW_KEY_D, GLFW_KEY_A, {PARAM_STEP}, "Parameter");
     in->addScalar(s.p, GLFW_KEY_W, GLFW_KEY_S, {0, PARAM_STEP}, "Parameter");
