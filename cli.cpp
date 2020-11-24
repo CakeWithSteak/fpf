@@ -178,7 +178,6 @@ Options getOptions(int argc, char** argv) {
             addAnimParam(anim.viewportBreadth, opt.viewportBreadth, opt.viewportBreadth);
 
         addAnimParam(anim.colorCutoff, vm, *opt.colorCutoff, "anim-color-cutoff-end");
-        addAnimParam(anim.pathStart, vm, "anim-path-start", "anim-path-end");
         addAnimParam(anim.shapeTransIteration, vm, "anim-shape-iters-start", "anim-shape-iters-end");
 
         if(vm.count("anim-line-a-start") && vm.count("anim-line-b-start")) {
@@ -211,6 +210,8 @@ Options getOptions(int argc, char** argv) {
                      .r = rEnd
                 }}
             }};
+        } else {
+            addAnimParam(anim.pathStart, vm, "anim-path-start", "anim-path-end");
         }
 
         opt.animParams = std::move(anim);
