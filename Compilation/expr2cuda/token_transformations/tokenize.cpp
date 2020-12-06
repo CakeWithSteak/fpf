@@ -49,6 +49,7 @@ Token createNumberLiteral(std::string_view sv, int& i) {
         if(c == '.') {
             if(hadDecimalPoint)
                 throw std::runtime_error("Failed to parse exception: Multiple decimal points in one number");
+            val.push_back('.');
             hadDecimalPoint = true;
         } else if(c == 'i') {
             val.push_back(c);
