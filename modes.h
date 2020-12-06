@@ -63,6 +63,6 @@ struct ModeInfo {
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     inline double prepMetricArg(double arg) {
-        return (argIsTolerance) ? arg * arg : arg;
+        return (argIsTolerance || metric == JULIA || metric == CAPTURING_JULIA || metric == JULIA_COMPLETE) ? arg * arg : arg;
     }
 };
