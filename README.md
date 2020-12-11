@@ -19,7 +19,7 @@ A maximum iteration count is always set and is interactively controllable by pre
 
 ![](https://cakewithsteak.github.io/readme-pictures/readme3.jpg) | ![](https://cakewithsteak.github.io/readme-pictures/readme4.jpg)
 -----------------------------------------------------------------|--------------------------------------------------------------------
-```fpf fixed "sin(z) --zoom 10"```                               | ```fpf julia "sin(z) --zoom 10"```
+```fpf fixed "sin(z)" --zoom 10```                               | ```fpf julia "sin(z)" --zoom 10```
 
 
 System requirements
@@ -157,4 +157,4 @@ Note that **you can only include one shape in an animation** and that **you cann
 
 ![](https://cakewithsteak.github.io/readme-pictures/readme-anim-1.gif) | ![](https://cakewithsteak.github.io/readme-pictures/readme-anim-2.gif)
 -----------------------------------------------------------------|--------------------------------------------------------------------
-```fpf fixed sin(z+p) -w 300 -A 20 -p 0 --anim-p-end 1.57 -o <dir>```| ```fpf fixed sin(z+p) -w 300 -A 20 --anim-p-end (1,1) --anim-line-a-start=(-1,-1) --anim-line-a-end=(0,-1) --anim-line-b-start=(1,1) --anim-line-b-end=(2,1) --anim-shape-iters-start=1 -o <dir>```
+```fpf fixed "sin(z+p)" -w 300 -A 20 -p 0 --anim-p-end 1.57 -o <dir>```| ```fpf fixed "sin(z+p)" -w 300 -A 20 --anim-p-end (1,1) --anim-line-a-start=(-1,-1) --anim-line-a-end=(0,-1) --anim-line-b-start=(1,1) --anim-line-b-end=(2,1) --anim-shape-iters-start=1 -o <dir>```
