@@ -26,7 +26,7 @@ System requirements
 -------------------
 fpf uses CUDA to calculate multiple orbits in parallel, therefore a CUDA-capable GPU and a valid CUDA installation are required.
 
-A prebuilt Windows version is available, which requires CUDA version 11.1
+You can download a prebuilt Windows version [here](https://github.com/CakeWithSteak/fpf/releases/tag/v1.0), which requires CUDA version 11.1
 
 Building
 -------
